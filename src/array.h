@@ -50,5 +50,12 @@ void CONCAT(ARRAY, _shrink_to_fit)(ARRAY *array) {
   array->items = new_items;
 }
 
+void CONCAT(ARRAY, _free)(ARRAY *array) {
+  array->size = 0;
+  array->capacity = 0;
+  free(array->items);
+  array->items = NULL;
+}
+
 #endif //ifndef ELEM_TYPE
 #endif //ARRAY_INCLUDED_
