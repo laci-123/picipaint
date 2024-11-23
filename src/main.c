@@ -17,7 +17,9 @@ void draw_points(Vector2_array *points) {
   }
 
   for(size_t i = 0; i < points->size; ++i) {
-    DrawCircleV(points->items[i], 5, WHITE);
+    if(i > 0) {
+      DrawLineV(points->items[i - 1], points->items[i], WHITE);
+    }
   }
 }
 
