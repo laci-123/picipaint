@@ -1,10 +1,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#ifndef ARRAY_INCLUDED_
-#define ARRAY_INCLUDED_
-
-
 #ifndef ELEM_TYPE
   #error "ELEM_TYPE must be defined before including array.h."
 #else
@@ -20,7 +16,7 @@ typedef struct {
   size_t capacity; 
 } ARRAY;
 
-void CONCAT(ARRAY, _push_back)(ARRAY *array, ELEM_TYPE x) {
+static inline void CONCAT(ARRAY, _push_back)(ARRAY *array, ELEM_TYPE x) {
   if(array->size == array->capacity) {
     if(array->capacity == 0) {
       array->capacity = 1;
@@ -38,19 +34,19 @@ void CONCAT(ARRAY, _push_back)(ARRAY *array, ELEM_TYPE x) {
   array->items[array->size++] = x;
 }
 
-ELEM_TYPE CONCAT(ARRAY, _pop_back)(ARRAY *array) {
+static inline ELEM_TYPE CONCAT(ARRAY, _pop_back)(ARRAY *array) {
   assert(array->size > 0);
   return array->items[--array->size];
 }
 
-void CONCAT(ARRAY, _shrink_to_fit)(ARRAY *array) {
+static inline void CONCAT(ARRAY, _shrink_to_fit)(ARRAY *array) {
   array->capacity = array->size;
   ELEM_TYPE *new_items = realloc(array->items, array->capacity * sizeof(ELEM_TYPE));
   assert(new_items != NULL);
   array->items = new_items;
 }
 
-void CONCAT(ARRAY, _free)(ARRAY *array) {
+static inline void CONCAT(ARRAY, _free)(ARRAY *array) {
   array->size = 0;
   array->capacity = 0;
   free(array->items);
@@ -58,4 +54,3 @@ void CONCAT(ARRAY, _free)(ARRAY *array) {
 }
 
 #endif //ifndef ELEM_TYPE
-#endif //ARRAY_INCLUDED_
