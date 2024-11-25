@@ -1,12 +1,14 @@
 #include "raypack.h"
 #include "curve.h"
+#include "toolbar.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 
 int main(void) {
+  SetWindowState(FLAG_MSAA_4X_HINT);
   InitWindow(800, 450, "PiciPaint");
-  SetWindowState(FLAG_VSYNC_HINT | FLAG_MSAA_4X_HINT | FLAG_WINDOW_RESIZABLE);
+  SetWindowState(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
 
   Curve_array curves = {0};
   Camera2D camera = { .zoom = 1.0f };
@@ -31,10 +33,11 @@ int main(void) {
     }
     
     BeginDrawing();
-    BeginMode2D(camera);
       ClearBackground(BLACK);
-      draw_curves(camera, &curves);
-    EndMode2D();
+      BeginMode2D(camera);
+        draw_curves(camera, &curves);
+      EndMode2D();
+      draw_toolbar();
     EndDrawing();
   }
 
