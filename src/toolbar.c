@@ -10,6 +10,16 @@ static const int   padding = 5;
 static const Color base_color = DARKBLUE;
 static const int font_size = 14;
 
+bool check_collision_point_toolbar(Vector2 point) {
+  const Rectangle rect = {
+    .x = 0,
+    .y = 0,
+    .width = GetScreenWidth(),
+    .height = toolbar_height,
+  };
+  return CheckCollisionPointRec(point, rect);
+}
+
 typedef struct {
   char *caption;
   bool is_pressed;

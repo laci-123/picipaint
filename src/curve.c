@@ -1,4 +1,5 @@
 #include "curve.h"
+#include "toolbar.h"
 #include <assert.h>
 
 
@@ -68,8 +69,9 @@ void draw_curves(Camera2D camera, Curve_array *curves) {
     }
   }
   else {
-    if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+    if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !check_collision_point_toolbar(GetMousePosition())) {
       pen_down = true;
+
       Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
       Curve_array_push_back(curves, (Curve){
           .points = {0},
@@ -82,6 +84,7 @@ void draw_curves(Camera2D camera, Curve_array *curves) {
         });
     }
   }
+
   for(size_t i = 0; i < curves->size; ++i) {
     draw_curve(camera, &curves->items[i]);
   }
