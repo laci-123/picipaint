@@ -17,17 +17,20 @@ typedef struct {
 } ARRAY;
 
 static inline void CONCAT(ARRAY, _push_back)(ARRAY *array, ELEM_TYPE x) {
+  assert(array);
+  assert(array->size <= array->capacity);
+
   if(array->size == array->capacity) {
     if(array->capacity == 0) {
       array->capacity = 1;
       ELEM_TYPE *new_items = malloc(array->capacity * sizeof(ELEM_TYPE));
-      assert(new_items != NULL);
+      assert(new_items);
       array->items = new_items;
     }
     else {
       array->capacity *= 2;
       ELEM_TYPE *new_items = realloc(array->items, array->capacity * sizeof(ELEM_TYPE));
-      assert(new_items != NULL);
+      assert(new_items);
       array->items = new_items;
     }
   }
@@ -35,11 +38,15 @@ static inline void CONCAT(ARRAY, _push_back)(ARRAY *array, ELEM_TYPE x) {
 }
 
 static inline ELEM_TYPE CONCAT(ARRAY, _pop_back)(ARRAY *array) {
+  assert(array);
   assert(array->size > 0);
+
   return array->items[--array->size];
 }
 
 static inline ELEM_TYPE *CONCAT(ARRAY, _last)(ARRAY *array) {
+  assert(array);
+
   if(array->size > 0) {
     return &array->items[array->size - 1];
   }
@@ -49,6 +56,8 @@ static inline ELEM_TYPE *CONCAT(ARRAY, _last)(ARRAY *array) {
 }
 
 static inline const ELEM_TYPE *CONCAT(ARRAY, _last_const)(const ARRAY *array) {
+  assert(array);
+
   if(array->size > 0) {
     return &array->items[array->size - 1];
   }
@@ -58,6 +67,9 @@ static inline const ELEM_TYPE *CONCAT(ARRAY, _last_const)(const ARRAY *array) {
 }
 
 static inline void CONCAT(ARRAY, _shrink_to_fit)(ARRAY *array) {
+  assert(array);
+  assert(array->size <= array->capacity);
+
   array->capacity = array->size;
   ELEM_TYPE *new_items = realloc(array->items, array->capacity * sizeof(ELEM_TYPE));
   assert(new_items != NULL);
@@ -65,6 +77,8 @@ static inline void CONCAT(ARRAY, _shrink_to_fit)(ARRAY *array) {
 }
 
 static inline void CONCAT(ARRAY, _free)(ARRAY *array) {
+  assert(array);
+
   array->size = 0;
   array->capacity = 0;
   free(array->items);

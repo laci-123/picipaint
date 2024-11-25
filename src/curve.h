@@ -10,6 +10,10 @@ typedef struct {
   Vector2_array points;
   Color color;
   float thickness;
+  float min_x;
+  float max_x;
+  float min_y;
+  float max_y;
 } Curve;
 
 #define ELEM_TYPE Curve
