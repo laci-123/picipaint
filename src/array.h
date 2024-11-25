@@ -39,6 +39,24 @@ static inline ELEM_TYPE CONCAT(ARRAY, _pop_back)(ARRAY *array) {
   return array->items[--array->size];
 }
 
+static inline ELEM_TYPE *CONCAT(ARRAY, _last)(ARRAY *array) {
+  if(array->size > 0) {
+    return &array->items[array->size - 1];
+  }
+  else {
+    return NULL;
+  }
+}
+
+static inline const ELEM_TYPE *CONCAT(ARRAY, _last_const)(const ARRAY *array) {
+  if(array->size > 0) {
+    return &array->items[array->size - 1];
+  }
+  else {
+    return NULL;
+  }
+}
+
 static inline void CONCAT(ARRAY, _shrink_to_fit)(ARRAY *array) {
   array->capacity = array->size;
   ELEM_TYPE *new_items = realloc(array->items, array->capacity * sizeof(ELEM_TYPE));
