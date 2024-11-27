@@ -2,6 +2,7 @@
 #include "curve.h"
 #include "toolbar.h"
 #include "mode.h"
+#include "selection.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -33,6 +34,8 @@ int main(void) {
       Vector2 mouse_delta = Vector2Scale(GetMouseDelta(), 1.0f / camera.zoom);
       camera.target = Vector2Subtract(camera.target, mouse_delta);
     }
+
+    update_selection(camera, &curves);
     
     BeginDrawing();
       ClearBackground(BLACK);

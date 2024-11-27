@@ -3,36 +3,47 @@
 #include <assert.h>
 
 
-static void draw_curve(Camera2D camera, const Curve *curve) {
-  assert(curve);
-  
-  Color color = curve->color;
+bool curve_is_mouse_over(Vector2 mouse_pos, const Curve *curve) {
   Rectangle rect = {
     .x = curve->min_x - curve->thickness,
     .y = curve->min_y - curve->thickness,
     .width = curve->max_x - curve->min_x + 2*curve->thickness,
     .height = curve->max_y - curve->min_y + 2*curve->thickness,
   };
-  Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
-  if(!IsMouseButtonDown(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(mouse_pos, rect)) {
-    DrawRectangleLinesEx(rect, 1.0f, WHITE);
+
+  if(CheckCollisionPointRec(mouse_pos, rect)) {
     for(size_t i = 0; i < curve->points.size; ++i) {
       if(CheckCollisionPointCircle(mouse_pos, curve->points.items[i], 2 * curve->thickness)) {
-        color = YELLOW;
-        break;
+        return true;
       }
     }
   }
 
+  return false;
+}
+
+static void draw_curve(const Curve *curve) {
+  assert(curve);
+  
+  if(curve->is_selected) {
+    Rectangle rect = {
+        .x = curve->min_x - curve->thickness,
+        .y = curve->min_y - curve->thickness,
+        .width = curve->max_x - curve->min_x + 2*curve->thickness,
+        .height = curve->max_y - curve->min_y + 2*curve->thickness,
+    };
+    DrawRectangleLinesEx(rect, 1.0f, WHITE);
+  }
+
   if(curve->points.size == 1) {
-    DrawCircleV(curve->points.items[0], curve->thickness * 0.6f, color);
+    DrawCircleV(curve->points.items[0], curve->thickness * 0.6f, curve->color);
   }
   else {
     for(size_t i = 0; i < curve->points.size; ++i) {
       if(i > 0) {
         Vector2 begin = curve->points.items[i - 1];
         Vector2 end   = curve->points.items[i];
-        DrawLineEx(begin, end, curve->thickness, color);
+        DrawLineEx(begin, end, curve->thickness, curve->color);
       }
     }
   }
@@ -92,6 +103,6 @@ void draw_curves(Camera2D camera, Mode mode, Curve_array *curves) {
   }
 
   for(size_t i = 0; i < curves->size; ++i) {
-    draw_curve(camera, &curves->items[i]);
+    draw_curve( &curves->items[i]);
   }
 }
