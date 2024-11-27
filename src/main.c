@@ -36,7 +36,9 @@ int main(void) {
       camera.target = Vector2Subtract(camera.target, mouse_delta);
     }
 
-    update_selection(camera, &curves);
+    if(mode == SELECT) {
+        update_selection(camera, &curves);
+    }
     
     BeginDrawing();
       ClearBackground(BLACK);
