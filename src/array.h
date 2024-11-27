@@ -37,11 +37,17 @@ static inline void CONCAT(ARRAY, _push_back)(ARRAY *array, ELEM_TYPE x) {
   array->items[array->size++] = x;
 }
 
-static inline ELEM_TYPE CONCAT(ARRAY, _pop_back)(ARRAY *array) {
+static inline ELEM_TYPE CONCAT(ARRAY, _delete)(ARRAY *array, size_t index) {
   assert(array);
-  assert(array->size > 0);
+  assert(array->size > index);
 
-  return array->items[--array->size];
+  ELEM_TYPE deleted = array->items[index];
+  if(array->size > 1) {
+    array->items[index] = array->items[array->size - 1];
+  }
+  --array->size;
+
+  return deleted;
 }
 
 static inline ELEM_TYPE *CONCAT(ARRAY, _last)(ARRAY *array) {
@@ -71,9 +77,15 @@ static inline void CONCAT(ARRAY, _shrink_to_fit)(ARRAY *array) {
   assert(array->size <= array->capacity);
 
   array->capacity = array->size;
-  ELEM_TYPE *new_items = realloc(array->items, array->capacity * sizeof(ELEM_TYPE));
-  assert(new_items != NULL);
-  array->items = new_items;
+  if(array->capacity > 0) {
+    ELEM_TYPE *new_items = realloc(array->items, array->capacity * sizeof(ELEM_TYPE));
+    assert(new_items);
+    array->items = new_items;
+  }
+  else {
+    free(array->items);
+    array->items = NULL;
+  }
 }
 
 static inline void CONCAT(ARRAY, _free)(ARRAY *array) {

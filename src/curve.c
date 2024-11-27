@@ -102,7 +102,15 @@ void draw_curves(Camera2D camera, Mode mode, Curve_array *curves) {
     draw_new_curve(camera, curves);
   }
 
+  bool is_delete_pressed = IsKeyPressed(KEY_DELETE);
   for(size_t i = 0; i < curves->size; ++i) {
-    draw_curve( &curves->items[i]);
+    if(curves->items[i].is_selected && is_delete_pressed) {
+      Curve deleted = Curve_array_delete(curves, i--); // array_delete messes with the indexes, be careful!
+      Vector2_array_free(&deleted.points);
+    }
+    else {
+        draw_curve(&curves->items[i]);
+    }
   }
+  Curve_array_shrink_to_fit(curves);
 }
