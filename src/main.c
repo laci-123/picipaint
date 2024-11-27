@@ -1,6 +1,7 @@
 #include "raypack.h"
 #include "curve.h"
 #include "toolbar.h"
+#include "mode.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -12,6 +13,7 @@ int main(void) {
 
   Curve_array curves = {0};
   Camera2D camera = { .zoom = 1.0f };
+  Mode mode = DRAW_CURVES;
 
   while(!WindowShouldClose()) {
     float mouse_wheel = GetMouseWheelMove();
@@ -35,9 +37,9 @@ int main(void) {
     BeginDrawing();
       ClearBackground(BLACK);
       BeginMode2D(camera);
-        draw_curves(camera, &curves);
+        draw_curves(camera, mode, &curves);
       EndMode2D();
-      draw_toolbar();
+      draw_toolbar(&mode);
     EndDrawing();
   }
 

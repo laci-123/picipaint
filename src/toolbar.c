@@ -61,7 +61,7 @@ static int draw_button(int x, Button *button) {
   return x + width;
 }
 
-void draw_toolbar(void) {
+void draw_toolbar(Mode *mode) {
   const int width = GetScreenWidth();
   DrawRectangleGradientV(0, 0,        width, height_1, ColorBrightness(base_color, 0.4f), ColorBrightness(base_color, 0.5f));
   DrawRectangleGradientV(0, height_1, width, height_2, ColorBrightness(base_color, 0.5f), base_color);
@@ -71,9 +71,11 @@ void draw_toolbar(void) {
   int x = draw_button(10, &button_select);
   if(button_select.is_pressed) {
     button_draw.is_pressed = false;
+    *mode = SELECT;
   }
   draw_button(x + 10, &button_draw);
   if(button_draw.is_pressed) {
     button_select.is_pressed = false;
+    *mode = DRAW_CURVES;
   }
 }

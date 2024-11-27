@@ -2,6 +2,7 @@
 #define CURVE_INCLUDED_
 
 #include "raypack.h"
+#include "mode.h"
 #define ELEM_TYPE Vector2
 #include "array.h"
 #undef ELEM_TYPE
@@ -20,6 +21,6 @@ typedef struct {
 #include "array.h"
 #undef ELEM_TYPE
 
-void draw_curves(Camera2D camera, Curve_array *curves);
+void draw_curves(Camera2D camera, Mode mode, Curve_array *curves);
 
 #endif //CURVE_INCLUDED_

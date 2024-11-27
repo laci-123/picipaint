@@ -38,9 +38,7 @@ static void draw_curve(Camera2D camera, const Curve *curve) {
   }
 }
 
-void draw_curves(Camera2D camera, Curve_array *curves) {
-  assert(curves);
-
+static void draw_new_curve(Camera2D camera, Curve_array *curves) {
   static bool pen_down = false;
   if(pen_down) {
     if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
@@ -83,6 +81,14 @@ void draw_curves(Camera2D camera, Curve_array *curves) {
           .max_y = mouse_pos.y,
         });
     }
+  }
+}
+
+void draw_curves(Camera2D camera, Mode mode, Curve_array *curves) {
+  assert(curves);
+
+  if(mode == DRAW_CURVES) {
+    draw_new_curve(camera, curves);
   }
 
   for(size_t i = 0; i < curves->size; ++i) {
