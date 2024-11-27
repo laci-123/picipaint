@@ -3,35 +3,18 @@
 #include <assert.h>
 
 
-bool curve_is_mouse_over(Vector2 mouse_pos, const Curve *curve) {
-  Rectangle rect = {
+static Rectangle selection_rect(const Curve *curve) {
+  return (Rectangle){
     .x = curve->min_x - curve->thickness,
     .y = curve->min_y - curve->thickness,
     .width = curve->max_x - curve->min_x + 2*curve->thickness,
     .height = curve->max_y - curve->min_y + 2*curve->thickness,
   };
-
-  if(CheckCollisionPointRec(mouse_pos, rect)) {
-    for(size_t i = 0; i < curve->points.size; ++i) {
-      if(CheckCollisionPointCircle(mouse_pos, curve->points.items[i], 2 * curve->thickness)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
 }
 
 static void draw_curve(const Curve *curve) {
-  assert(curve);
-  
   if(curve->is_selected) {
-    Rectangle rect = {
-        .x = curve->min_x - curve->thickness,
-        .y = curve->min_y - curve->thickness,
-        .width = curve->max_x - curve->min_x + 2*curve->thickness,
-        .height = curve->max_y - curve->min_y + 2*curve->thickness,
-    };
+    Rectangle rect = selection_rect(curve);
     DrawRectangleLinesEx(rect, 1.0f, WHITE);
   }
 
@@ -95,6 +78,21 @@ static void draw_new_curve(Camera2D camera, Curve_array *curves) {
   }
 }
 
+bool curve_is_mouse_over(Vector2 mouse_pos, const Curve *curve) {
+  assert(curve);
+
+  Rectangle rect = selection_rect(curve);
+  if(CheckCollisionPointRec(mouse_pos, rect)) {
+    for(size_t i = 0; i < curve->points.size; ++i) {
+      if(CheckCollisionPointCircle(mouse_pos, curve->points.items[i], 2 * curve->thickness)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 void draw_curves(Camera2D camera, Mode mode, Curve_array *curves) {
   assert(curves);
 
@@ -113,4 +111,17 @@ void draw_curves(Camera2D camera, Mode mode, Curve_array *curves) {
     }
   }
   Curve_array_shrink_to_fit(curves);
+}
+
+void move_curve(Vector2 mouse_delta, Curve *curve) {
+  assert(curve);
+  
+  for(size_t i = 0; i < curve->points.size; ++i) {
+    curve->points.items[i] = Vector2Add(curve->points.items[i], mouse_delta);
+  }
+
+  curve->min_x += mouse_delta.x;
+  curve->min_y += mouse_delta.y;
+  curve->max_x += mouse_delta.x;
+  curve->max_y += mouse_delta.y;
 }

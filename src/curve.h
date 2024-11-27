@@ -16,6 +16,7 @@ typedef struct {
   float min_y;
   float max_y;
   bool is_selected;
+  bool is_moved;
 } Curve;
 
 #define ELEM_TYPE Curve
@@ -24,5 +25,6 @@ typedef struct {
 
 void draw_curves(Camera2D camera, Mode mode, Curve_array *curves);
 bool curve_is_mouse_over(Vector2 mouse_pos, const Curve *curve);
+void move_curve(Vector2 mouse_delta, Curve *curve);
 
 #endif //CURVE_INCLUDED_

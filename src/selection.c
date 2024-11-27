@@ -19,7 +19,7 @@ void update_selection(Camera2D camera, Curve_array *curves) {
     return;
   }
 
-  if(!IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+  if(!IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
     return;
   }
 

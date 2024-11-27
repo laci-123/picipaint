@@ -3,6 +3,7 @@
 #include "toolbar.h"
 #include "mode.h"
 #include "selection.h"
+#include "moving.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -38,6 +39,7 @@ int main(void) {
 
     if(mode == SELECT) {
         update_selection(camera, &curves);
+        update_movement(camera, &curves);
     }
     
     BeginDrawing();
