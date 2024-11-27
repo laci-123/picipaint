@@ -11,6 +11,7 @@ int main(void) {
   SetWindowState(FLAG_MSAA_4X_HINT);
   InitWindow(800, 450, "PiciPaint");
   SetWindowState(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
+  SetExitKey(KEY_NULL);
 
   Curve_array curves = {0};
   Camera2D camera = { .zoom = 1.0f };

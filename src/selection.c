@@ -4,6 +4,21 @@
 
 void update_selection(Camera2D camera, Curve_array *curves) {
   assert(curves);
+
+  if(IsKeyPressed(KEY_ESCAPE)) {
+    for(size_t i = 0; i < curves->size; ++i) {
+      curves->items[i].is_selected = false;
+    }
+    return;
+  }
+
+  if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_A)) {
+    for(size_t i = 0; i < curves->size; ++i) {
+      curves->items[i].is_selected = true;
+    }
+    return;
+  }
+
   if(!IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
     return;
   }
