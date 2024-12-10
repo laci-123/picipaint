@@ -24,6 +24,14 @@ void Selection_update(Camera2D camera, Curve_array *curves) {
   }
 
   Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
+  bool any_curve_is_under_mouse = false;
+  for(size_t i = 0; i < curves->size; ++i) {
+    if(Curve_is_under_mouse(mouse_pos, &curves->items[i])) {
+      any_curve_is_under_mouse = true;
+      break;
+    }
+  }
+
   bool is_shift_down = IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT);
   for(size_t i = 0; i < curves->size; ++i) {
     if(Curve_is_under_mouse(mouse_pos, &curves->items[i])) {
@@ -34,7 +42,7 @@ void Selection_update(Camera2D camera, Curve_array *curves) {
         curves->items[i].is_selected = true;
       }
     }
-    else if(!is_shift_down) {
+    else if(!any_curve_is_under_mouse) {
       curves->items[i].is_selected = false;
     }
   }
