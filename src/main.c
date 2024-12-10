@@ -1,5 +1,6 @@
 #include "raypack.h"
 #include "curve.h"
+#include "line.h"
 #include "toolbar.h"
 #include "mode.h"
 #include "selection.h"
@@ -15,6 +16,7 @@ int main(void) {
   SetExitKey(KEY_NULL);
 
   Curve_array curves = {0};
+  Line_array lines = {0};
   Camera2D camera = { .zoom = 1.0f };
   Mode mode = MODE_DRAW_CURVES;
 
@@ -46,6 +48,7 @@ int main(void) {
       ClearBackground(BLACK);
       BeginMode2D(camera);
         Curve_draw_all(camera, mode, &curves);
+        Line_draw_all(camera, mode, &lines);
       EndMode2D();
       Toolbar_draw(&mode);
     EndDrawing();

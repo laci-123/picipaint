@@ -66,16 +66,26 @@ void Toolbar_draw(Mode *mode) {
   DrawRectangleGradientV(0, 0,        width, height_1, ColorBrightness(base_color, 0.4f), ColorBrightness(base_color, 0.5f));
   DrawRectangleGradientV(0, height_1, width, height_2, ColorBrightness(base_color, 0.5f), base_color);
 
-  static Button button_select = (Button){ .caption = "select", .is_pressed = false };
-  static Button button_draw   = (Button){ .caption = "draw", .is_pressed = true };
+  static Button button_select      = (Button){ .caption = "select", .is_pressed = false };
+  static Button button_draw_curves = (Button){ .caption = "draw curve", .is_pressed = true };
+  static Button button_draw_lines  = (Button){ .caption = "draw line", .is_pressed = false };
+
   int x = draw_button(10, &button_select);
   if(button_select.is_pressed) {
-    button_draw.is_pressed = false;
+    button_draw_curves.is_pressed = false;
+    button_draw_lines.is_pressed = false;
     *mode = MODE_SELECT;
   }
-  draw_button(x + 10, &button_draw);
-  if(button_draw.is_pressed) {
+  x = draw_button(x + 10, &button_draw_curves);
+  if(button_draw_curves.is_pressed) {
     button_select.is_pressed = false;
+    button_draw_lines.is_pressed = false;
     *mode = MODE_DRAW_CURVES;
+  }
+  draw_button(x + 10, &button_draw_lines);
+  if(button_draw_lines.is_pressed) {
+    button_select.is_pressed = false;
+    button_draw_curves.is_pressed = false;
+    *mode = MODE_DRAW_LINES;
   }
 }
