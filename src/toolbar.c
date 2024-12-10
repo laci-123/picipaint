@@ -10,7 +10,7 @@ static const int   padding = 5;
 static const Color base_color = DARKBLUE;
 static const int font_size = 14;
 
-bool check_collision_point_toolbar(Vector2 point) {
+bool Toolbar_check_collision_point(Vector2 point) {
   const Rectangle rect = {
     .x = 0,
     .y = 0,
@@ -61,7 +61,7 @@ static int draw_button(int x, Button *button) {
   return x + width;
 }
 
-void draw_toolbar(Mode *mode) {
+void Toolbar_draw(Mode *mode) {
   const int width = GetScreenWidth();
   DrawRectangleGradientV(0, 0,        width, height_1, ColorBrightness(base_color, 0.4f), ColorBrightness(base_color, 0.5f));
   DrawRectangleGradientV(0, height_1, width, height_2, ColorBrightness(base_color, 0.5f), base_color);
@@ -71,11 +71,11 @@ void draw_toolbar(Mode *mode) {
   int x = draw_button(10, &button_select);
   if(button_select.is_pressed) {
     button_draw.is_pressed = false;
-    *mode = SELECT;
+    *mode = MODE_SELECT;
   }
   draw_button(x + 10, &button_draw);
   if(button_draw.is_pressed) {
     button_select.is_pressed = false;
-    *mode = DRAW_CURVES;
+    *mode = MODE_DRAW_CURVES;
   }
 }

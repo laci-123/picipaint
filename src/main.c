@@ -3,7 +3,7 @@
 #include "toolbar.h"
 #include "mode.h"
 #include "selection.h"
-#include "moving.h"
+#include "movement.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -16,7 +16,7 @@ int main(void) {
 
   Curve_array curves = {0};
   Camera2D camera = { .zoom = 1.0f };
-  Mode mode = DRAW_CURVES;
+  Mode mode = MODE_DRAW_CURVES;
 
   while(!WindowShouldClose()) {
     float mouse_wheel = GetMouseWheelMove();
@@ -37,17 +37,17 @@ int main(void) {
       camera.target = Vector2Subtract(camera.target, mouse_delta);
     }
 
-    if(mode == SELECT) {
-        update_selection(camera, &curves);
-        update_movement(camera, &curves);
+    if(mode == MODE_SELECT) {
+        Selection_update(camera, &curves);
+        Movement_update(camera, &curves);
     }
     
     BeginDrawing();
       ClearBackground(BLACK);
       BeginMode2D(camera);
-        draw_curves(camera, mode, &curves);
+        Curve_draw_all(camera, mode, &curves);
       EndMode2D();
-      draw_toolbar(&mode);
+      Toolbar_draw(&mode);
     EndDrawing();
   }
 

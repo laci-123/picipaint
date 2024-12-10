@@ -2,8 +2,8 @@
 #define MODE_INCLUDED_
 
 typedef enum {
-  SELECT,
-  DRAW_CURVES,
+  MODE_SELECT,
+  MODE_DRAW_CURVES,
 } Mode;
 
 #endif //MODE_INCLUDED_

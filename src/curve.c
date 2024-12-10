@@ -3,7 +3,7 @@
 #include <assert.h>
 
 
-static Rectangle selection_rect(const Curve *curve) {
+static Rectangle Curve_get_selection_rect(const Curve *curve) {
   return (Rectangle){
     .x = curve->min_x - curve->thickness,
     .y = curve->min_y - curve->thickness,
@@ -12,9 +12,9 @@ static Rectangle selection_rect(const Curve *curve) {
   };
 }
 
-static void draw_curve(const Curve *curve) {
+static void Curve_draw(const Curve *curve) {
   if(curve->is_selected) {
-    Rectangle rect = selection_rect(curve);
+    Rectangle rect = Curve_get_selection_rect(curve);
     DrawRectangleLinesEx(rect, 1.0f, WHITE);
   }
 
@@ -32,7 +32,7 @@ static void draw_curve(const Curve *curve) {
   }
 }
 
-static void draw_new_curve(Camera2D camera, Curve_array *curves) {
+static void Curve_draw_new(Camera2D camera, Curve_array *curves) {
   static bool pen_down = false;
   if(pen_down) {
     if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
@@ -61,7 +61,7 @@ static void draw_new_curve(Camera2D camera, Curve_array *curves) {
     }
   }
   else {
-    if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !check_collision_point_toolbar(GetMousePosition())) {
+    if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !Toolbar_check_collision_point(GetMousePosition())) {
       pen_down = true;
 
       Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
@@ -78,10 +78,10 @@ static void draw_new_curve(Camera2D camera, Curve_array *curves) {
   }
 }
 
-bool curve_is_mouse_over(Vector2 mouse_pos, const Curve *curve) {
+bool Curve_is_under_mouse(Vector2 mouse_pos, const Curve *curve) {
   assert(curve);
 
-  Rectangle rect = selection_rect(curve);
+  Rectangle rect = Curve_get_selection_rect(curve);
   if(CheckCollisionPointRec(mouse_pos, rect)) {
     for(size_t i = 0; i < curve->points.size; ++i) {
       if(CheckCollisionPointCircle(mouse_pos, curve->points.items[i], 2 * curve->thickness)) {
@@ -93,11 +93,11 @@ bool curve_is_mouse_over(Vector2 mouse_pos, const Curve *curve) {
   return false;
 }
 
-void draw_curves(Camera2D camera, Mode mode, Curve_array *curves) {
+void Curve_draw_all(Camera2D camera, Mode mode, Curve_array *curves) {
   assert(curves);
 
-  if(mode == DRAW_CURVES) {
-    draw_new_curve(camera, curves);
+  if(mode == MODE_DRAW_CURVES) {
+    Curve_draw_new(camera, curves);
   }
 
   bool is_delete_pressed = IsKeyPressed(KEY_DELETE);
@@ -107,13 +107,13 @@ void draw_curves(Camera2D camera, Mode mode, Curve_array *curves) {
       Vector2_array_free(&deleted.points);
     }
     else {
-        draw_curve(&curves->items[i]);
+        Curve_draw(&curves->items[i]);
     }
   }
   Curve_array_shrink_to_fit(curves);
 }
 
-void move_curve(Vector2 mouse_delta, Curve *curve) {
+void Curve_move(Vector2 mouse_delta, Curve *curve) {
   assert(curve);
   
   for(size_t i = 0; i < curve->points.size; ++i) {
