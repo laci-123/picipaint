@@ -16,11 +16,11 @@ void update_movement(Camera2D camera, Curve_array *curves) {
     }
     Vector2 mouse_delta = Vector2Scale(GetMouseDelta(), 1.0f / camera.zoom);
     for(size_t i = 0; i < curves->size; ++i) {
-      if(curves->items[i].is_selected && mouse_is_over_a_selected) {
+      if(curves->items[i].is_selected) {
         if(curves->items[i].is_moved) {
           move_curve(mouse_delta, &curves->items[i]);
         }
-        else {
+        else if(mouse_is_over_a_selected) {
           curves->items[i].is_moved = true;
         }
       }
