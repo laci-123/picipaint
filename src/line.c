@@ -55,6 +55,6 @@ bool Line_is_under_mouse(Vector2 mouse_pos, const Line *line) {
 void Line_move(Vector2 mouse_delta, Line *line) {
     assert(line);
 
-    Vector2Add(line->start, mouse_delta);
-    Vector2Add(line->end,   mouse_delta);
+    line->start = Vector2Add(line->start, mouse_delta);
+    line->end = Vector2Add(line->end,   mouse_delta);
 }

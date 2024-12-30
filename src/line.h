@@ -10,6 +10,7 @@ typedef struct {
     Color color;
     float thickness;
     bool is_selected;
+    bool is_moved;
 } Line;
 
 #define ELEM_TYPE Line

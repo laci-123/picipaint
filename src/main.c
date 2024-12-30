@@ -3,7 +3,7 @@
 #include "object.h"
 #include "mode.h"
 #include "selection.h"
-/* #include "movement.h" */
+#include "movement.h"
 #include "toolbar.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,7 +40,7 @@ int main(void) {
 
         if(mode == MODE_SELECT) {
             Selection_update(camera, &objects);
-            //Movement_update(camera, &curves);
+            Movement_update(camera, &objects);
         }
     
         BeginDrawing();
