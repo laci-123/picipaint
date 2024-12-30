@@ -11,81 +11,81 @@ static const Color base_color = DARKBLUE;
 static const int font_size = 14;
 
 bool Toolbar_check_collision_point(Vector2 point) {
-  const Rectangle rect = {
-    .x = 0,
-    .y = 0,
-    .width = GetScreenWidth(),
-    .height = toolbar_height,
-  };
-  return CheckCollisionPointRec(point, rect);
+    const Rectangle rect = {
+        .x = 0,
+        .y = 0,
+        .width = GetScreenWidth(),
+        .height = toolbar_height,
+    };
+    return CheckCollisionPointRec(point, rect);
 }
 
 typedef struct {
-  char *caption;
-  bool is_pressed;
+    char *caption;
+    bool is_pressed;
 } Button;
 
 static int draw_button(int x, Button *button) {
-  assert(button);
-  assert(button->caption);
+    assert(button);
+    assert(button->caption);
   
-  Color background_color = ColorBrightness(base_color, 0.4f);
-  const int width = MeasureText(button->caption, font_size) + 2 * padding;
-  const Rectangle rect = {
-    .x = x,
-    .y = padding,
-    .width = width,
-    .height = toolbar_height - 2 * padding,
-  };
-  Rectangle shaddow = {
-    .x = rect.x,
-    .y = rect.y,
-    .width = rect.width + 2,
-    .height = rect.height + 2,
-  };
-  if(button->is_pressed) {
-    shaddow.x -= 2;
-    shaddow.y -= 2;
-    background_color = ColorBrightness(base_color, 0.3f);
-  }
-  if(CheckCollisionPointRec(GetMousePosition(), rect)) {
-    if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-      button->is_pressed = !button->is_pressed;
+    Color background_color = ColorBrightness(base_color, 0.4f);
+    const int width = MeasureText(button->caption, font_size) + 2 * padding;
+    const Rectangle rect = {
+        .x = x,
+        .y = padding,
+        .width = width,
+        .height = toolbar_height - 2 * padding,
+    };
+    Rectangle shaddow = {
+        .x = rect.x,
+        .y = rect.y,
+        .width = rect.width + 2,
+        .height = rect.height + 2,
+    };
+    if(button->is_pressed) {
+        shaddow.x -= 2;
+        shaddow.y -= 2;
+        background_color = ColorBrightness(base_color, 0.3f);
     }
-  }
-  DrawRectangleRec(shaddow, BLACK);
-  DrawRectangleRec(rect, background_color);
-  DrawRectangleLinesEx(rect, 1, BLACK);
-  DrawText(button->caption, x + padding, 1.5 * padding, font_size, BLACK);
+    if(CheckCollisionPointRec(GetMousePosition(), rect)) {
+        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            button->is_pressed = !button->is_pressed;
+        }
+    }
+    DrawRectangleRec(shaddow, BLACK);
+    DrawRectangleRec(rect, background_color);
+    DrawRectangleLinesEx(rect, 1, BLACK);
+    DrawText(button->caption, x + padding, 1.5 * padding, font_size, BLACK);
 
-  return x + width;
+    return x + width;
 }
 
 void Toolbar_draw(Mode *mode) {
-  const int width = GetScreenWidth();
-  DrawRectangleGradientV(0, 0,        width, height_1, ColorBrightness(base_color, 0.4f), ColorBrightness(base_color, 0.5f));
-  DrawRectangleGradientV(0, height_1, width, height_2, ColorBrightness(base_color, 0.5f), base_color);
+    const int width = GetScreenWidth();
+    DrawRectangleGradientV(0, 0,        width, height_1, ColorBrightness(base_color, 0.4f), ColorBrightness(base_color, 0.5f));
+    DrawRectangleGradientV(0, height_1, width, height_2, ColorBrightness(base_color, 0.5f), base_color);
 
-  static Button button_select      = (Button){ .caption = "select", .is_pressed = false };
-  static Button button_draw_curves = (Button){ .caption = "draw curve", .is_pressed = true };
-  static Button button_draw_lines  = (Button){ .caption = "draw line", .is_pressed = false };
+    static Button button_select      = (Button){ .caption = "select", .is_pressed = false };
+    static Button button_draw_curves = (Button){ .caption = "draw curve", .is_pressed = true };
+    static Button button_draw_lines  = (Button){ .caption = "draw line", .is_pressed = false };
 
-  int x = draw_button(10, &button_select);
-  if(button_select.is_pressed) {
-    button_draw_curves.is_pressed = false;
-    button_draw_lines.is_pressed = false;
-    *mode = MODE_SELECT;
-  }
-  x = draw_button(x + 10, &button_draw_curves);
-  if(button_draw_curves.is_pressed) {
-    button_select.is_pressed = false;
-    button_draw_lines.is_pressed = false;
-    *mode = MODE_DRAW_CURVES;
-  }
-  draw_button(x + 10, &button_draw_lines);
-  if(button_draw_lines.is_pressed) {
-    button_select.is_pressed = false;
-    button_draw_curves.is_pressed = false;
-    *mode = MODE_DRAW_LINES;
-  }
+    int x = draw_button(10, &button_select);
+    if(button_select.is_pressed) {
+        button_draw_curves.is_pressed = false;
+        button_draw_lines.is_pressed = false;
+        *mode = MODE_SELECT;
+    }
+    x = draw_button(x + 10, &button_draw_curves);
+    if(button_draw_curves.is_pressed) {
+        button_select.is_pressed = false;
+        button_draw_lines.is_pressed = false;
+        *mode = MODE_DRAW_CURVES;
+    }
+    draw_button(x + 10, &button_draw_lines);
+    if(button_draw_lines.is_pressed) {
+        button_select.is_pressed = false;
+        button_draw_curves.is_pressed = false;
+        *mode = MODE_DRAW_LINES;
+    }
 }

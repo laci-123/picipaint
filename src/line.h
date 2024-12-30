@@ -5,10 +5,10 @@
 #include "mode.h"
 
 typedef struct {
-  Vector2 start;
-  Vector2 end;
-  Color color;
-  float thickness;
+    Vector2 start;
+    Vector2 end;
+    Color color;
+    float thickness;
 } Line;
 
 #define ELEM_TYPE Line

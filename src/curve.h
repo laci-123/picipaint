@@ -8,15 +8,15 @@
 #undef ELEM_TYPE
 
 typedef struct {
-  Vector2_array points;
-  Color color;
-  float thickness;
-  float min_x;
-  float max_x;
-  float min_y;
-  float max_y;
-  bool is_selected;
-  bool is_moved;
+    Vector2_array points;
+    Color color;
+    float thickness;
+    float min_x;
+    float max_x;
+    float min_y;
+    float max_y;
+    bool is_selected;
+    bool is_moved;
 } Curve;
 
 #define ELEM_TYPE Curve
