@@ -32,6 +32,15 @@ static void Line_draw_new(Camera2D camera, Line_array *lines) {
 }
 
 static void Line_draw(const Line *line) {
+    if(line->is_selected) {
+        Rectangle rect = {
+            .x = fmin(line->start.x, line->end.x) - line->thickness,
+            .y = fmin(line->start.y, line->end.y) - line->thickness,
+            .width  = fabs(line->end.x - line->start.x) + 2 * line->thickness,
+            .height = fabs(line->end.y - line->start.y) + 2 * line->thickness,
+        };
+        DrawRectangleLinesEx(rect, 1.0f, WHITE);
+    }
     DrawLineEx(line->start, line->end, line->thickness, line->color);
 }
 

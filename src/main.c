@@ -1,10 +1,10 @@
 #include "raypack.h"
 #include "curve.h"
-#include "line.h"
-#include "toolbar.h"
+#include "object.h"
 #include "mode.h"
 #include "selection.h"
-#include "movement.h"
+/* #include "movement.h" */
+#include "toolbar.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,8 +15,7 @@ int main(void) {
     SetWindowState(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     SetExitKey(KEY_NULL);
 
-    Curve_array curves = {0};
-    Line_array lines = {0};
+    Object_array objects = {0};
     Camera2D camera = { .zoom = 1.0f };
     Mode mode = MODE_DRAW_CURVES;
 
@@ -40,21 +39,20 @@ int main(void) {
         }
 
         if(mode == MODE_SELECT) {
-            Selection_update(camera, &curves);
-            Movement_update(camera, &curves);
+            Selection_update(camera, &objects);
+            //Movement_update(camera, &curves);
         }
     
         BeginDrawing();
-        ClearBackground(BLACK);
-        BeginMode2D(camera);
-        Curve_draw_all(camera, mode, &curves);
-        Line_draw_all(camera, mode, &lines);
-        EndMode2D();
-        Toolbar_draw(&mode);
+            ClearBackground(BLACK);
+            BeginMode2D(camera);
+                Object_draw_all(camera, mode, &objects);
+            EndMode2D();
+            Toolbar_draw(&mode);
         EndDrawing();
     }
 
-    Curve_array_free(&curves);
+    Object_array_free(&objects);
     CloseWindow();
 
     return 0;

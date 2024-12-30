@@ -9,6 +9,7 @@ typedef struct {
     Vector2 end;
     Color color;
     float thickness;
+    bool is_selected;
 } Line;
 
 #define ELEM_TYPE Line
