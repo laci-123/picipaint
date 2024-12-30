@@ -23,7 +23,16 @@ typedef struct {
 #include "array.h"
 #undef ELEM_TYPE
 
-void Curve_draw_all(Camera2D camera, Mode mode, Curve_array *curves);
+typedef struct {
+    Color color;
+    float thickness;
+    Curve new_curve;
+    bool pen_is_down;
+    bool finished;
+} CurveTool;
+
+void Curve_draw(const Curve *curve);
+void Curve_draw_new(Camera2D camera, CurveTool *tool);
 bool Curve_is_under_mouse(Vector2 mouse_pos, const Curve *curve);
 void Curve_move(Vector2 mouse_delta, Curve *curve);
 

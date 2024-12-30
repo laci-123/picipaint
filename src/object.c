@@ -47,40 +47,57 @@ bool Object_is_under_mouse(Vector2 mouse_pos, const Object *object) {
 
 
 void Object_draw_all(Camera2D camera, Mode mode, Object_array *objects) {
-    Curve_array curves = {0};
-    Line_array lines = {0};
+    assert(objects);
+
+    static CurveTool curve_tool = {
+        .color = BLUE,
+        .thickness = 5.0f,
+    };
+    static LineTool  line_tool  = {
+        .color = GREEN,
+        .thickness = 1.0f,
+    };
+
+    switch(mode) {
+    case MODE_DRAW_CURVES: {
+        Curve_draw_new(camera, &curve_tool);
+        if(curve_tool.finished) {
+            Object_array_push_back(objects, (Object) {
+                .kind = OBJECT_KIND_CURVE,
+                .as.curve = curve_tool.new_curve,
+            });
+            curve_tool.finished = false;
+        }
+        break;
+    }
+    case MODE_DRAW_LINES: {
+        Line_draw_new(camera, &line_tool);
+        if(line_tool.finished) {
+            Object_array_push_back(objects, (Object) {
+                .kind = OBJECT_KIND_LINE,
+                .as.line = line_tool.new_line,
+            });
+            line_tool.finished = false;
+        }
+        break;
+    }
+    case MODE_SELECT:
+        // do nothing
+        break;
+    default:
+        assert(false && "unreachable");
+    }
 
     for(size_t i = 0; i < objects->size; ++i) {
-        switch (objects->items[i].kind) {
+        switch(objects->items[i].kind) {
         case OBJECT_KIND_CURVE:
-            Curve_array_push_back(&curves, objects->items[i].as.curve);
+            Curve_draw(&objects->items[i].as.curve);
             break;
         case OBJECT_KIND_LINE:
-            Line_array_push_back(&lines, objects->items[i].as.line);
+            Line_draw(&objects->items[i].as.line);
             break;
         default:
             assert(false && "unreachable");
         }
     }
-
-    Curve_draw_all(camera, mode, &curves);
-    Line_draw_all(camera, mode, &lines);
-
-    objects->size = 0;
-    for(size_t i = 0; i < curves.size; ++i) {
-        Object object;
-        object.kind = OBJECT_KIND_CURVE;
-        object.as.curve = curves.items[i];
-        Object_array_push_back(objects, object);
-    }
-    for(size_t i = 0; i < lines.size; ++i) {
-        Object object;
-        object.kind = OBJECT_KIND_LINE;
-        object.as.line = lines.items[i];
-        Object_array_push_back(objects, object);
-    }
-
-    Line_array_free(&lines);
-    Curve_array_free(&curves);
-    Object_array_shrink_to_fit(objects);
 }
