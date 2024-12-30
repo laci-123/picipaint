@@ -3,6 +3,7 @@
 
 #include "curve.h"
 #include "line.h"
+#include "tool.h"
 #include "raypack.h"
 
 
@@ -32,6 +33,6 @@ bool Object_is_under_mouse(Vector2 mouse_pos, const Object *object);
 #include "array.h"
 #undef ELEM_TYPE
 
-void Object_draw_all(Camera2D camera, Mode mode, Object_array *objects);
+void Object_draw_all(Camera2D camera, Tool *tool, Object_array *objects);
 
 #endif //OBJECT_INCLUDED_

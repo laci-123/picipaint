@@ -61,7 +61,7 @@ static int draw_button(int x, Button *button) {
     return x + width;
 }
 
-void Toolbar_draw(Mode *mode) {
+void Toolbar_draw(Tool *tool) {
     const int width = GetScreenWidth();
     DrawRectangleGradientV(0, 0,        width, height_1, ColorBrightness(base_color, 0.4f), ColorBrightness(base_color, 0.5f));
     DrawRectangleGradientV(0, height_1, width, height_2, ColorBrightness(base_color, 0.5f), base_color);
@@ -74,18 +74,18 @@ void Toolbar_draw(Mode *mode) {
     if(button_select.is_pressed) {
         button_draw_curves.is_pressed = false;
         button_draw_lines.is_pressed = false;
-        *mode = MODE_SELECT;
+        tool->kind = TOOL_KIND_SELECT;
     }
     x = draw_button(x + 10, &button_draw_curves);
     if(button_draw_curves.is_pressed) {
         button_select.is_pressed = false;
         button_draw_lines.is_pressed = false;
-        *mode = MODE_DRAW_CURVES;
+        tool->kind = TOOL_KIND_CURVE;
     }
     draw_button(x + 10, &button_draw_lines);
     if(button_draw_lines.is_pressed) {
         button_select.is_pressed = false;
         button_draw_curves.is_pressed = false;
-        *mode = MODE_DRAW_LINES;
+        tool->kind = TOOL_KIND_LINE;
     }
 }

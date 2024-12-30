@@ -2,7 +2,6 @@
 #define CURVE_INCLUDED_
 
 #include "raypack.h"
-#include "mode.h"
 #define ELEM_TYPE Vector2
 #include "array.h"
 #undef ELEM_TYPE

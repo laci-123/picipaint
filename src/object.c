@@ -92,42 +92,33 @@ bool Object_is_under_mouse(Vector2 mouse_pos, const Object *object) {
 }
 
 
-void Object_draw_all(Camera2D camera, Mode mode, Object_array *objects) {
+void Object_draw_all(Camera2D camera, Tool *tool, Object_array *objects) {
     assert(objects);
 
-    static CurveTool curve_tool = {
-        .color = BLUE,
-        .thickness = 5.0f,
-    };
-    static LineTool  line_tool  = {
-        .color = GREEN,
-        .thickness = 1.0f,
-    };
-
-    switch(mode) {
-    case MODE_DRAW_CURVES: {
-        Curve_draw_new(camera, &curve_tool);
-        if(curve_tool.finished) {
+    switch(tool->kind) {
+    case TOOL_KIND_CURVE: {
+        Curve_draw_new(camera, &tool->as.curve_tool);
+        if(tool->as.curve_tool.finished) {
             Object_array_push_back(objects, (Object) {
                 .kind = OBJECT_KIND_CURVE,
-                .as.curve = curve_tool.new_curve,
+                .as.curve = tool->as.curve_tool.new_curve,
             });
-            curve_tool.finished = false;
+            tool->as.curve_tool.finished = false;
         }
         break;
     }
-    case MODE_DRAW_LINES: {
-        Line_draw_new(camera, &line_tool);
-        if(line_tool.finished) {
+    case TOOL_KIND_LINE: {
+        Line_draw_new(camera, &tool->as.line_tool);
+        if(tool->as.line_tool.finished) {
             Object_array_push_back(objects, (Object) {
                 .kind = OBJECT_KIND_LINE,
-                .as.line = line_tool.new_line,
+                .as.line = tool->as.line_tool.new_line,
             });
-            line_tool.finished = false;
+            tool->as.line_tool.finished = false;
         }
         break;
     }
-    case MODE_SELECT:
+    case TOOL_KIND_SELECT:
         // do nothing
         break;
     default:

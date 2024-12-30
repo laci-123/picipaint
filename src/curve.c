@@ -34,7 +34,7 @@ void Curve_draw(const Curve *curve) {
 
 void Curve_draw_new(Camera2D camera, CurveTool *tool) {
     assert(tool);
-    
+
     if(tool->pen_is_down) {
         if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
@@ -68,8 +68,10 @@ void Curve_draw_new(Camera2D camera, CurveTool *tool) {
             Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
             tool->new_curve = (Curve){
                     .points = {0},
-                    .color = tool->color,
-                    .thickness = tool->thickness,
+                    /* .color = tool->color, */
+                    /* .thickness = tool->thickness, */
+                    .color = WHITE,
+                    .thickness = 3.0f,
                     .min_x = mouse_pos.x,
                     .max_x = mouse_pos.x,
                     .min_y = mouse_pos.y,

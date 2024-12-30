@@ -1,10 +1,10 @@
 #include "raypack.h"
 #include "curve.h"
 #include "object.h"
-#include "mode.h"
 #include "selection.h"
 #include "movement.h"
 #include "toolbar.h"
+#include "tool.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -17,7 +17,7 @@ int main(void) {
 
     Object_array objects = {0};
     Camera2D camera = { .zoom = 1.0f };
-    Mode mode = MODE_DRAW_CURVES;
+    Tool tool = { .kind = TOOL_KIND_CURVE };
 
     while(!WindowShouldClose()) {
         float mouse_wheel = GetMouseWheelMove();
@@ -38,7 +38,7 @@ int main(void) {
             camera.target = Vector2Subtract(camera.target, mouse_delta);
         }
 
-        if(mode == MODE_SELECT) {
+        if(tool.kind == TOOL_KIND_SELECT) {
             Selection_update(camera, &objects);
             Movement_update(camera, &objects);
         }
@@ -46,9 +46,9 @@ int main(void) {
         BeginDrawing();
             ClearBackground(BLACK);
             BeginMode2D(camera);
-                Object_draw_all(camera, mode, &objects);
+                Object_draw_all(camera, &tool, &objects);
             EndMode2D();
-            Toolbar_draw(&mode);
+            Toolbar_draw(&tool);
         EndDrawing();
     }
 

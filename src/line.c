@@ -22,8 +22,10 @@ void Line_draw_new(Camera2D camera, LineTool *tool) {
             tool->new_line = (Line){
                 .start = mouse_pos,
                 .end = mouse_pos,
-                .color = tool->color,
-                .thickness = tool->thickness,
+                /* .color = tool->color, */
+                /* .thickness = tool->thickness, */
+                .color = GREEN,
+                .thickness = 3.0f,
             };
         }
     }

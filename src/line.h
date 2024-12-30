@@ -2,7 +2,6 @@
 #define LINE_INCLUDED_
 
 #include "raypack.h"
-#include "mode.h"
 
 typedef struct {
     Vector2 start;
