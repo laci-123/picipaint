@@ -28,6 +28,7 @@ void Object_set_moving(Object *object, bool value);
 bool Object_is_selected(const Object *object);
 void Object_set_selection(Object *object, bool value);
 bool Object_is_under_mouse(Vector2 mouse_pos, const Object *object);
+void Object_free(Object *object);
 
 #define ELEM_TYPE Object
 #include "array.h"

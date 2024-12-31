@@ -52,6 +52,9 @@ int main(void) {
         EndDrawing();
     }
 
+    for(size_t i = 0; i < objects.size; ++i) {
+        Object_free(&objects.items[i]);
+    }
     Object_array_free(&objects);
     CloseWindow();
 

@@ -138,3 +138,17 @@ void Object_draw_all(Camera2D camera, Tool *tool, Object_array *objects) {
         }
     }
 }
+
+
+void Object_free(Object *object) {
+    switch (object->kind) {
+    case OBJECT_KIND_CURVE:
+        Vector2_array_free(&object->as.curve.points);
+        break;
+    case OBJECT_KIND_LINE:
+        // do nothing
+        break;
+    default:
+        assert(false && "unreachable");
+    }
+}
