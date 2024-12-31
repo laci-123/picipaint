@@ -28,6 +28,7 @@ int main(void) {
             .thickness = 3.0f,
         },
     };
+    Toolbar toolbar = {0};
 
     while(!WindowShouldClose()) {
         float mouse_wheel = GetMouseWheelMove();
@@ -58,7 +59,7 @@ int main(void) {
             BeginMode2D(camera);
                 Object_draw_all(camera, &tool, &objects);
             EndMode2D();
-            Toolbar_draw(&tool);
+            Toolbar_draw(&toolbar, &tool);
         EndDrawing();
     }
 

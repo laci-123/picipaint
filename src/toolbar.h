@@ -4,7 +4,11 @@
 #include "raypack.h"
 #include "tool.h"
 
-void Toolbar_draw(Tool *tool);
+typedef struct {
+    int x;
+} Toolbar;
+
+void Toolbar_draw(Toolbar *toolbar, Tool *tool);
 bool Toolbar_check_collision_point(Vector2 point);
 
 #endif //TOOLBAR_INCLUDED_

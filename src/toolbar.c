@@ -27,14 +27,15 @@ typedef struct {
     bool is_clicked;
 } Button;
 
-static int draw_button(int x, Button *button) {
+static void draw_button(Toolbar *toolbar, Button *button) {
+    assert(toolbar);
     assert(button);
     assert(button->caption);
   
     Color background_color = ColorBrightness(base_color, 0.4f);
     const int width = MeasureText(button->caption, font_size) + 2 * padding;
     const Rectangle rect = {
-        .x = x,
+        .x = toolbar->x,
         .y = padding,
         .width = width,
         .height = toolbar_height - 2 * padding,
@@ -59,9 +60,9 @@ static int draw_button(int x, Button *button) {
     DrawRectangleRec(shaddow, BLACK);
     DrawRectangleRec(rect, background_color);
     DrawRectangleLinesEx(rect, 1, BLACK);
-    DrawText(button->caption, x + padding, 1.5 * padding, font_size, BLACK);
+    DrawText(button->caption, toolbar->x + padding, 1.5 * padding, font_size, BLACK);
 
-    return x + width;
+    toolbar->x += width + 10;
 }
 
 static void draw_tooltip(const char *text) {
@@ -73,13 +74,14 @@ static void draw_tooltip(const char *text) {
     DrawText(text, position.x + 2, position.y, font_size, BLACK);
 }
 
-static void draw_thickness_selector(int x, int width, float max_thickness, Tool *tool) {
+static void draw_thickness_selector(Toolbar *toolbar, int width, float max_thickness, Tool *tool) {
+    assert(toolbar);
     assert(tool);
 
     float new_p = -1;
     Vector2 mouse_pos = GetMousePosition();
-    if(CheckCollisionPointRec(mouse_pos, (Rectangle){ .x = x, .y = padding, .width = width, .height = toolbar_height - 2 * padding })) {
-        float value_under_mouse = max_thickness * (float)(mouse_pos.x - x) / (float)width;
+    if(CheckCollisionPointRec(mouse_pos, (Rectangle){ .x = toolbar->x, .y = padding, .width = width, .height = toolbar_height - 2 * padding })) {
+        float value_under_mouse = max_thickness * (float)(mouse_pos.x - toolbar->x) / (float)width;
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             new_p = value_under_mouse;
         }
@@ -118,19 +120,20 @@ static void draw_thickness_selector(int x, int width, float max_thickness, Tool 
         enabled = false;
     }
 
-    DrawTriangle((Vector2){ .x = x, .y = toolbar_height / 2 },
-                 (Vector2){ .x = x + width, .y = toolbar_height - padding },
-                 (Vector2){ .x = x + width, .y = padding },
+    DrawTriangle((Vector2){ .x = toolbar->x, .y = toolbar_height / 2 },
+                 (Vector2){ .x = toolbar->x + width, .y = toolbar_height - padding },
+                 (Vector2){ .x = toolbar->x + width, .y = padding },
                  enabled ? BLACK : GRAY);
 
-    DrawRectangleRec((Rectangle){ .x = x + p * width, .y = padding, .width = 3, .height = toolbar_height - 2 * padding },
+    DrawRectangleRec((Rectangle){ .x = toolbar->x + p * width, .y = padding, .width = 3, .height = toolbar_height - 2 * padding },
                      enabled ? WHITE : GRAY);
 
+    toolbar->x += width;
 }
 
-static int draw_color_selector(int x, Tool *tool) {
+static void draw_color_selector(Toolbar *toolbar, Tool *tool) {
     int side_length = toolbar_height - 2 * padding;
-    Rectangle rectangle = { .x = x, .y = padding, .width = side_length, .height = side_length };
+    Rectangle rectangle = { .x = toolbar->x, .y = padding, .width = side_length, .height = side_length };
     Color color;
     Color border_color;
     switch(tool->active) {
@@ -148,10 +151,12 @@ static int draw_color_selector(int x, Tool *tool) {
     }
     DrawRectangleRec(rectangle, color);
     DrawRectangleLinesEx(rectangle, 2, border_color);
-    return x + side_length;
+    toolbar->x += side_length + 10;
 }
 
-void Toolbar_draw(Tool *tool) {
+void Toolbar_draw(Toolbar *toolbar, Tool *tool) {
+    toolbar->x = 10;
+
     const int width = GetScreenWidth();
     DrawRectangleGradientV(0, 0,        width, height_1, ColorBrightness(base_color, 0.4f), ColorBrightness(base_color, 0.5f));
     DrawRectangleGradientV(0, height_1, width, height_2, ColorBrightness(base_color, 0.5f), base_color);
@@ -160,19 +165,19 @@ void Toolbar_draw(Tool *tool) {
     Button button_draw_curves = (Button){ .caption = "draw curve", .is_down = (tool->active == TOOL_KIND_CURVE) };
     Button button_draw_lines  = (Button){ .caption = "draw line",  .is_down = (tool->active == TOOL_KIND_LINE) };
 
-    int x = draw_button(10, &button_select);
+    draw_button(toolbar, &button_select);
     if(button_select.is_clicked) {
         tool->active = TOOL_KIND_SELECT;
     }
-    x = draw_button(x + 10, &button_draw_curves);
+    draw_button(toolbar, &button_draw_curves);
     if(button_draw_curves.is_clicked) {
         tool->active = TOOL_KIND_CURVE;
     }
-    x = draw_button(x + 10, &button_draw_lines);
+    draw_button(toolbar, &button_draw_lines);
     if(button_draw_lines.is_clicked) {
         tool->active = TOOL_KIND_LINE;
     }
 
-    x = draw_color_selector(x + 10, tool);
-    draw_thickness_selector(x + 10, 100, 10.0f, tool);
+    draw_color_selector(toolbar, tool);
+    draw_thickness_selector(toolbar, 100, 10.0f, tool);
 }
