@@ -128,6 +128,29 @@ static void draw_thickness_selector(int x, int width, float max_thickness, Tool 
 
 }
 
+static int draw_color_selector(int x, Tool *tool) {
+    int side_length = toolbar_height - 2 * padding;
+    Rectangle rectangle = { .x = x, .y = padding, .width = side_length, .height = side_length };
+    Color color;
+    Color border_color;
+    switch(tool->active) {
+    case TOOL_KIND_CURVE:
+        color = tool->get.curve_tool.color;
+        border_color = BLACK;
+        break;
+    case TOOL_KIND_LINE:
+        color = tool->get.line_tool.color;
+        border_color = BLACK;
+        break;
+    default:
+        color = GRAY;
+        border_color = GRAY;
+    }
+    DrawRectangleRec(rectangle, color);
+    DrawRectangleLinesEx(rectangle, 2, border_color);
+    return x + side_length;
+}
+
 void Toolbar_draw(Tool *tool) {
     const int width = GetScreenWidth();
     DrawRectangleGradientV(0, 0,        width, height_1, ColorBrightness(base_color, 0.4f), ColorBrightness(base_color, 0.5f));
@@ -150,5 +173,6 @@ void Toolbar_draw(Tool *tool) {
         tool->active = TOOL_KIND_LINE;
     }
 
+    x = draw_color_selector(x + 10, tool);
     draw_thickness_selector(x + 10, 100, 10.0f, tool);
 }
