@@ -1,5 +1,6 @@
 #include "toolbar.h"
 #include "assert.h"
+#include <stdio.h>
 
 
 static const int   toolbar_height = 30;
@@ -63,14 +64,29 @@ static int draw_button(int x, Button *button) {
     return x + width;
 }
 
+static void draw_tooltip(const char *text) {
+    assert(text);
+
+    Vector2 position = Vector2Add(GetMousePosition(), (Vector2){ .x = 20, .y = 20 });
+    int width = MeasureText(text, font_size);
+    DrawRectangleRec((Rectangle){ .x = position.x, .y = position.y, .width = width + 4, .height = font_size }, WHITE);
+    DrawText(text, position.x + 2, position.y, font_size, BLACK);
+}
+
 static void draw_thickness_selector(int x, int width, float max_thickness, Tool *tool) {
     assert(tool);
 
     float new_p = -1;
     Vector2 mouse_pos = GetMousePosition();
     if(CheckCollisionPointRec(mouse_pos, (Rectangle){ .x = x, .y = padding, .width = width, .height = toolbar_height - 2 * padding })) {
+        float value_under_mouse = max_thickness * (float)(mouse_pos.x - x) / (float)width;
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            new_p = max_thickness * (float)(mouse_pos.x - x) / (float)width;
+            new_p = value_under_mouse;
+        }
+        else {
+            char text[32];
+            sprintf(text, "thickness: %.1f", value_under_mouse);
+            draw_tooltip(text);
         }
     }
 
