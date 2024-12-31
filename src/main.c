@@ -2,7 +2,6 @@
 #include "curve.h"
 #include "object.h"
 #include "selection.h"
-#include "movement.h"
 #include "toolbar.h"
 #include "tool.h"
 #include <stdio.h>
@@ -51,7 +50,6 @@ int main(void) {
 
         if(tool.active == TOOL_KIND_SELECT) {
             Selection_update(camera, &objects);
-            Movement_update(camera, &objects);
         }
     
         BeginDrawing();
