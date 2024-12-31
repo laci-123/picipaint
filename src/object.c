@@ -95,26 +95,26 @@ bool Object_is_under_mouse(Vector2 mouse_pos, const Object *object) {
 void Object_draw_all(Camera2D camera, Tool *tool, Object_array *objects) {
     assert(objects);
 
-    switch(tool->kind) {
+    switch(tool->active) {
     case TOOL_KIND_CURVE: {
-        Curve_draw_new(camera, &tool->as.curve_tool);
-        if(tool->as.curve_tool.finished) {
+        Curve_draw_new(camera, &tool->get.curve_tool);
+        if(tool->get.curve_tool.finished) {
             Object_array_push_back(objects, (Object) {
                 .kind = OBJECT_KIND_CURVE,
-                .as.curve = tool->as.curve_tool.new_curve,
+                .as.curve = tool->get.curve_tool.new_curve,
             });
-            tool->as.curve_tool.finished = false;
+            tool->get.curve_tool.finished = false;
         }
         break;
     }
     case TOOL_KIND_LINE: {
-        Line_draw_new(camera, &tool->as.line_tool);
-        if(tool->as.line_tool.finished) {
+        Line_draw_new(camera, &tool->get.line_tool);
+        if(tool->get.line_tool.finished) {
             Object_array_push_back(objects, (Object) {
                 .kind = OBJECT_KIND_LINE,
-                .as.line = tool->as.line_tool.new_line,
+                .as.line = tool->get.line_tool.new_line,
             });
-            tool->as.line_tool.finished = false;
+            tool->get.line_tool.finished = false;
         }
         break;
     }

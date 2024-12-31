@@ -17,7 +17,17 @@ int main(void) {
 
     Object_array objects = {0};
     Camera2D camera = { .zoom = 1.0f };
-    Tool tool = { .kind = TOOL_KIND_CURVE };
+    Tool tool = {
+        .active = TOOL_KIND_CURVE,
+        .get.curve_tool = (CurveTool) {
+            .color = BLUE,
+            .thickness = 5.0f,
+        },
+        .get.line_tool = (LineTool) {
+            .color = GREEN,
+            .thickness = 3.0f,
+        },
+    };
 
     while(!WindowShouldClose()) {
         float mouse_wheel = GetMouseWheelMove();
@@ -38,7 +48,7 @@ int main(void) {
             camera.target = Vector2Subtract(camera.target, mouse_delta);
         }
 
-        if(tool.kind == TOOL_KIND_SELECT) {
+        if(tool.active == TOOL_KIND_SELECT) {
             Selection_update(camera, &objects);
             Movement_update(camera, &objects);
         }

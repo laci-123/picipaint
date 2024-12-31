@@ -68,10 +68,8 @@ void Curve_draw_new(Camera2D camera, CurveTool *tool) {
             Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
             tool->new_curve = (Curve){
                     .points = {0},
-                    /* .color = tool->color, */
-                    /* .thickness = tool->thickness, */
-                    .color = WHITE,
-                    .thickness = 3.0f,
+                    .color = tool->color,
+                    .thickness = tool->thickness,
                     .min_x = mouse_pos.x,
                     .max_x = mouse_pos.x,
                     .min_y = mouse_pos.y,

@@ -22,7 +22,8 @@ bool Toolbar_check_collision_point(Vector2 point) {
 
 typedef struct {
     char *caption;
-    bool is_pressed;
+    bool is_down;
+    bool is_clicked;
 } Button;
 
 static int draw_button(int x, Button *button) {
@@ -43,14 +44,15 @@ static int draw_button(int x, Button *button) {
         .width = rect.width + 2,
         .height = rect.height + 2,
     };
-    if(button->is_pressed) {
+    if(button->is_down) {
         shaddow.x -= 2;
         shaddow.y -= 2;
         background_color = ColorBrightness(base_color, 0.3f);
     }
     if(CheckCollisionPointRec(GetMousePosition(), rect)) {
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            button->is_pressed = !button->is_pressed;
+            button->is_down = true;
+            button->is_clicked = true;
         }
     }
     DrawRectangleRec(shaddow, BLACK);
@@ -66,26 +68,20 @@ void Toolbar_draw(Tool *tool) {
     DrawRectangleGradientV(0, 0,        width, height_1, ColorBrightness(base_color, 0.4f), ColorBrightness(base_color, 0.5f));
     DrawRectangleGradientV(0, height_1, width, height_2, ColorBrightness(base_color, 0.5f), base_color);
 
-    static Button button_select      = (Button){ .caption = "select", .is_pressed = false };
-    static Button button_draw_curves = (Button){ .caption = "draw curve", .is_pressed = true };
-    static Button button_draw_lines  = (Button){ .caption = "draw line", .is_pressed = false };
+    Button button_select      = (Button){ .caption = "select",     .is_down = (tool->active == TOOL_KIND_SELECT) };
+    Button button_draw_curves = (Button){ .caption = "draw curve", .is_down = (tool->active == TOOL_KIND_CURVE) };
+    Button button_draw_lines  = (Button){ .caption = "draw line",  .is_down = (tool->active == TOOL_KIND_LINE) };
 
     int x = draw_button(10, &button_select);
-    if(button_select.is_pressed) {
-        button_draw_curves.is_pressed = false;
-        button_draw_lines.is_pressed = false;
-        tool->kind = TOOL_KIND_SELECT;
+    if(button_select.is_clicked) {
+        tool->active = TOOL_KIND_SELECT;
     }
     x = draw_button(x + 10, &button_draw_curves);
-    if(button_draw_curves.is_pressed) {
-        button_select.is_pressed = false;
-        button_draw_lines.is_pressed = false;
-        tool->kind = TOOL_KIND_CURVE;
+    if(button_draw_curves.is_clicked) {
+        tool->active = TOOL_KIND_CURVE;
     }
     draw_button(x + 10, &button_draw_lines);
-    if(button_draw_lines.is_pressed) {
-        button_select.is_pressed = false;
-        button_draw_curves.is_pressed = false;
-        tool->kind = TOOL_KIND_LINE;
+    if(button_draw_lines.is_clicked) {
+        tool->active = TOOL_KIND_LINE;
     }
 }

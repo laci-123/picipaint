@@ -11,11 +11,11 @@ typedef enum {
 } ToolKind;
 
 typedef struct {
-    union {
+    struct {
         CurveTool curve_tool;
         LineTool line_tool;
-    } as;
-    ToolKind kind;
+    } get;
+    ToolKind active;
 } Tool;
 
 #endif //TOOL_INCLUDED_
