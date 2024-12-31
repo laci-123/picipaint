@@ -32,10 +32,24 @@ static void update_movement(Camera2D camera, Object_array *objects) {
 }
 
 
+static void update_deletion(Object_array *objects) {
+    if(IsKeyPressed(KEY_DELETE)) {
+        for(size_t i = 0; i < objects->size; ++i) {
+            if(Object_is_selected(&objects->items[i])) {
+                Object deleted = Object_array_delete(objects, i--); // array_delete messes with the indexes, be careful!
+                Object_free(&deleted);
+            }
+        }
+        Object_array_shrink_to_fit(objects);
+    }
+}
+
+
 void Selection_update(Camera2D camera, Object_array *objects) {
     assert(objects);
 
     update_movement(camera, objects);
+    update_deletion(objects);
 
     if(IsKeyPressed(KEY_ESCAPE)) {
         for(size_t i = 0; i < objects->size; ++i) {
