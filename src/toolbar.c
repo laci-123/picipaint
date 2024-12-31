@@ -180,6 +180,13 @@ static void draw_color_selector(Toolbar *toolbar, Tool *tool) {
         default:
             assert(false && "color selector is disabled");
         }
+
+        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
+           !CheckCollisionPointRec(GetMousePosition(), toolbar->color_palette.rectangle) &&
+           !CheckCollisionPointRec(GetMousePosition(), rectangle))
+        {
+            toolbar->color_palette.is_shown = false;
+        }
     }
 }
 
