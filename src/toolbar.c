@@ -1,5 +1,6 @@
 #include "toolbar.h"
-#include "assert.h"
+#include "color_palette.h"
+#include <assert.h>
 #include <stdio.h>
 
 
@@ -136,22 +137,50 @@ static void draw_color_selector(Toolbar *toolbar, Tool *tool) {
     Rectangle rectangle = { .x = toolbar->x, .y = padding, .width = side_length, .height = side_length };
     Color color;
     Color border_color;
+    bool enabled;
     switch(tool->active) {
     case TOOL_KIND_CURVE:
         color = tool->get.curve_tool.color;
         border_color = BLACK;
+        enabled = true;
         break;
     case TOOL_KIND_LINE:
         color = tool->get.line_tool.color;
         border_color = BLACK;
+        enabled = true;
         break;
     default:
         color = GRAY;
         border_color = GRAY;
+        enabled = false;
     }
     DrawRectangleRec(rectangle, color);
     DrawRectangleLinesEx(rectangle, 2, border_color);
     toolbar->x += side_length + 10;
+
+    if(enabled && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), rectangle)) {
+        toolbar->color_palette.is_shown = true;
+        toolbar->color_palette.rectangle = (Rectangle){
+            .x = toolbar->x - 100,
+            .y = toolbar_height + 10,
+            .width = 200,
+            .height = 200,
+        };
+        toolbar->color_palette.background_color = base_color;
+    }
+
+    if(toolbar->color_palette.is_shown) {
+        switch(tool->active) {
+        case TOOL_KIND_CURVE:
+            ColorPalette_draw(&toolbar->color_palette, &tool->get.curve_tool.color);
+            break;
+        case TOOL_KIND_LINE:
+            ColorPalette_draw(&toolbar->color_palette, &tool->get.line_tool.color);
+            break;
+        default:
+            assert(false && "color selector is disabled");
+        }
+    }
 }
 
 void Toolbar_draw(Toolbar *toolbar, Tool *tool) {
