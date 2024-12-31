@@ -63,6 +63,55 @@ static int draw_button(int x, Button *button) {
     return x + width;
 }
 
+static void draw_thickness_selector(int x, int width, float max_thickness, Tool *tool) {
+    assert(tool);
+
+    float new_p = -1;
+    Vector2 mouse_pos = GetMousePosition();
+    if(CheckCollisionPointRec(mouse_pos, (Rectangle){ .x = x, .y = padding, .width = width, .height = toolbar_height - 2 * padding })) {
+        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            new_p = max_thickness * (float)(mouse_pos.x - x) / (float)width;
+        }
+    }
+
+    float p;
+    bool enabled;
+    switch(tool->active) {
+    case TOOL_KIND_CURVE:
+        if(new_p > 0) {
+            tool->get.curve_tool.thickness = new_p;
+            p = new_p;
+        }
+        else{
+            p = tool->get.curve_tool.thickness / max_thickness;
+        }
+        enabled = true;
+        break;
+    case TOOL_KIND_LINE:
+        if(new_p > 0) {
+            tool->get.line_tool.thickness = new_p;
+            p = new_p;
+        }
+        else{
+            p = tool->get.line_tool.thickness / max_thickness;
+        }
+        enabled = true;
+        break;
+    default:
+        p = 0.5f;
+        enabled = false;
+    }
+
+    DrawTriangle((Vector2){ .x = x, .y = toolbar_height / 2 },
+                 (Vector2){ .x = x + width, .y = toolbar_height - padding },
+                 (Vector2){ .x = x + width, .y = padding },
+                 enabled ? BLACK : GRAY);
+
+    DrawRectangleRec((Rectangle){ .x = x + p * width, .y = padding, .width = 3, .height = toolbar_height - 2 * padding },
+                     enabled ? WHITE : GRAY);
+
+}
+
 void Toolbar_draw(Tool *tool) {
     const int width = GetScreenWidth();
     DrawRectangleGradientV(0, 0,        width, height_1, ColorBrightness(base_color, 0.4f), ColorBrightness(base_color, 0.5f));
@@ -80,8 +129,10 @@ void Toolbar_draw(Tool *tool) {
     if(button_draw_curves.is_clicked) {
         tool->active = TOOL_KIND_CURVE;
     }
-    draw_button(x + 10, &button_draw_lines);
+    x = draw_button(x + 10, &button_draw_lines);
     if(button_draw_lines.is_clicked) {
         tool->active = TOOL_KIND_LINE;
     }
+
+    draw_thickness_selector(x + 10, 100, 10.0f, tool);
 }
