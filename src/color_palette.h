@@ -2,6 +2,7 @@
 #define COLOR_PALETTE_INCLUDED_
 
 #include "raypack.h"
+#include "user_input.h"
 
 typedef struct {
     Rectangle rectangle;
@@ -11,6 +12,6 @@ typedef struct {
     bool is_b_selector_moved;
 } ColorPalette;
 
-void ColorPalette_draw(ColorPalette *color_palette, Color *color);
+void ColorPalette_draw(ColorPalette *color_palette, Color *color, UserInput *input);
 
 #endif //COLOR_PALETTE_INCLUDED_

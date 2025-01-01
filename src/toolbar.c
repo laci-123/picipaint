@@ -53,7 +53,7 @@ static void draw_button(Toolbar *toolbar, Button *button) {
         background_color = ColorBrightness(base_color, 0.3f);
     }
     if(CheckCollisionPointRec(GetMousePosition(), rect)) {
-        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        if(is_mouse_button_pressed(toolbar->input, MOUSE_BUTTON_LEFT)) {
             button->is_down = true;
             button->is_clicked = true;
         }
@@ -83,7 +83,7 @@ static void draw_thickness_selector(Toolbar *toolbar, int width, float max_thick
     Vector2 mouse_pos = GetMousePosition();
     if(CheckCollisionPointRec(mouse_pos, (Rectangle){ .x = toolbar->x, .y = padding, .width = width, .height = toolbar_height - 2 * padding })) {
         float value_under_mouse = max_thickness * (float)(mouse_pos.x - toolbar->x) / (float)width;
-        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        if(is_mouse_button_pressed(toolbar->input, MOUSE_BUTTON_LEFT)) {
             new_p = value_under_mouse;
         }
         else {
@@ -138,27 +138,31 @@ static void draw_color_selector(Toolbar *toolbar, Tool *tool) {
     Color color;
     Color border_color;
     bool enabled;
+    UserInput *input;
     switch(tool->active) {
     case TOOL_KIND_CURVE:
         color = tool->get.curve_tool.color;
         border_color = BLACK;
         enabled = true;
+        input = tool->get.curve_tool.input;
         break;
     case TOOL_KIND_LINE:
         color = tool->get.line_tool.color;
         border_color = BLACK;
+        input = tool->get.line_tool.input;
         enabled = true;
         break;
     default:
         color = GRAY;
         border_color = GRAY;
+        input = NULL;
         enabled = false;
     }
     DrawRectangleRec(rectangle, color);
     DrawRectangleLinesEx(rectangle, 2, border_color);
     toolbar->x += side_length + 10;
 
-    if(enabled && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), rectangle)) {
+    if(enabled && is_mouse_button_pressed(toolbar->input, MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), rectangle)) {
         toolbar->color_palette.is_shown = true;
         toolbar->color_palette.rectangle = (Rectangle){
             .x = toolbar->x - 100,
@@ -172,16 +176,16 @@ static void draw_color_selector(Toolbar *toolbar, Tool *tool) {
     if(toolbar->color_palette.is_shown) {
         switch(tool->active) {
         case TOOL_KIND_CURVE:
-            ColorPalette_draw(&toolbar->color_palette, &tool->get.curve_tool.color);
+            ColorPalette_draw(&toolbar->color_palette, &tool->get.curve_tool.color, input);
             break;
         case TOOL_KIND_LINE:
-            ColorPalette_draw(&toolbar->color_palette, &tool->get.line_tool.color);
+            ColorPalette_draw(&toolbar->color_palette, &tool->get.line_tool.color, input);
             break;
         default:
             assert(false && "color selector is disabled");
         }
 
-        if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
+        if(is_mouse_button_pressed(toolbar->input, MOUSE_BUTTON_LEFT) &&
            !CheckCollisionPointRec(GetMousePosition(), toolbar->color_palette.rectangle) &&
            !CheckCollisionPointRec(GetMousePosition(), rectangle))
         {

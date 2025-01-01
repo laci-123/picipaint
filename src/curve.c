@@ -34,9 +34,10 @@ void Curve_draw(const Curve *curve) {
 
 void Curve_draw_new(Camera2D camera, CurveTool *tool) {
     assert(tool);
+    assert(tool->input);
 
     if(tool->pen_is_down) {
-        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        if(is_mouse_button_down(tool->input, MOUSE_BUTTON_LEFT)) {
             Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
             const Vector2 *last_point = Vector2_array_last_const(&tool->new_curve.points);
             if(!(last_point && Vector2Equals(*last_point, mouse_pos))) {
@@ -62,7 +63,7 @@ void Curve_draw_new(Camera2D camera, CurveTool *tool) {
         Curve_draw(&tool->new_curve);
     }
     else {
-        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !Toolbar_check_collision_point(GetMousePosition())) {
+        if(is_mouse_button_down(tool->input, MOUSE_BUTTON_LEFT) && !Toolbar_check_collision_point(GetMousePosition())) {
             tool->pen_is_down = true;
 
             Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);

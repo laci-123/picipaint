@@ -4,10 +4,12 @@
 #include "raypack.h"
 #include "tool.h"
 #include "color_palette.h"
+#include "user_input.h"
 
 typedef struct {
     int x;
     ColorPalette color_palette;
+    UserInput *input;
 } Toolbar;
 
 void Toolbar_draw(Toolbar *toolbar, Tool *tool);

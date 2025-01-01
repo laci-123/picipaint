@@ -2,7 +2,7 @@
 #include <assert.h>
 
 
-void ColorPalette_draw(ColorPalette *cp, Color *color) {
+void ColorPalette_draw(ColorPalette *cp, Color *color, UserInput *input) {
     assert(cp);
     assert(color);
 
@@ -52,7 +52,7 @@ void ColorPalette_draw(ColorPalette *cp, Color *color) {
         cp->is_rg_selector_moved = true;
     }
     if(cp->is_rg_selector_moved) {
-        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        if(is_mouse_button_down(input, MOUSE_BUTTON_LEFT)) {
             Vector2 new_pos_rg = GetMousePosition(); 
             if(CheckCollisionPointRec(new_pos_rg, rg_rectangle)) {
                 color->r = 255.0f * (float)(new_pos_rg.x - rg_rectangle.x) / (float)rg_rectangle.width;
@@ -68,7 +68,7 @@ void ColorPalette_draw(ColorPalette *cp, Color *color) {
         cp->is_b_selector_moved = true;
     }
     if(cp->is_b_selector_moved) {
-        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        if(is_mouse_button_down(input, MOUSE_BUTTON_LEFT)) {
             int new_pos_b = GetMousePosition().x;
             if(b_rectangle.x <= new_pos_b && new_pos_b < b_rectangle.x + b_rectangle.width) {
                 color->b = 255.0f * (float)(new_pos_b - b_rectangle.x) / (float)b_rectangle.width;

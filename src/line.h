@@ -2,6 +2,7 @@
 #define LINE_INCLUDED_
 
 #include "raypack.h"
+#include "user_input.h"
 
 typedef struct {
     Vector2 start;
@@ -22,6 +23,7 @@ typedef struct {
     Line new_line;
     bool pen_is_down;
     bool finished;
+    UserInput *input;
 } LineTool;
 
 void Line_draw_new(Camera2D camera, LineTool *tool);
