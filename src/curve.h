@@ -2,7 +2,6 @@
 #define CURVE_INCLUDED_
 
 #include "raypack.h"
-#include "user_input.h"
 #define ELEM_TYPE Vector2
 #include "array.h"
 #undef ELEM_TYPE
@@ -29,7 +28,6 @@ typedef struct {
     Curve new_curve;
     bool pen_is_down;
     bool finished;
-    UserInput *input;
 } CurveTool;
 
 void Curve_draw(const Curve *curve);

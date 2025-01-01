@@ -16,26 +16,20 @@ int main(void) {
 
     Object_array objects = {0};
     Camera2D camera = { .zoom = 1.0f };
-    UserInput input = {0};
     Tool tool = {
         .active = TOOL_KIND_CURVE,
         .get.curve_tool = (CurveTool) {
             .color = BLUE,
             .thickness = 5.0f,
-            .input = &input,
         },
         .get.line_tool = (LineTool) {
             .color = GREEN,
             .thickness = 3.0f,
-            .input = &input,
         },
     };
-    Toolbar toolbar = {
-        .input = &input,
-    };
+    Toolbar toolbar = {0};
 
     while(!WindowShouldClose()) {
-        input = (UserInput){0};
         float mouse_wheel = GetMouseWheelMove();
         if(mouse_wheel > 0) {
             camera.zoom *= 1.1f;
@@ -49,16 +43,14 @@ int main(void) {
             .y = GetScreenHeight() / 2.0f,
         };
 
-        if(is_mouse_button_down(&input, MOUSE_BUTTON_MIDDLE)) {
+        if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
             Vector2 mouse_delta = Vector2Scale(GetMouseDelta(), 1.0f / camera.zoom);
             camera.target = Vector2Subtract(camera.target, mouse_delta);
         }
 
         if(tool.active == TOOL_KIND_SELECT) {
-            Selection_update(camera, &objects, &input);
+            Selection_update(camera, &objects);
         }
-
-        input = (UserInput){0};
     
         BeginDrawing();
             ClearBackground(BLACK);

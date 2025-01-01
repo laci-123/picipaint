@@ -4,11 +4,8 @@
 
 
 void Line_draw_new(Camera2D camera, LineTool *tool) {
-    assert(tool);
-    assert(tool->input);
-    
     if(tool->pen_is_down) {
-        if(is_mouse_button_down(tool->input, MOUSE_BUTTON_LEFT)) {
+        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
             tool->new_line.end = mouse_pos;
         }
@@ -19,7 +16,7 @@ void Line_draw_new(Camera2D camera, LineTool *tool) {
         Line_draw(&tool->new_line);
     }
     else {
-        if(is_mouse_button_down(tool->input, MOUSE_BUTTON_LEFT) && !Toolbar_check_collision_point(GetMousePosition())) {
+        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !Toolbar_check_collision_point(GetMousePosition())) {
             tool->pen_is_down = true;
             Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
             tool->new_line = (Line){
@@ -33,8 +30,6 @@ void Line_draw_new(Camera2D camera, LineTool *tool) {
 }
 
 void Line_draw(const Line *line) {
-    assert(line);
-    
     if(line->is_selected) {
         Rectangle rect = {
             .x = fmin(line->start.x, line->end.x) - line->thickness,
