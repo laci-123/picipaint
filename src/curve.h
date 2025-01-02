@@ -18,10 +18,6 @@ typedef struct {
     float max_y;
 } Curve;
 
-#define ELEM_TYPE Curve
-#include "array.h"
-#undef ELEM_TYPE
-
 typedef struct {
     Color color;
     float thickness;

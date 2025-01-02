@@ -12,10 +12,6 @@ typedef struct {
     float thickness;
 } Line;
 
-#define ELEM_TYPE Line
-#include "array.h"
-#undef ELEM_TYPE
-
 typedef struct {
     Color color;
     float thickness;
