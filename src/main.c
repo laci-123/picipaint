@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "picture.h"
+
 
 int main(void) {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
@@ -15,6 +17,15 @@ int main(void) {
     SetExitKey(KEY_NULL);
 
     Object_array objects = {0};
+
+    Image test_image = GenImageColor(100, 100, RED);
+    Picture test_picture = {
+        .texture = LoadTextureFromImage(test_image),
+        .top_left = (Vector2){ .x = 10, .y = 50 },
+    };
+    UnloadImage(test_image);
+    Object_array_push_back(&objects, (Object){.as.picture = test_picture, .kind = OBJECT_KIND_PICTURE});
+
     Camera2D camera = { .zoom = 1.0f };
     Tool tool = {
         .active = TOOL_KIND_CURVE,

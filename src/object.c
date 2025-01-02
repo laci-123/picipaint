@@ -12,6 +12,9 @@ void Object_move(Vector2 mouse_delta, Object *object) {
     case OBJECT_KIND_LINE:
         Line_move(mouse_delta, &object->as.line);
         break;
+    case OBJECT_KIND_PICTURE:
+        Picture_move(mouse_delta, &object->as.picture);
+        break;
     default:
         assert(false && "unreachable");
     }
@@ -26,6 +29,8 @@ bool Object_is_under_mouse(Vector2 mouse_pos, const Object *object) {
         return Curve_is_under_mouse(mouse_pos, &object->as.curve);
     case OBJECT_KIND_LINE:
         return Line_is_under_mouse(mouse_pos, &object->as.line);
+    case OBJECT_KIND_PICTURE:
+        return Picture_is_under_mouse(mouse_pos, &object->as.picture);
     default:
         assert(false && "unreachable");
     }
@@ -73,6 +78,9 @@ void Object_draw_all(Camera2D camera, Tool *tool, Object_array *objects) {
         case OBJECT_KIND_LINE:
             Line_draw(&objects->items[i].as.line);
             break;
+        case OBJECT_KIND_PICTURE:
+            Picture_draw(&objects->items[i].as.picture);
+            break;
         default:
             assert(false && "unreachable");
         }
@@ -87,6 +95,9 @@ void Object_free(Object *object) {
         break;
     case OBJECT_KIND_LINE:
         // do nothing
+        break;
+    case OBJECT_KIND_PICTURE:
+        UnloadTexture(object->as.picture.texture);
         break;
     default:
         assert(false && "unreachable");

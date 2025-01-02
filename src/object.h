@@ -4,6 +4,7 @@
 #include "curve.h"
 #include "selectable.h"
 #include "line.h"
+#include "picture.h"
 #include "tool.h"
 #include "raypack.h"
 
@@ -11,6 +12,7 @@
 typedef enum {
     OBJECT_KIND_CURVE,
     OBJECT_KIND_LINE,
+    OBJECT_KIND_PICTURE,
 } ObjectKind;
 
 
@@ -19,6 +21,7 @@ typedef struct {
         Selectable selectable;
         Curve curve;
         Line line;
+        Picture picture;
     } as;
     ObjectKind kind;
 } Object;
