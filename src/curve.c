@@ -13,7 +13,7 @@ static Rectangle Curve_get_selection_rect(const Curve *curve) {
 }
 
 void Curve_draw(const Curve *curve) {
-    if(curve->is_selected) {
+    if(curve->base.is_selected) {
         Rectangle rect = Curve_get_selection_rect(curve);
         DrawRectangleLinesEx(rect, 1.0f, WHITE);
     }

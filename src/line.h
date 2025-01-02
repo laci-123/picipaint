@@ -2,14 +2,14 @@
 #define LINE_INCLUDED_
 
 #include "raypack.h"
+#include "selectable.h"
 
 typedef struct {
+    Selectable base;
     Vector2 start;
     Vector2 end;
     Color color;
     float thickness;
-    bool is_selected;
-    bool is_moved;
 } Line;
 
 #define ELEM_TYPE Line

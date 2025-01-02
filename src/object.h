@@ -2,6 +2,7 @@
 #define OBJECT_INCLUDED_
 
 #include "curve.h"
+#include "selectable.h"
 #include "line.h"
 #include "tool.h"
 #include "raypack.h"
@@ -15,6 +16,7 @@ typedef enum {
 
 typedef struct {
     union {
+        Selectable selectable;
         Curve curve;
         Line line;
     } as;
@@ -22,11 +24,7 @@ typedef struct {
 } Object;
 
 
-bool Object_is_moved(const Object *object);
 void Object_move(Vector2 mouse_delta, Object *object);
-void Object_set_moving(Object *object, bool value);
-bool Object_is_selected(const Object *object);
-void Object_set_selection(Object *object, bool value);
 bool Object_is_under_mouse(Vector2 mouse_pos, const Object *object);
 void Object_free(Object *object);
 

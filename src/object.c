@@ -2,20 +2,6 @@
 #include <assert.h>
 
 
-bool Object_is_moved(const Object *object) {
-    assert(object);
-    
-    switch (object->kind) {
-    case OBJECT_KIND_CURVE:
-        return object->as.curve.is_moved;
-    case OBJECT_KIND_LINE:
-        return object->as.line.is_moved;
-    default:
-        assert(false && "unreachable");
-    }
-}
-
-
 void Object_move(Vector2 mouse_delta, Object *object) {
     assert(object);
     
@@ -25,52 +11,6 @@ void Object_move(Vector2 mouse_delta, Object *object) {
         break;
     case OBJECT_KIND_LINE:
         Line_move(mouse_delta, &object->as.line);
-        break;
-    default:
-        assert(false && "unreachable");
-    }
-}
-
-
-void Object_set_moving(Object *object, bool value) {
-    assert(object);
-    
-    switch (object->kind) {
-    case OBJECT_KIND_CURVE:
-        object->as.curve.is_moved = value;
-        break;
-    case OBJECT_KIND_LINE:
-        object->as.line.is_moved = value;
-        break;
-    default:
-        assert(false && "unreachable");
-    }
-}
-
-
-bool Object_is_selected(const Object *object) {
-    assert(object);
-    
-    switch (object->kind) {
-    case OBJECT_KIND_CURVE:
-        return object->as.curve.is_selected;
-    case OBJECT_KIND_LINE:
-        return object->as.line.is_selected;
-    default:
-        assert(false && "unreachable");
-    }
-}
-
-
-void Object_set_selection(Object *object, bool value) {
-    assert(object);
-    
-    switch (object->kind) {
-    case OBJECT_KIND_CURVE:
-        object->as.curve.is_selected = value;
-        break;
-    case OBJECT_KIND_LINE:
-        object->as.line.is_selected = value;
         break;
     default:
         assert(false && "unreachable");

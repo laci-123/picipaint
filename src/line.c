@@ -30,7 +30,7 @@ void Line_draw_new(Camera2D camera, LineTool *tool) {
 }
 
 void Line_draw(const Line *line) {
-    if(line->is_selected) {
+    if(line->base.is_selected) {
         Rectangle rect = {
             .x = fmin(line->start.x, line->end.x) - line->thickness,
             .y = fmin(line->start.y, line->end.y) - line->thickness,

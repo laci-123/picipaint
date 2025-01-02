@@ -2,11 +2,13 @@
 #define CURVE_INCLUDED_
 
 #include "raypack.h"
+#include "selectable.h"
 #define ELEM_TYPE Vector2
 #include "array.h"
 #undef ELEM_TYPE
 
 typedef struct {
+    Selectable base;
     Vector2_array points;
     Color color;
     float thickness;
@@ -14,8 +16,6 @@ typedef struct {
     float max_x;
     float min_y;
     float max_y;
-    bool is_selected;
-    bool is_moved;
 } Curve;
 
 #define ELEM_TYPE Curve
