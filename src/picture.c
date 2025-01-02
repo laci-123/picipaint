@@ -2,6 +2,15 @@
 
 
 void Picture_draw(const Picture *picture) {
+    if(picture->base.is_selected) {
+        Rectangle rect = {
+            .x = picture->top_left.x - 2,
+            .y = picture->top_left.y - 2,
+            .width = picture->texture.width + 4,
+            .height = picture->texture.height + 4,
+        };
+        DrawRectangleLinesEx(rect, 1.0f, WHITE);
+    }
     DrawTextureV(picture->texture, picture->top_left, WHITE);
 }
 
