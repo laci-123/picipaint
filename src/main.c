@@ -1,6 +1,7 @@
 #include "raypack.h"
 #include "curve.h"
 #include "object.h"
+#include "picture_loader.h"
 #include "selection.h"
 #include "toolbar.h"
 #include "tool.h"
@@ -17,14 +18,6 @@ int main(void) {
     SetExitKey(KEY_NULL);
 
     Object_array objects = {0};
-
-    Image test_image = GenImageColor(100, 100, RED);
-    Picture test_picture = {
-        .texture = LoadTextureFromImage(test_image),
-        .top_left = (Vector2){ .x = 10, .y = 50 },
-    };
-    UnloadImage(test_image);
-    Object_array_push_back(&objects, (Object){.as.picture = test_picture, .kind = OBJECT_KIND_PICTURE});
 
     Camera2D camera = { .zoom = 1.0f };
     Tool tool = {
@@ -62,6 +55,8 @@ int main(void) {
         if(tool.active == TOOL_KIND_SELECT) {
             Selection_update(camera, &objects);
         }
+
+        load_dropped_pictures(&objects, camera);
     
         BeginDrawing();
             ClearBackground(BLACK);
