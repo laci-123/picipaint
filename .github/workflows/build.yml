@@ -8,8 +8,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: install raylib dependencies
+    - name: install dependencies of raylib
       run: sudo apt install libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
+    - name: install dependencies of nativefiledialog-extended
+      run: sudo apt install libgtk-3-dev
     - uses: actions/checkout@v4
       with:
         submodules: recursive
