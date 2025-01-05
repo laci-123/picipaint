@@ -2,7 +2,8 @@ name: Build and create release
 
 on:
   push:
-    branches: [ "main" ]
+    tags:
+    - 'v*'
 
 jobs:
   build:
@@ -12,7 +13,8 @@ jobs:
       run: sudo apt install libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
     - name: install dependencies of nativefiledialog-extended
       run: sudo apt install libgtk-3-dev
-    - uses: actions/checkout@v4
+    - name: checkout sources
+      uses: actions/checkout@v4
       with:
         submodules: recursive
     - name: make
