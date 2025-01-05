@@ -8,6 +8,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+    - name: get Ubuntu version
+      run: lsb_release -a
     - name: install recent GCC
       run: |
         sudo apt install software-properties-common
