@@ -24,4 +24,4 @@ jobs:
     - name: make
       run: make
       env:
-        CC: gcc
+        CC: gcc-14
