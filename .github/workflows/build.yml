@@ -9,7 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: install recent GCC
-      run: sudo apt install gcc-13
+      run: |
+        sudo add-apt-repository universe
+        sudo apt install gcc-14
     - name: install dependencies of raylib
       run: sudo apt install libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
     - name: install dependencies of nativefiledialog-extended
