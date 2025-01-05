@@ -2,7 +2,7 @@ NAME	?= picipaint
 SRC_DIR ?= ./src
 BIN_DIR ?= ./bin
 CC		?= gcc
-CFLAGS	= -Wall -Wextra
+CFLAGS	= -Wall -Wextra -std=c23 -pedantic
 RAYLIB	= ./raylib/src
 NFD     = ./nativefiledialog-extended
 INCLUDE = -I./raylib/src -I./nativefiledialog-extended/src/include
