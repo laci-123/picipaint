@@ -10,6 +10,7 @@ jobs:
     steps:
     - name: install recent GCC
       run: |
+        sudo apt install software-properties-common
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
         sudo apt install gcc-14
     - name: install dependencies of raylib
