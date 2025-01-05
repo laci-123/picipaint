@@ -1,4 +1,4 @@
-name: Build
+name: Build and create release
 
 on:
   push:
@@ -15,9 +15,14 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-    - name: gcc version
-      run: gcc --version
     - name: make
       run: make
       env:
         CC: gcc-14
+    - name: create release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: bin/picipaint
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
