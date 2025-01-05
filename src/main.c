@@ -8,33 +8,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <nfd.h>
-
 
 int main(void) {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
     InitWindow(800, 450, "PiciPaint");
     SetWindowState(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     SetExitKey(KEY_NULL);
-
-    NFD_Init();
-
-    nfdu8char_t *out_path;
-    nfdu8filteritem_t filters[2] = { { "Source code", "c,cpp,cc" }, { "Headers", "h,hpp" } };
-    nfdopendialogu8args_t args = {0};
-    args.filterList = filters;
-    args.filterCount = 2;
-    nfdresult_t result = NFD_OpenDialogU8_With(&out_path, &args); 
-    if(result == NFD_OKAY) {
-        TraceLog(LOG_INFO, "success: %s", out_path);
-        NFD_FreePathU8(out_path);
-    }
-    else if(result == NFD_CANCEL) {
-        TraceLog(LOG_INFO, "canceled");
-    }
-    else {
-        TraceLog(LOG_INFO, "error: %s", NFD_GetError());
-    }
 
     Object_array objects = {0};
 
@@ -76,6 +55,10 @@ int main(void) {
         }
 
         load_dropped_pictures(&objects, camera);
+        if(toolbar.insert_picture) {
+            load_picture_using_file_dialog(&objects);
+            toolbar.insert_picture = false;
+        }
     
         BeginDrawing();
             ClearBackground(BLACK);
@@ -85,8 +68,6 @@ int main(void) {
             Toolbar_draw(&toolbar, &tool);
         EndDrawing();
     }
-
-    NFD_Quit();
 
     for(size_t i = 0; i < objects.size; ++i) {
         Object_free(&objects.items[i]);

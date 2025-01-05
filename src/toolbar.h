@@ -8,6 +8,7 @@
 typedef struct {
     int x;
     ColorPalette color_palette;
+    bool insert_picture;
 } Toolbar;
 
 void Toolbar_draw(Toolbar *toolbar, Tool *tool);

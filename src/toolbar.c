@@ -28,7 +28,7 @@ typedef struct {
     bool is_clicked;
 } Button;
 
-static void draw_button(Toolbar *toolbar, Button *button) {
+static void draw_toggle_button(Toolbar *toolbar, Button *button) {
     assert(toolbar);
     assert(button);
     assert(button->caption);
@@ -58,6 +58,53 @@ static void draw_button(Toolbar *toolbar, Button *button) {
             button->is_clicked = true;
         }
     }
+    DrawRectangleRec(shaddow, BLACK);
+    DrawRectangleRec(rect, background_color);
+    DrawRectangleLinesEx(rect, 1, BLACK);
+    DrawText(button->caption, toolbar->x + padding, 1.5 * padding, font_size, BLACK);
+
+    toolbar->x += width + 10;
+}
+
+static void draw_button(Toolbar *toolbar, Button *button) {
+    assert(toolbar);
+    assert(button);
+    assert(button->caption);
+  
+    Color background_color = ColorBrightness(base_color, 0.4f);
+    const int width = MeasureText(button->caption, font_size) + 2 * padding;
+    const Rectangle rect = {
+        .x = toolbar->x,
+        .y = padding,
+        .width = width,
+        .height = toolbar_height - 2 * padding,
+    };
+    Rectangle shaddow = {
+        .x = rect.x,
+        .y = rect.y,
+        .width = rect.width + 2,
+        .height = rect.height + 2,
+    };
+    if(button->is_down) {
+        shaddow.x -= 2;
+        shaddow.y -= 2;
+        background_color = ColorBrightness(base_color, 0.3f);
+    }
+    if(CheckCollisionPointRec(GetMousePosition(), rect)) {
+        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+            button->is_down = true;
+        }
+        if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            button->is_down = false;
+            button->is_clicked = true;
+        }
+    }
+    else {
+        if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            button->is_down = false;
+        }
+    }
+    
     DrawRectangleRec(shaddow, BLACK);
     DrawRectangleRec(rect, background_color);
     DrawRectangleLinesEx(rect, 1, BLACK);
@@ -129,7 +176,7 @@ static void draw_thickness_selector(Toolbar *toolbar, int width, float max_thick
     DrawRectangleRec((Rectangle){ .x = toolbar->x + p * width, .y = padding, .width = 3, .height = toolbar_height - 2 * padding },
                      enabled ? WHITE : GRAY);
 
-    toolbar->x += width;
+    toolbar->x += width + 10;
 }
 
 static void draw_color_selector(Toolbar *toolbar, Tool *tool) {
@@ -201,19 +248,26 @@ void Toolbar_draw(Toolbar *toolbar, Tool *tool) {
     Button button_draw_curves = (Button){ .caption = "draw curve", .is_down = (tool->active == TOOL_KIND_CURVE) };
     Button button_draw_lines  = (Button){ .caption = "draw line",  .is_down = (tool->active == TOOL_KIND_LINE) };
 
-    draw_button(toolbar, &button_select);
+    draw_toggle_button(toolbar, &button_select);
     if(button_select.is_clicked) {
         tool->active = TOOL_KIND_SELECT;
     }
-    draw_button(toolbar, &button_draw_curves);
+    draw_toggle_button(toolbar, &button_draw_curves);
     if(button_draw_curves.is_clicked) {
         tool->active = TOOL_KIND_CURVE;
     }
-    draw_button(toolbar, &button_draw_lines);
+    draw_toggle_button(toolbar, &button_draw_lines);
     if(button_draw_lines.is_clicked) {
         tool->active = TOOL_KIND_LINE;
     }
 
     draw_color_selector(toolbar, tool);
     draw_thickness_selector(toolbar, 100, 10.0f, tool);
+
+    static Button button_insert_picture = (Button){ .caption = "insert image", .is_down = false };
+    draw_button(toolbar, &button_insert_picture);
+    if(button_insert_picture.is_clicked) {
+        toolbar->insert_picture = true;
+        button_insert_picture.is_clicked = false;
+    }
 }
