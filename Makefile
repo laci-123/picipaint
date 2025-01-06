@@ -12,7 +12,7 @@ C_FILES      = $(wildcard $(SRC_DIR)/*.c)
 H_FILES      = $(wildcard $(SRC_DIR)/*.h)
 
 ifeq ($(OS),Windows_NT)
-	NAME += .exe
+	NAME := $(NAME).exe
 	NFD_FLAGS += -G "MinGW Makefiles"
 else
 	LINKFLAGS += `pkg-config --libs gtk+-3.0`
