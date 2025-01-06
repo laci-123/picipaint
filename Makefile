@@ -1,18 +1,18 @@
-NAME	?= picipaint
-SRC_DIR ?= ./src
-BIN_DIR ?= ./bin
-CC		?= gcc
-CFLAGS	= -Wall -Wextra -std=c2x -pedantic
-RAYLIB	= ./raylib/src
-NFD     = ./nativefiledialog-extended
-INCLUDE = -I./raylib/src -I./nativefiledialog-extended/src/include
-LINK    = `pkg-config --libs gtk+-3.0` -lm
-C_FILES = $(wildcard $(SRC_DIR)/*.c)
-H_FILES = $(wildcard $(SRC_DIR)/*.h)
+NAME		?= picipaint
+SRC_DIR		?= ./src
+BIN_DIR		?= ./bin
+CC			?= gcc
+LINKFLAGS	?= `pkg-config --libs gtk+-3.0` -lm
+CFLAGS	     = -Wall -Wextra -std=c2x -pedantic
+RAYLIB	     = ./raylib/src
+NFD          = ./nativefiledialog-extended
+INCLUDE      = -I./raylib/src -I./nativefiledialog-extended/src/include
+C_FILES      = $(wildcard $(SRC_DIR)/*.c)
+H_FILES      = $(wildcard $(SRC_DIR)/*.h)
 
 
 $(BIN_DIR)/$(NAME): $(C_FILES) $(H_FILES) | $(RAYLIB)/libraylib.a $(NFD)/build/src/libnfd.a $(BIN_DIR)
-	$(CC) $(C_FILES) $(RAYLIB)/libraylib.a $(NFD)/build/src/libnfd.a $(CFLAGS) $(INCLUDE) $(LINK) -o $(BIN_DIR)/$(NAME)
+	$(CC) $(C_FILES) $(RAYLIB)/libraylib.a $(NFD)/build/src/libnfd.a $(CFLAGS) $(INCLUDE) $(LINKFLAGS) -o $(BIN_DIR)/$(NAME)
 
 $(RAYLIB)/libraylib.a: 
 	cd $(RAYLIB) && $(MAKE)
