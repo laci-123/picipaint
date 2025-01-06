@@ -31,6 +31,8 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
+    - name: add MinGW to the path
+      run: set PATH=C:\mingw64\bin;%PATH%
     - name: checkout sources
       uses: actions/checkout@v4
       with:
