@@ -39,6 +39,8 @@ jobs:
       run: |
         $env:PATH = "C:\mingw64\bin;$env:PATH"
         make
+      env:
+        CC: gcc
     #- name: create release
     #  uses: softprops/action-gh-release@v2
     #  with:
