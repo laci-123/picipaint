@@ -25,7 +25,7 @@ $(NFD)/build/src/libnfd.a:
 	cmake --build .
 
 $(BIN_DIR):
-	mkdir $(BIN_DIR)
+	mkdir -p $(BIN_DIR)
 
 
 .PHONY: run clean clean_all
