@@ -31,8 +31,6 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
-    - name: setup MinGW
-      uses: egor-tensin/setup-mingw@v2
     - name: checkout sources
       uses: actions/checkout@v4
       with:
