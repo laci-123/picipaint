@@ -37,6 +37,8 @@ jobs:
         submodules: recursive
     - name: build
       run: make
+      env:
+        LINKFLAGS: "-lm"
     #- name: create release
     #  uses: softprops/action-gh-release@v2
     #  with:
