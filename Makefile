@@ -3,7 +3,7 @@ SRC_DIR		?= ./src
 BIN_DIR		?= ./bin
 CC			?= gcc
 CFLAGS	     = -Wall -Wextra -std=c2x -pedantic
-LINKFLAGS	 = -lm
+LINKFLAGS	 = -lm `pkg-config --libs gtk+-3.0`
 RAYLIB	     = ./raylib/src
 NFD          = ./nativefiledialog-extended
 NFD_FLAGS    = -DCMAKE_BUILD_TYPE=Release -DNFD_BUILD_TESTS=OFF
@@ -14,8 +14,6 @@ H_FILES      = $(wildcard $(SRC_DIR)/*.h)
 ifeq ($(OS),Windows_NT)
 	NAME := $(NAME).exe
 	NFD_FLAGS += -G "MinGW Makefiles"
-else
-	LINKFLAGS += `pkg-config --libs gtk+-3.0`
 endif
 
 
