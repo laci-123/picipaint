@@ -2,9 +2,8 @@ name: Build and create release
 
 on:
   push:
-    branches: main
-    #tags:
-    #- 'v*'
+    tags:
+    - 'v*'
 
 jobs:
   #build-linux:
@@ -41,10 +40,10 @@ jobs:
         make
       env:
         CC: gcc
-    #- name: create release
-    #  uses: softprops/action-gh-release@v2
-    #  with:
-    #    files: bin/picipaint.exe
-    #  env:
-    #      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: create release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: bin/picipaint.exe
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
