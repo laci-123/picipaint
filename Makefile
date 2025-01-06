@@ -13,9 +13,13 @@ H_FILES      = $(wildcard $(SRC_DIR)/*.h)
 
 ifeq ($(OS),Windows_NT)
 	NAME := $(NAME).exe
+	 #raylib
 	LINKFLAGS += -lgdi32 -lwinmm
+	 #nfd
+	LINKFLAGS += -lole32 -luuid -lshell32
 	NFD_FLAGS += -G "MinGW Makefiles"
 else
+	 #raylib
 	LINKFLAGS += `pkg-config --libs gtk+-3.0`
 endif
 
