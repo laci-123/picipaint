@@ -44,19 +44,21 @@ bool Object_is_under_mouse(Vector2 mouse_pos, const Object *object) {
 void Object_draw_all(Camera2D camera, ObjectMaker *maker) {
     assert(maker);
 
-    switch(maker->kind) {
-    case OBJECT_KIND_CURVE:
-        Curve_draw_new(camera, maker);
-        break;
-    case OBJECT_KIND_LINE:
-        Line_draw_new(camera, maker);
-        break;
-    case OBJECT_KIND_NONE:
-    case OBJECT_KIND_PICTURE:
-        // do nothing
-        break;
-    default:
-        assert(false && "unreachable");
+    if(!maker->toolbar_is_focused || maker->pen_is_down) {
+        switch(maker->kind) {
+        case OBJECT_KIND_CURVE:
+            Curve_draw_new(camera, maker);
+            break;
+        case OBJECT_KIND_LINE:
+            Line_draw_new(camera, maker);
+            break;
+        case OBJECT_KIND_NONE:
+        case OBJECT_KIND_PICTURE:
+            // do nothing
+            break;
+        default:
+            assert(false && "unreachable");
+        }
     }
 
     for(size_t i = 0; i < maker->objects.size; ++i) {

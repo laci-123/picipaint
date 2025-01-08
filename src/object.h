@@ -2,9 +2,10 @@
 #define OBJECT_INCLUDED_
 
 #include "curve.h"
-#include "selectable.h"
 #include "line.h"
 #include "picture.h"
+
+#include "selectable.h"
 #include "object_maker_fwd.h"
 #include "raypack.h"
 
@@ -45,6 +46,7 @@ struct ObjectMaker {
     float thickness;
     ObjectKind kind;
     bool pen_is_down;
+    bool toolbar_is_focused;
 };
 
 #endif //OBJECT_INCLUDED_

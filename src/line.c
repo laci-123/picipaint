@@ -1,6 +1,5 @@
 #include "line.h"
 #include "object.h"
-#include "toolbar.h"
 #include <assert.h>
 
 
@@ -22,7 +21,7 @@ void Line_draw_new(Camera2D camera, ObjectMaker *maker) {
         }
     }
     else {
-        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !Toolbar_check_collision_point(GetMousePosition())) {
+        if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             maker->pen_is_down = true;
             Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
             Line new_line = {

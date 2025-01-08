@@ -207,6 +207,13 @@ void Toolbar_draw(Toolbar *toolbar, ObjectMaker *object_maker) {
     }
 
     draw_color_selector(toolbar, object_maker);
+    const Rectangle toolbar_rec = {
+        .x = 0,
+        .y = 0,
+        .width = width,
+        .height = toolbar_height,
+    };
+    object_maker->toolbar_is_focused = toolbar->color_palette.is_shown || CheckCollisionPointRec(GetMousePosition(), toolbar_rec);
     draw_thickness_selector(toolbar, 100, 10.0f, object_maker);
 
     Button button_insert_picture = (Button){ .caption = "insert image", .is_down = false };
