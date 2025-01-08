@@ -29,10 +29,6 @@ typedef struct {
 } Button;
 
 static void draw_toggle_button(Toolbar *toolbar, Button *button) {
-    assert(toolbar);
-    assert(button);
-    assert(button->caption);
-  
     Color background_color = ColorBrightness(base_color, 0.4f);
     const int width = MeasureText(button->caption, font_size) + 2 * padding;
     const Rectangle rect = {
@@ -67,10 +63,6 @@ static void draw_toggle_button(Toolbar *toolbar, Button *button) {
 }
 
 static void draw_button(Toolbar *toolbar, Button *button) {
-    assert(toolbar);
-    assert(button);
-    assert(button->caption);
-  
     Color background_color = ColorBrightness(base_color, 0.4f);
     const int width = MeasureText(button->caption, font_size) + 2 * padding;
     const Rectangle rect = {
@@ -114,18 +106,13 @@ static void draw_button(Toolbar *toolbar, Button *button) {
 }
 
 static void draw_tooltip(const char *text) {
-    assert(text);
-
     Vector2 position = Vector2Add(GetMousePosition(), (Vector2){ .x = 20, .y = 20 });
     int width = MeasureText(text, font_size);
     DrawRectangleRec((Rectangle){ .x = position.x, .y = position.y, .width = width + 4, .height = font_size }, WHITE);
     DrawText(text, position.x + 2, position.y, font_size, BLACK);
 }
 
-static void draw_thickness_selector(Toolbar *toolbar, int width, float max_thickness, Tool *tool) {
-    assert(toolbar);
-    assert(tool);
-
+static void draw_thickness_selector(Toolbar *toolbar, int width, float max_thickness, ObjectMaker *object_maker) {
     float new_p = -1;
     Vector2 mouse_pos = GetMousePosition();
     if(CheckCollisionPointRec(mouse_pos, (Rectangle){ .x = toolbar->x, .y = padding, .width = width, .height = toolbar_height - 2 * padding })) {
@@ -141,71 +128,29 @@ static void draw_thickness_selector(Toolbar *toolbar, int width, float max_thick
     }
 
     float p;
-    bool enabled;
-    switch(tool->active) {
-    case TOOL_KIND_CURVE:
-        if(new_p > 0) {
-            tool->get.curve_tool.thickness = new_p;
-            p = new_p;
-        }
-        else{
-            p = tool->get.curve_tool.thickness / max_thickness;
-        }
-        enabled = true;
-        break;
-    case TOOL_KIND_LINE:
-        if(new_p > 0) {
-            tool->get.line_tool.thickness = new_p;
-            p = new_p;
-        }
-        else{
-            p = tool->get.line_tool.thickness / max_thickness;
-        }
-        enabled = true;
-        break;
-    default:
-        p = 0.5f;
-        enabled = false;
+    if(new_p > 0) {
+        object_maker->thickness = new_p;
     }
+    p = object_maker->thickness / max_thickness;
 
     DrawTriangle((Vector2){ .x = toolbar->x, .y = toolbar_height / 2 },
                  (Vector2){ .x = toolbar->x + width, .y = toolbar_height - padding },
                  (Vector2){ .x = toolbar->x + width, .y = padding },
-                 enabled ? BLACK : GRAY);
+                 BLACK);
 
-    DrawRectangleRec((Rectangle){ .x = toolbar->x + p * width, .y = padding, .width = 3, .height = toolbar_height - 2 * padding },
-                     enabled ? WHITE : GRAY);
+    DrawRectangleRec((Rectangle){ .x = toolbar->x + p * width, .y = padding, .width = 3, .height = toolbar_height - 2 * padding }, WHITE);
 
     toolbar->x += width + 10;
 }
 
-static void draw_color_selector(Toolbar *toolbar, Tool *tool) {
+static void draw_color_selector(Toolbar *toolbar, ObjectMaker *object_maker) {
     int side_length = toolbar_height - 2 * padding;
     Rectangle rectangle = { .x = toolbar->x, .y = padding, .width = side_length, .height = side_length };
-    Color color;
-    Color border_color;
-    bool enabled;
-    switch(tool->active) {
-    case TOOL_KIND_CURVE:
-        color = tool->get.curve_tool.color;
-        border_color = BLACK;
-        enabled = true;
-        break;
-    case TOOL_KIND_LINE:
-        color = tool->get.line_tool.color;
-        border_color = BLACK;
-        enabled = true;
-        break;
-    default:
-        color = GRAY;
-        border_color = GRAY;
-        enabled = false;
-    }
-    DrawRectangleRec(rectangle, color);
-    DrawRectangleLinesEx(rectangle, 2, border_color);
+    DrawRectangleRec(rectangle, object_maker->color);
+    DrawRectangleLinesEx(rectangle, 2, BLACK);
     toolbar->x += side_length + 10;
 
-    if(enabled && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), rectangle)) {
+    if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && CheckCollisionPointRec(GetMousePosition(), rectangle)) {
         toolbar->color_palette.is_shown = true;
         toolbar->color_palette.rectangle = (Rectangle){
             .x = toolbar->x - 100,
@@ -217,16 +162,7 @@ static void draw_color_selector(Toolbar *toolbar, Tool *tool) {
     }
 
     if(toolbar->color_palette.is_shown) {
-        switch(tool->active) {
-        case TOOL_KIND_CURVE:
-            ColorPalette_draw(&toolbar->color_palette, &tool->get.curve_tool.color);
-            break;
-        case TOOL_KIND_LINE:
-            ColorPalette_draw(&toolbar->color_palette, &tool->get.line_tool.color);
-            break;
-        default:
-            assert(false && "color selector is disabled");
-        }
+        ColorPalette_draw(&toolbar->color_palette, &object_maker->color);
 
         if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
            !CheckCollisionPointRec(GetMousePosition(), toolbar->color_palette.rectangle) &&
@@ -237,32 +173,34 @@ static void draw_color_selector(Toolbar *toolbar, Tool *tool) {
     }
 }
 
-void Toolbar_draw(Toolbar *toolbar, Tool *tool) {
+void Toolbar_draw(Toolbar *toolbar, ObjectMaker *object_maker) {
+    assert(toolbar);
+    assert(object_maker);
     toolbar->x = 10;
 
     const int width = GetScreenWidth();
     DrawRectangleGradientV(0, 0,        width, height_1, ColorBrightness(base_color, 0.4f), ColorBrightness(base_color, 0.5f));
     DrawRectangleGradientV(0, height_1, width, height_2, ColorBrightness(base_color, 0.5f), base_color);
 
-    Button button_select      = (Button){ .caption = "select",     .is_down = (tool->active == TOOL_KIND_SELECT) };
-    Button button_draw_curves = (Button){ .caption = "draw curve", .is_down = (tool->active == TOOL_KIND_CURVE) };
-    Button button_draw_lines  = (Button){ .caption = "draw line",  .is_down = (tool->active == TOOL_KIND_LINE) };
+    Button button_select      = (Button){ .caption = "select",     .is_down = (object_maker->kind == OBJECT_KIND_NONE) };
+    Button button_draw_curves = (Button){ .caption = "draw curve", .is_down = (object_maker->kind == OBJECT_KIND_CURVE) };
+    Button button_draw_lines  = (Button){ .caption = "draw line",  .is_down = (object_maker->kind == OBJECT_KIND_LINE) };
 
     draw_toggle_button(toolbar, &button_select);
     if(button_select.is_clicked) {
-        tool->active = TOOL_KIND_SELECT;
+        object_maker->kind = OBJECT_KIND_NONE;
     }
     draw_toggle_button(toolbar, &button_draw_curves);
     if(button_draw_curves.is_clicked) {
-        tool->active = TOOL_KIND_CURVE;
+        object_maker->kind = OBJECT_KIND_CURVE;
     }
     draw_toggle_button(toolbar, &button_draw_lines);
     if(button_draw_lines.is_clicked) {
-        tool->active = TOOL_KIND_LINE;
+        object_maker->kind = OBJECT_KIND_LINE;
     }
 
-    draw_color_selector(toolbar, tool);
-    draw_thickness_selector(toolbar, 100, 10.0f, tool);
+    draw_color_selector(toolbar, object_maker);
+    draw_thickness_selector(toolbar, 100, 10.0f, object_maker);
 
     static Button button_insert_picture = (Button){ .caption = "insert image", .is_down = false };
     draw_button(toolbar, &button_insert_picture);

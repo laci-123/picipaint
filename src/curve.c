@@ -1,4 +1,5 @@
 #include "curve.h"
+#include "object.h"
 #include "toolbar.h"
 #include <assert.h>
 
@@ -32,49 +33,53 @@ void Curve_draw(const Curve *curve) {
     }
 }
 
-void Curve_draw_new(Camera2D camera, CurveTool *tool) {
-    assert(tool);
+void Curve_draw_new(Camera2D camera, ObjectMaker *maker) {
+    assert(maker);
 
-    if(tool->pen_is_down) {
+    if(maker->pen_is_down) {
         if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
-            const Vector2 *last_point = Vector2_array_last_const(&tool->new_curve.points);
+
+            Object *new_object = &maker->objects.items[maker->objects.size - 1];
+            assert(new_object->kind == OBJECT_KIND_CURVE);
+            Curve *new_curve = &new_object->as.curve;
+            const Vector2 *last_point = Vector2_array_last_const(&new_curve->points);
+
             if(!(last_point && Vector2Equals(*last_point, mouse_pos))) {
-                if(mouse_pos.x < tool->new_curve.min_x) {
-                    tool->new_curve.min_x = mouse_pos.x;
+                if(mouse_pos.x < new_curve->min_x) {
+                    new_curve->min_x = mouse_pos.x;
                 }
-                if(mouse_pos.x > tool->new_curve.max_x) {
-                    tool->new_curve.max_x = mouse_pos.x;
+                if(mouse_pos.x > new_curve->max_x) {
+                    new_curve->max_x = mouse_pos.x;
                 }
-                if(mouse_pos.y < tool->new_curve.min_y) {
-                    tool->new_curve.min_y = mouse_pos.y;
+                if(mouse_pos.y < new_curve->min_y) {
+                    new_curve->min_y = mouse_pos.y;
                 }
-                if(mouse_pos.y > tool->new_curve.max_y) {
-                    tool->new_curve.max_y = mouse_pos.y;
+                if(mouse_pos.y > new_curve->max_y) {
+                    new_curve->max_y = mouse_pos.y;
                 }
-                Vector2_array_push_back(&tool->new_curve.points, mouse_pos);
+                Vector2_array_push_back(&new_curve->points, mouse_pos);
             }
         }
         else {
-            tool->pen_is_down = false;
-            tool->finished = true;
+            maker->pen_is_down = false;
         }
-        Curve_draw(&tool->new_curve);
     }
     else {
         if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !Toolbar_check_collision_point(GetMousePosition())) {
-            tool->pen_is_down = true;
+            maker->pen_is_down = true;
 
             Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
-            tool->new_curve = (Curve){
+            Curve new_curve = {
                     .points = {0},
-                    .color = tool->color,
-                    .thickness = tool->thickness,
+                    .color = maker->color,
+                    .thickness = maker->thickness,
                     .min_x = mouse_pos.x,
                     .max_x = mouse_pos.x,
                     .min_y = mouse_pos.y,
                     .max_y = mouse_pos.y,
             };
+            Object_array_push_back(&maker->objects, (Object){ .kind = OBJECT_KIND_CURVE, .as.curve = new_curve });
         }
     }
 }

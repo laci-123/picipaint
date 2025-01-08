@@ -5,11 +5,12 @@
 #include "selectable.h"
 #include "line.h"
 #include "picture.h"
-#include "tool.h"
+#include "object_maker_fwd.h"
 #include "raypack.h"
 
 
 typedef enum {
+    OBJECT_KIND_NONE,
     OBJECT_KIND_CURVE,
     OBJECT_KIND_LINE,
     OBJECT_KIND_PICTURE,
@@ -30,11 +31,20 @@ typedef struct {
 void Object_move(Vector2 mouse_delta, Object *object);
 bool Object_is_under_mouse(Vector2 mouse_pos, const Object *object);
 void Object_free(Object *object);
+void Object_draw_all(Camera2D camera, ObjectMaker *maker);
+
 
 #define ELEM_TYPE Object
 #include "array.h"
 #undef ELEM_TYPE
 
-void Object_draw_all(Camera2D camera, Tool *tool, Object_array *objects);
+
+struct ObjectMaker {
+    Object_array objects;
+    Color color;
+    float thickness;
+    ObjectKind kind;
+    bool pen_is_down;
+};
 
 #endif //OBJECT_INCLUDED_

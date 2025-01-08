@@ -6,6 +6,9 @@ void Object_move(Vector2 mouse_delta, Object *object) {
     assert(object);
     
     switch (object->kind) {
+    case OBJECT_KIND_NONE:
+        // do nothing
+        break;
     case OBJECT_KIND_CURVE:
         Curve_move(mouse_delta, &object->as.curve);
         break;
@@ -31,56 +34,43 @@ bool Object_is_under_mouse(Vector2 mouse_pos, const Object *object) {
         return Line_is_under_mouse(mouse_pos, &object->as.line);
     case OBJECT_KIND_PICTURE:
         return Picture_is_under_mouse(mouse_pos, &object->as.picture);
+    case OBJECT_KIND_NONE:
     default:
         assert(false && "unreachable");
     }
 }
 
 
-void Object_draw_all(Camera2D camera, Tool *tool, Object_array *objects) {
-    assert(objects);
+void Object_draw_all(Camera2D camera, ObjectMaker *maker) {
+    assert(maker);
 
-    switch(tool->active) {
-    case TOOL_KIND_CURVE: {
-        Curve_draw_new(camera, &tool->get.curve_tool);
-        if(tool->get.curve_tool.finished) {
-            Object_array_push_back(objects, (Object) {
-                .kind = OBJECT_KIND_CURVE,
-                .as.curve = tool->get.curve_tool.new_curve,
-            });
-            tool->get.curve_tool.finished = false;
-        }
+    switch(maker->kind) {
+    case OBJECT_KIND_CURVE:
+        Curve_draw_new(camera, maker);
         break;
-    }
-    case TOOL_KIND_LINE: {
-        Line_draw_new(camera, &tool->get.line_tool);
-        if(tool->get.line_tool.finished) {
-            Object_array_push_back(objects, (Object) {
-                .kind = OBJECT_KIND_LINE,
-                .as.line = tool->get.line_tool.new_line,
-            });
-            tool->get.line_tool.finished = false;
-        }
+    case OBJECT_KIND_LINE:
+        Line_draw_new(camera, maker);
         break;
-    }
-    case TOOL_KIND_SELECT:
+    case OBJECT_KIND_NONE:
+    case OBJECT_KIND_PICTURE:
         // do nothing
         break;
     default:
         assert(false && "unreachable");
     }
 
-    for(size_t i = 0; i < objects->size; ++i) {
-        switch(objects->items[i].kind) {
+    for(size_t i = 0; i < maker->objects.size; ++i) {
+        switch(maker->objects.items[i].kind) {
         case OBJECT_KIND_CURVE:
-            Curve_draw(&objects->items[i].as.curve);
+            Curve_draw(&maker->objects.items[i].as.curve);
             break;
         case OBJECT_KIND_LINE:
-            Line_draw(&objects->items[i].as.line);
+            Line_draw(&maker->objects.items[i].as.line);
             break;
         case OBJECT_KIND_PICTURE:
-            Picture_draw(&objects->items[i].as.picture);
+            Picture_draw(&maker->objects.items[i].as.picture);
             break;
+        case OBJECT_KIND_NONE:
         default:
             assert(false && "unreachable");
         }
@@ -93,11 +83,12 @@ void Object_free(Object *object) {
     case OBJECT_KIND_CURVE:
         Vector2_array_free(&object->as.curve.points);
         break;
-    case OBJECT_KIND_LINE:
-        // do nothing
-        break;
     case OBJECT_KIND_PICTURE:
         UnloadTexture(object->as.picture.texture);
+        break;
+    case OBJECT_KIND_NONE:
+    case OBJECT_KIND_LINE:
+        // do nothing
         break;
     default:
         assert(false && "unreachable");

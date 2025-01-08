@@ -2,6 +2,7 @@
 #define CURVE_INCLUDED_
 
 #include "raypack.h"
+#include "object_maker_fwd.h"
 #include "selectable.h"
 #define ELEM_TYPE Vector2
 #include "array.h"
@@ -18,16 +19,8 @@ typedef struct {
     float max_y;
 } Curve;
 
-typedef struct {
-    Color color;
-    float thickness;
-    Curve new_curve;
-    bool pen_is_down;
-    bool finished;
-} CurveTool;
-
 void Curve_draw(const Curve *curve);
-void Curve_draw_new(Camera2D camera, CurveTool *tool);
+void Curve_draw_new(Camera2D camera, ObjectMaker *maker);
 bool Curve_is_under_mouse(Vector2 mouse_pos, const Curve *curve);
 void Curve_move(Vector2 mouse_delta, Curve *curve);
 

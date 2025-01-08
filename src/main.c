@@ -4,7 +4,6 @@
 #include "picture_loader.h"
 #include "selection.h"
 #include "toolbar.h"
-#include "tool.h"
 #include "camera.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,48 +15,41 @@ int main(void) {
     SetWindowState(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     SetExitKey(KEY_NULL);
 
-    Object_array objects = {0};
+    ObjectMaker object_maker = {
+        .color = BLUE,
+        .thickness = 3.0f,
+        .kind = OBJECT_KIND_CURVE,
+    };
 
     Camera2D camera = { .zoom = 1.0f };
-    Tool tool = {
-        .active = TOOL_KIND_CURVE,
-        .get.curve_tool = (CurveTool) {
-            .color = BLUE,
-            .thickness = 5.0f,
-        },
-        .get.line_tool = (LineTool) {
-            .color = GREEN,
-            .thickness = 3.0f,
-        },
-    };
     Toolbar toolbar = {0};
 
     while(!WindowShouldClose()) {
         Camera_update(&camera);
 
-        if(tool.active == TOOL_KIND_SELECT) {
-            Selection_update(camera, &objects);
+        if(object_maker.kind == OBJECT_KIND_NONE) {
+            Selection_update(camera, &object_maker.objects);
         }
 
-        load_dropped_pictures(&objects, camera);
+        load_dropped_pictures(&object_maker.objects, camera);
         if(toolbar.insert_picture) {
-            load_picture_using_file_dialog(&objects);
+            load_picture_using_file_dialog(&object_maker.objects);
             toolbar.insert_picture = false;
         }
     
         BeginDrawing();
             ClearBackground(BLACK);
             BeginMode2D(camera);
-                Object_draw_all(camera, &tool, &objects);
+                Object_draw_all(camera, &object_maker);
             EndMode2D();
-            Toolbar_draw(&toolbar, &tool);
+            Toolbar_draw(&toolbar, &object_maker);
         EndDrawing();
     }
 
-    for(size_t i = 0; i < objects.size; ++i) {
-        Object_free(&objects.items[i]);
+    for(size_t i = 0; i < object_maker.objects.size; ++i) {
+        Object_free(&object_maker.objects.items[i]);
     }
-    Object_array_free(&objects);
+    Object_array_free(&object_maker.objects);
     CloseWindow();
 
     return 0;

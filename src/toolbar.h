@@ -2,7 +2,7 @@
 #define TOOLBAR_INCLUDED_
 
 #include "raypack.h"
-#include "tool.h"
+#include "object.h"
 #include "color_palette.h"
 
 typedef struct {
@@ -11,7 +11,7 @@ typedef struct {
     bool insert_picture;
 } Toolbar;
 
-void Toolbar_draw(Toolbar *toolbar, Tool *tool);
+void Toolbar_draw(Toolbar *toolbar, ObjectMaker *object_maker);
 bool Toolbar_check_collision_point(Vector2 point);
 
 #endif //TOOLBAR_INCLUDED_

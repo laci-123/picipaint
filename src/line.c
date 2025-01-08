@@ -1,35 +1,44 @@
 #include "line.h"
+#include "object.h"
 #include "toolbar.h"
 #include <assert.h>
 
 
-void Line_draw_new(Camera2D camera, LineTool *tool) {
-    if(tool->pen_is_down) {
+void Line_draw_new(Camera2D camera, ObjectMaker *maker) {
+    assert(maker);
+    
+    if(maker->pen_is_down) {
         if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
-            tool->new_line.end = mouse_pos;
+
+            Object *new_object = &maker->objects.items[maker->objects.size - 1];
+            assert(new_object->kind == OBJECT_KIND_LINE);
+            Line *new_line = &new_object->as.line;
+
+            new_line->end = mouse_pos;
         }
         else {
-            tool->pen_is_down = false;
-            tool->finished = true;
+            maker->pen_is_down = false;
         }
-        Line_draw(&tool->new_line);
     }
     else {
         if(IsMouseButtonDown(MOUSE_BUTTON_LEFT) && !Toolbar_check_collision_point(GetMousePosition())) {
-            tool->pen_is_down = true;
+            maker->pen_is_down = true;
             Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
-            tool->new_line = (Line){
+            Line new_line = {
                 .start = mouse_pos,
                 .end = mouse_pos,
-                .color = tool->color,
-                .thickness = tool->thickness,
+                .color = maker->color,
+                .thickness = maker->thickness,
             };
+            Object_array_push_back(&maker->objects, (Object){ .kind = OBJECT_KIND_LINE, .as.line = new_line });
         }
     }
 }
 
 void Line_draw(const Line *line) {
+    assert(line);
+    
     if(line->base.is_selected) {
         Rectangle rect = {
             .x = fmin(line->start.x, line->end.x) - line->thickness,
