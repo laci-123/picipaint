@@ -167,6 +167,9 @@ static void draw_color_selector(Toolbar *toolbar, ObjectMaker *object_maker) {
         };
         toolbar->color_palette.background_color = base_color;
     }
+    if(IsKeyPressed(KEY_ESCAPE)) {
+        toolbar->color_palette.is_shown = false;
+    }
 
     if(toolbar->color_palette.is_shown) {
         ColorPalette_draw(&toolbar->color_palette, &object_maker->color);
