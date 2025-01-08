@@ -17,6 +17,8 @@ ifeq ($(OS),Windows_NT)
 	LINKFLAGS += -lgdi32 -lwinmm
 	 #nfd
 	LINKFLAGS += -lole32 -luuid -lshell32
+	 #use Windows subsystem
+	LINKFLAGS += -mwindows
 	NFD_FLAGS += -G "MinGW Makefiles"
 else
 	 #raylib
