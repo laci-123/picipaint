@@ -1,5 +1,4 @@
 #include "raypack.h"
-#include "curve.h"
 #include "object.h"
 #include "picture_loader.h"
 #include "selection.h"

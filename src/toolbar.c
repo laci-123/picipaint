@@ -9,7 +9,12 @@ static const float max_brightness_ratio = 0.3f;
 static const float height_1 = max_brightness_ratio          * toolbar_height;
 static const float height_2 = (1.0f - max_brightness_ratio) * toolbar_height;
 static const int   padding = 5;
-static const Color base_color = DARKBLUE;
+static const Color base_color = {
+    .r = 0,
+    .g = 82,
+    .b = 172,
+    .a = 255
+};
 static const int font_size = 14;
 
 bool Toolbar_check_collision_point(Vector2 point) {
@@ -77,11 +82,7 @@ static void draw_button(Toolbar *toolbar, Button *button) {
         .width = rect.width + 2,
         .height = rect.height + 2,
     };
-    if(button->is_down) {
-        shaddow.x -= 2;
-        shaddow.y -= 2;
-        background_color = ColorBrightness(base_color, 0.3f);
-    }
+
     if(CheckCollisionPointRec(GetMousePosition(), rect)) {
         if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
             button->is_down = true;
@@ -95,6 +96,12 @@ static void draw_button(Toolbar *toolbar, Button *button) {
         if(IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
             button->is_down = false;
         }
+    }
+
+    if(button->is_down) {
+        shaddow.x -= 2;
+        shaddow.y -= 2;
+        background_color = ColorBrightness(base_color, 0.3f);
     }
     
     DrawRectangleRec(shaddow, BLACK);
@@ -202,7 +209,7 @@ void Toolbar_draw(Toolbar *toolbar, ObjectMaker *object_maker) {
     draw_color_selector(toolbar, object_maker);
     draw_thickness_selector(toolbar, 100, 10.0f, object_maker);
 
-    static Button button_insert_picture = (Button){ .caption = "insert image", .is_down = false };
+    Button button_insert_picture = (Button){ .caption = "insert image", .is_down = false };
     draw_button(toolbar, &button_insert_picture);
     if(button_insert_picture.is_clicked) {
         toolbar->insert_picture = true;
