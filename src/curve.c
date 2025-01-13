@@ -3,7 +3,7 @@
 #include <assert.h>
 
 
-static Rectangle Curve_get_selection_rect(const Curve *curve) {
+Rectangle Curve_bounding_rec(const Curve *curve) {
     return (Rectangle){
         .x = curve->min_x - curve->thickness,
         .y = curve->min_y - curve->thickness,
@@ -14,8 +14,7 @@ static Rectangle Curve_get_selection_rect(const Curve *curve) {
 
 void Curve_draw(const Curve *curve) {
     if(curve->base.is_selected) {
-        Rectangle rect = Curve_get_selection_rect(curve);
-        DrawRectangleLinesEx(rect, 1.0f, WHITE);
+        DrawRectangleLinesEx(Curve_bounding_rec(curve), 1.0f, WHITE);
     }
 
     if(curve->points.size == 1) {
@@ -86,7 +85,7 @@ void Curve_draw_new(Camera2D camera, ObjectMaker *maker) {
 bool Curve_is_under_mouse(Vector2 mouse_pos, const Curve *curve) {
     assert(curve);
 
-    Rectangle rect = Curve_get_selection_rect(curve);
+    Rectangle rect = Curve_bounding_rec(curve);
     if(CheckCollisionPointRec(mouse_pos, rect)) {
         for(size_t i = 0; i < curve->points.size; ++i) {
             if(CheckCollisionPointCircle(mouse_pos, curve->points.items[i], 2 * curve->thickness)) {

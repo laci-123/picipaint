@@ -2,6 +2,23 @@
 #include <assert.h>
 
 
+Rectangle Object_bounding_rec(const Object *object) {
+    assert(object);
+    
+    switch (object->kind) {
+    case OBJECT_KIND_CURVE:
+        return Curve_bounding_rec(&object->as.curve);
+    case OBJECT_KIND_LINE:
+        return Line_bounding_rec(&object->as.line);
+    case OBJECT_KIND_PICTURE:
+        return Picture_bounding_rec(&object->as.picture);
+    case OBJECT_KIND_NONE:
+    default:
+        assert(false && "unreachable");
+    }
+}
+
+
 void Object_move(Vector2 mouse_delta, Object *object) {
     assert(object);
     

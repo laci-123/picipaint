@@ -23,5 +23,6 @@ void Curve_draw(const Curve *curve);
 void Curve_draw_new(Camera2D camera, ObjectMaker *maker);
 bool Curve_is_under_mouse(Vector2 mouse_pos, const Curve *curve);
 void Curve_move(Vector2 mouse_delta, Curve *curve);
+Rectangle Curve_bounding_rec(const Curve *curve);
 
 #endif //CURVE_INCLUDED_

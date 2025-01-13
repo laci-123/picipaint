@@ -33,6 +33,7 @@ void Object_move(Vector2 mouse_delta, Object *object);
 bool Object_is_under_mouse(Vector2 mouse_pos, const Object *object);
 void Object_free(Object *object);
 void Object_draw_all(Camera2D camera, ObjectMaker *maker);
+Rectangle Object_bounding_rec(const Object *object);
 
 
 #define ELEM_TYPE Object

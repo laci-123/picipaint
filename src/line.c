@@ -39,13 +39,7 @@ void Line_draw(const Line *line) {
     assert(line);
     
     if(line->base.is_selected) {
-        Rectangle rect = {
-            .x = fmin(line->start.x, line->end.x) - line->thickness,
-            .y = fmin(line->start.y, line->end.y) - line->thickness,
-            .width  = fabs(line->end.x - line->start.x) + 2 * line->thickness,
-            .height = fabs(line->end.y - line->start.y) + 2 * line->thickness,
-        };
-        DrawRectangleLinesEx(rect, 1.0f, WHITE);
+        DrawRectangleLinesEx(Line_bounding_rec(line), 1.0f, WHITE);
     }
     DrawLineEx(line->start, line->end, line->thickness, line->color);
 }
@@ -65,4 +59,15 @@ void Line_move(Vector2 mouse_delta, Line *line) {
 
     line->start = Vector2Add(line->start, mouse_delta);
     line->end = Vector2Add(line->end,   mouse_delta);
+}
+
+Rectangle Line_bounding_rec(const Line *line) {
+    assert(line);
+    
+    return (Rectangle){
+        .x = fmin(line->start.x, line->end.x) - line->thickness,
+        .y = fmin(line->start.y, line->end.y) - line->thickness,
+        .width  = fabs(line->end.x - line->start.x) + 2 * line->thickness,
+        .height = fabs(line->end.y - line->start.y) + 2 * line->thickness,
+    };
 }
