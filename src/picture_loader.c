@@ -1,5 +1,6 @@
 #include "picture_loader.h"
 #include <nfd.h>
+#include <assert.h>
 
 
 static bool load_picture_from_file(const char *file_path, Vector2 position, Object *out_object) {
@@ -7,9 +8,9 @@ static bool load_picture_from_file(const char *file_path, Vector2 position, Obje
     if(IsImageValid(image)) {
         Picture picture = {
             .texture = LoadTextureFromImage(image),
+            .original_image = image,
             .top_left = position,
         };
-        UnloadImage(image);
         *out_object = (Object){.as.picture = picture, .kind = OBJECT_KIND_PICTURE};
         return true;
     }
@@ -19,6 +20,8 @@ static bool load_picture_from_file(const char *file_path, Vector2 position, Obje
 }
 
 void load_dropped_pictures(Object_array *objects, Camera2D camera) {
+    assert(objects);
+    
     static const Vector2 offset = { .x = 30, .y = 30 };
 
     if(IsFileDropped()) {
@@ -37,6 +40,8 @@ void load_dropped_pictures(Object_array *objects, Camera2D camera) {
 }
 
 void load_picture_using_file_dialog(Object_array *objects) {
+    assert(objects);
+
     // source: https://github.com/raysan5/raylib/blob/master/FAQ.md#what-file-formats-are-supported-by-raylib
     static const char *supported_image_formats = "png,bmp,tga,jpg,jpeg,gif,qoi,psd,dds,hdr,ktx,astc,pkm,pvr";
 

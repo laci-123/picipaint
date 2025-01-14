@@ -6,6 +6,7 @@
 
 typedef struct {
     Selectable base;
+    Image original_image;
     Texture2D texture;
     Vector2 top_left;
 } Picture;

@@ -6,10 +6,10 @@ Rectangle Picture_bounding_rec(const Picture *picture) {
     assert(picture);
     
     return (Rectangle){
-        .x = picture->top_left.x,// - 2,
-        .y = picture->top_left.y,// - 2,
-        .width = picture->texture.width,// + 4,
-        .height = picture->texture.height,// + 4,
+        .x = picture->top_left.x,
+        .y = picture->top_left.y,
+        .width = picture->texture.width,
+        .height = picture->texture.height,
     };
 }
 
@@ -43,9 +43,9 @@ void Picture_resize(Rectangle new_size, Picture *picture) {
     picture->top_left.x = new_size.x;
     picture->top_left.y = new_size.y;
 
-    Image image = LoadImageFromTexture(picture->texture);
-    UnloadTexture(picture->texture);
+    Image image = ImageCopy(picture->original_image);
     ImageResize(&image, new_size.width, new_size.height);
+    UnloadTexture(picture->texture);
     picture->texture = LoadTextureFromImage(image);
     UnloadImage(image);
 }
