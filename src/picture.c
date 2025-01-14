@@ -17,9 +17,6 @@ Rectangle Picture_bounding_rec(const Picture *picture) {
 void Picture_draw(const Picture *picture) {
     assert(picture);
     
-    if(picture->base.is_selected) {
-        DrawRectangleLinesEx(Picture_bounding_rec(picture), 1.0f, WHITE);
-    }
     DrawTextureV(picture->texture, picture->top_left, WHITE);
 }
 

@@ -38,9 +38,6 @@ void Line_draw_new(Camera2D camera, ObjectMaker *maker) {
 void Line_draw(const Line *line) {
     assert(line);
     
-    if(line->base.is_selected) {
-        DrawRectangleLinesEx(Line_bounding_rec(line), 1.0f, WHITE);
-    }
     DrawLineEx(line->start, line->end, line->thickness, line->color);
 }
 

@@ -58,6 +58,16 @@ bool Object_is_under_mouse(Vector2 mouse_pos, const Object *object) {
 }
 
 
+static Rectangle pad_rectangle(Rectangle rec, float padding) {
+    return (Rectangle){
+        .x      = rec.x - padding,
+        .y      = rec.y - padding,
+        .width  = rec.width + 2 * padding,
+        .height = rec.height + 2 * padding,
+    };
+}
+
+
 void Object_draw_all(Camera2D camera, ObjectMaker *maker) {
     assert(maker);
 
@@ -79,6 +89,10 @@ void Object_draw_all(Camera2D camera, ObjectMaker *maker) {
     }
 
     for(size_t i = 0; i < maker->objects.size; ++i) {
+        if(maker->objects.items[i].as.selectable.is_selected) {
+            DrawRectangleLinesEx(pad_rectangle(Object_bounding_rec(&maker->objects.items[i]), 2), 1.0f, WHITE);
+        }
+        
         switch(maker->objects.items[i].kind) {
         case OBJECT_KIND_CURVE:
             Curve_draw(&maker->objects.items[i].as.curve);

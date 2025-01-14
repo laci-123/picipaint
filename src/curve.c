@@ -4,6 +4,8 @@
 
 
 Rectangle Curve_bounding_rec(const Curve *curve) {
+    assert(curve);
+    
     return (Rectangle){
         .x = curve->min_x - curve->thickness,
         .y = curve->min_y - curve->thickness,
@@ -13,10 +15,8 @@ Rectangle Curve_bounding_rec(const Curve *curve) {
 }
 
 void Curve_draw(const Curve *curve) {
-    if(curve->base.is_selected) {
-        DrawRectangleLinesEx(Curve_bounding_rec(curve), 1.0f, WHITE);
-    }
-
+    assert(curve);
+    
     if(curve->points.size == 1) {
         DrawCircleV(curve->points.items[0], curve->thickness * 0.6f, curve->color);
     }
