@@ -65,9 +65,18 @@ Rectangle Line_bounding_rec(const Line *line) {
     assert(line);
     
     return (Rectangle){
-        .x = fmin(line->start.x, line->end.x) - line->thickness,
-        .y = fmin(line->start.y, line->end.y) - line->thickness,
-        .width  = fabs(line->end.x - line->start.x) + 2 * line->thickness,
-        .height = fabs(line->end.y - line->start.y) + 2 * line->thickness,
+        .x = fmin(line->start.x, line->end.x),// - line->thickness,
+        .y = fmin(line->start.y, line->end.y),// - line->thickness,
+        .width  = fabs(line->end.x - line->start.x),// + 2 * line->thickness,
+        .height = fabs(line->end.y - line->start.y),// + 2 * line->thickness,
     };
+}
+
+void Line_resize(Rectangle new_size, Line *line) {
+    assert(line);
+
+    line->start.x = new_size.x;
+    line->start.y = new_size.y;
+    line->end.x    = new_size.x + new_size.width;
+    line->end.y    = new_size.y + new_size.height;
 }

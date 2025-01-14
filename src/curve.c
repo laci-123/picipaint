@@ -109,3 +109,17 @@ void Curve_move(Vector2 mouse_delta, Curve *curve) {
     curve->max_x += mouse_delta.x;
     curve->max_y += mouse_delta.y;
 }
+
+void Curve_resize(Rectangle new_size, Curve *curve) {
+    assert(curve);
+    
+    float scale = (float)new_size.width / (float)(curve->max_x - curve->min_x);
+    for(size_t i = 0; i < curve->points.size; ++i) {
+        Vector2Scale(curve->points.items[i], scale);
+    }
+    
+    curve->min_x = new_size.x;
+    curve->min_y = new_size.y;
+    curve->max_x = new_size.x + new_size.width;
+    curve->max_y = new_size.y + new_size.height;
+}

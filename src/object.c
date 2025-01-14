@@ -113,3 +113,24 @@ void Object_free(Object *object) {
         assert(false && "unreachable");
     }
 }
+
+void Object_resize(Rectangle new_size, Object *object) {
+    assert(object);
+    
+    switch (object->kind) {
+    case OBJECT_KIND_NONE:
+        // do nothing
+        break;
+    case OBJECT_KIND_CURVE:
+        Curve_resize(new_size, &object->as.curve);
+        break;
+    case OBJECT_KIND_LINE:
+        Line_resize(new_size, &object->as.line);
+        break;
+    case OBJECT_KIND_PICTURE:
+        Picture_resize(new_size, &object->as.picture);
+        break;
+    default:
+        assert(false && "unreachable");
+    }
+}
