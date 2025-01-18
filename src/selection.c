@@ -53,7 +53,57 @@ static bool update_resizing(Camera2D camera, Object_array *objects) {
             Rectangle bounding_rec = Object_bounding_rec(&objects->items[i]);
             RectangleParts rparts = parts_of_rectangle(bounding_rec, 10);
 
-            if(CheckCollisionPointCircle(mouse_pos, rparts.top_left_corner, 10)) {
+            if(objects->items[i].as.selectable.resize != RESIZE_NONE) {
+                if(is_mouse_down) {
+                    Rectangle new_size = bounding_rec;
+                    switch(objects->items[i].as.selectable.resize) {
+                    case RESIZE_TOP:
+                        new_size.height += bounding_rec.y - mouse_pos.y;
+                        new_size.y = mouse_pos.y;
+                        break;
+                    case RESIZE_BOTTOM:
+                        new_size.height = mouse_pos.y - bounding_rec.y;
+                        break;
+                    case RESIZE_LEFT:
+                        new_size.width += bounding_rec.x - mouse_pos.x;
+                        new_size.x = mouse_pos.x;
+                        break;
+                    case RESIZE_RIGHT:
+                        new_size.width = mouse_pos.x - bounding_rec.x;
+                        break;
+                    case RESIZE_TOP_LEFT:
+                        new_size.width += bounding_rec.x - mouse_pos.x;
+                        new_size.height += bounding_rec.y - mouse_pos.y;
+                        new_size.x = mouse_pos.x;
+                        new_size.y = mouse_pos.y;
+                        break;
+                    case RESIZE_TOP_RIGHT:
+                        new_size.height += bounding_rec.y - mouse_pos.y;
+                        new_size.y = mouse_pos.y;
+                        new_size.width = mouse_pos.x - bounding_rec.x;
+                        break;
+                    case RESIZE_BOTTOM_LEFT:
+                        new_size.height = mouse_pos.y - bounding_rec.y;
+                        new_size.width += bounding_rec.x - mouse_pos.x;
+                        new_size.x = mouse_pos.x;
+                        break;
+                    case RESIZE_BOTTOM_RIGHT:
+                        new_size.height = mouse_pos.y - bounding_rec.y;
+                        new_size.width = mouse_pos.x - bounding_rec.x;
+                        break;
+                    case RESIZE_NONE:
+                        assert(false && "objects->items[i].as.selectable.resize cannot be RESIZE_NONE because we already checked that it isn't");
+                    }
+                    if(new_size.width > 1 && new_size.height > 1) {
+                        Object_resize(new_size, &objects->items[i]);
+                    }
+                    resize_happening = true;
+                }
+                else {
+                    objects->items[i].as.selectable.resize = RESIZE_NONE;
+                }
+            }
+            else if(CheckCollisionPointCircle(mouse_pos, rparts.top_left_corner, 10)) {
                 SetMouseCursor(MOUSE_CURSOR_RESIZE_NWSE);
                 objects->items[i].as.selectable.resize = is_mouse_down ? RESIZE_TOP_LEFT : RESIZE_NONE;
                 resize_happening = true;
@@ -92,53 +142,6 @@ static bool update_resizing(Camera2D camera, Object_array *objects) {
                 SetMouseCursor(MOUSE_CURSOR_RESIZE_EW);
                 objects->items[i].as.selectable.resize = is_mouse_down ? RESIZE_RIGHT : RESIZE_NONE;
                 resize_happening = true;
-            }
-            else if(objects->items[i].as.selectable.resize != RESIZE_NONE) {
-                if(is_mouse_down) {
-                    switch(objects->items[i].as.selectable.resize) {
-                    case RESIZE_TOP:
-                        bounding_rec.height += bounding_rec.y - mouse_pos.y;
-                        bounding_rec.y = mouse_pos.y;
-                        break;
-                    case RESIZE_BOTTOM:
-                        bounding_rec.height = mouse_pos.y - bounding_rec.y;
-                        break;
-                    case RESIZE_LEFT:
-                        bounding_rec.width += bounding_rec.x - mouse_pos.x;
-                        bounding_rec.x = mouse_pos.x;
-                        break;
-                    case RESIZE_RIGHT:
-                        bounding_rec.width = mouse_pos.x - bounding_rec.x;
-                        break;
-                    case RESIZE_TOP_LEFT:
-                        bounding_rec.width += bounding_rec.x - mouse_pos.x;
-                        bounding_rec.height += bounding_rec.y - mouse_pos.y;
-                        bounding_rec.x = mouse_pos.x;
-                        bounding_rec.y = mouse_pos.y;
-                        break;
-                    case RESIZE_TOP_RIGHT:
-                        bounding_rec.height += bounding_rec.y - mouse_pos.y;
-                        bounding_rec.y = mouse_pos.y;
-                        bounding_rec.width = mouse_pos.x - bounding_rec.x;
-                        break;
-                    case RESIZE_BOTTOM_LEFT:
-                        bounding_rec.height = mouse_pos.y - bounding_rec.y;
-                        bounding_rec.width += bounding_rec.x - mouse_pos.x;
-                        bounding_rec.x = mouse_pos.x;
-                        break;
-                    case RESIZE_BOTTOM_RIGHT:
-                        bounding_rec.height = mouse_pos.y - bounding_rec.y;
-                        bounding_rec.width = mouse_pos.x - bounding_rec.x;
-                        break;
-                    case RESIZE_NONE:
-                        assert(false && "objects->items[i].as.selectable.resize cannot be RESIZE_NONE because we already checked that it isn't");
-                    }
-                    Object_resize(bounding_rec, &objects->items[i]);
-                    resize_happening = true;
-                }
-                else {
-                    objects->items[i].as.selectable.resize = RESIZE_NONE;
-                }
             }
         }
     }
