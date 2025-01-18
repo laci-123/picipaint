@@ -62,18 +62,24 @@ Rectangle Line_bounding_rec(const Line *line) {
     assert(line);
     
     return (Rectangle){
-        .x = fmin(line->start.x, line->end.x),// - line->thickness,
-        .y = fmin(line->start.y, line->end.y),// - line->thickness,
-        .width  = fabs(line->end.x - line->start.x),// + 2 * line->thickness,
-        .height = fabs(line->end.y - line->start.y),// + 2 * line->thickness,
+        .x = fmin(line->start.x, line->end.x),
+        .y = fmin(line->start.y, line->end.y),
+        .width  = fabs(line->end.x - line->start.x),
+        .height = fabs(line->end.y - line->start.y),
     };
 }
 
 void Line_resize(Rectangle new_size, Line *line) {
     assert(line);
 
-    line->start.x = new_size.x;
-    line->start.y = new_size.y;
-    line->end.x    = new_size.x + new_size.width;
-    line->end.y    = new_size.y + new_size.height;
+
+    float start_x = line->start.x < line->end.x ? new_size.x : new_size.x + new_size.width; 
+    float start_y = line->start.y < line->end.y ? new_size.y : new_size.y + new_size.height; 
+    float end_x   = line->start.x > line->end.x ? new_size.x : new_size.x + new_size.width; 
+    float end_y   = line->start.y > line->end.y ? new_size.y : new_size.y + new_size.height; 
+
+    line->start.x = start_x;
+    line->start.y = start_y;
+    line->end.x   = end_x; 
+    line->end.y   = end_y; 
 }
