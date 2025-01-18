@@ -3,15 +3,11 @@
 
 
 typedef enum {
-    RESIZE_NONE,
-    RESIZE_TOP,
-    RESIZE_BOTTOM,
-    RESIZE_LEFT,
-    RESIZE_RIGHT,
-    RESIZE_TOP_LEFT,
-    RESIZE_TOP_RIGHT,
-    RESIZE_BOTTOM_LEFT,
-    RESIZE_BOTTOM_RIGHT,
+    RESIZE_NONE   = 0,
+    RESIZE_TOP    = 1,
+    RESIZE_BOTTOM = 2,
+    RESIZE_LEFT   = 4,
+    RESIZE_RIGHT  = 8,
 } Resize;
 
 typedef struct {

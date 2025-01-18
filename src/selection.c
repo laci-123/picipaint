@@ -43,112 +43,88 @@ static RectangleParts parts_of_rectangle(Rectangle rec, int side_thickness) {
 }
 
 
+typedef struct {
+    Resize resize;
+    MouseCursor cursor;
+} ResizeAndCursor;
+
+static ResizeAndCursor resize_and_cursor(Rectangle bounding_rec, Vector2 mouse_pos) {
+    RectangleParts rparts = parts_of_rectangle(bounding_rec, 10);
+
+    if(CheckCollisionPointCircle(mouse_pos, rparts.top_left_corner, 10)) { 
+        return (ResizeAndCursor){ .resize = RESIZE_TOP | RESIZE_LEFT, .cursor = MOUSE_CURSOR_RESIZE_NWSE };
+    }
+    if(CheckCollisionPointCircle(mouse_pos, rparts.bottom_right_corner, 10)) {
+        return (ResizeAndCursor){ .resize = RESIZE_BOTTOM | RESIZE_RIGHT, .cursor = MOUSE_CURSOR_RESIZE_NWSE };
+    }
+    if(CheckCollisionPointCircle(mouse_pos, rparts.top_right_corner, 10)) { 
+        return (ResizeAndCursor){ .resize = RESIZE_TOP | RESIZE_RIGHT, .cursor = MOUSE_CURSOR_RESIZE_NESW };
+    }
+    if(CheckCollisionPointCircle(mouse_pos, rparts.bottom_left_corner, 10)) { 
+        return (ResizeAndCursor){ .resize = RESIZE_BOTTOM | RESIZE_LEFT, .cursor = MOUSE_CURSOR_RESIZE_NESW };
+    }
+    if(CheckCollisionPointRec(mouse_pos, rparts.top_side)) {
+        return (ResizeAndCursor){ .resize = RESIZE_TOP, .cursor = MOUSE_CURSOR_RESIZE_NS };
+    }
+    if(CheckCollisionPointRec(mouse_pos, rparts.bottom_side)) {
+        return (ResizeAndCursor){ .resize = RESIZE_BOTTOM, .cursor = MOUSE_CURSOR_RESIZE_NS };
+    }
+    if(CheckCollisionPointRec(mouse_pos, rparts.left_side)) {
+        return (ResizeAndCursor){ .resize = RESIZE_LEFT, .cursor = MOUSE_CURSOR_RESIZE_EW };
+    }
+    if (CheckCollisionPointRec(mouse_pos, rparts.right_side)) {
+        return (ResizeAndCursor){ .resize = RESIZE_RIGHT, .cursor = MOUSE_CURSOR_RESIZE_EW };
+    }
+    return (ResizeAndCursor){ .resize = RESIZE_NONE, .cursor = MOUSE_CURSOR_DEFAULT };
+}
+
+
 static bool update_resizing(Camera2D camera, Object_array *objects) {
     Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
     bool is_mouse_down = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
     bool resize_happening = false;
+    bool none_is_selected = true;
 
     for(size_t i = 0; i < objects->size; ++i) {
         if(objects->items[i].as.selectable.is_selected) {
+            none_is_selected = false;
             Rectangle bounding_rec = Object_bounding_rec(&objects->items[i]);
-            RectangleParts rparts = parts_of_rectangle(bounding_rec, 10);
+            Resize *resize = &objects->items[i].as.selectable.resize;
 
-            if(objects->items[i].as.selectable.resize != RESIZE_NONE) {
-                if(is_mouse_down) {
-                    Rectangle new_size = bounding_rec;
-                    switch(objects->items[i].as.selectable.resize) {
-                    case RESIZE_TOP:
-                        new_size.height += bounding_rec.y - mouse_pos.y;
-                        new_size.y = mouse_pos.y;
-                        break;
-                    case RESIZE_BOTTOM:
-                        new_size.height = mouse_pos.y - bounding_rec.y;
-                        break;
-                    case RESIZE_LEFT:
-                        new_size.width += bounding_rec.x - mouse_pos.x;
-                        new_size.x = mouse_pos.x;
-                        break;
-                    case RESIZE_RIGHT:
-                        new_size.width = mouse_pos.x - bounding_rec.x;
-                        break;
-                    case RESIZE_TOP_LEFT:
-                        new_size.width += bounding_rec.x - mouse_pos.x;
-                        new_size.height += bounding_rec.y - mouse_pos.y;
-                        new_size.x = mouse_pos.x;
-                        new_size.y = mouse_pos.y;
-                        break;
-                    case RESIZE_TOP_RIGHT:
-                        new_size.height += bounding_rec.y - mouse_pos.y;
-                        new_size.y = mouse_pos.y;
-                        new_size.width = mouse_pos.x - bounding_rec.x;
-                        break;
-                    case RESIZE_BOTTOM_LEFT:
-                        new_size.height = mouse_pos.y - bounding_rec.y;
-                        new_size.width += bounding_rec.x - mouse_pos.x;
-                        new_size.x = mouse_pos.x;
-                        break;
-                    case RESIZE_BOTTOM_RIGHT:
-                        new_size.height = mouse_pos.y - bounding_rec.y;
-                        new_size.width = mouse_pos.x - bounding_rec.x;
-                        break;
-                    case RESIZE_NONE:
-                        assert(false && "objects->items[i].as.selectable.resize cannot be RESIZE_NONE because we already checked that it isn't");
-                    }
-                    if(new_size.width > 1 && new_size.height > 1) {
-                        Object_resize(new_size, &objects->items[i]);
-                    }
+            if(*resize != RESIZE_NONE && is_mouse_down) {
+                if(*resize & RESIZE_TOP){
+                    bounding_rec.height += bounding_rec.y - mouse_pos.y;
+                    bounding_rec.y = mouse_pos.y;
+                }
+                if(*resize & RESIZE_BOTTOM) {
+                    bounding_rec.height = mouse_pos.y - bounding_rec.y;
+                }
+                if(*resize & RESIZE_LEFT) {
+                    bounding_rec.width += bounding_rec.x - mouse_pos.x;
+                    bounding_rec.x = mouse_pos.x;
+                }
+                if(*resize & RESIZE_RIGHT) {
+                    bounding_rec.width = mouse_pos.x - bounding_rec.x;
+                }
+                if(bounding_rec.width > 1 && bounding_rec.height > 1) {
+                    Object_resize(bounding_rec, &objects->items[i]);
                     resize_happening = true;
                 }
-                else {
-                    objects->items[i].as.selectable.resize = RESIZE_NONE;
+            }
+            else {
+                ResizeAndCursor rc = resize_and_cursor(bounding_rec, mouse_pos);
+                *resize = rc.resize;
+                SetMouseCursor(rc.cursor);
+                if(*resize != RESIZE_NONE && is_mouse_down) {
+                    resize_happening = true;
                 }
-            }
-            else if(CheckCollisionPointCircle(mouse_pos, rparts.top_left_corner, 10)) {
-                SetMouseCursor(MOUSE_CURSOR_RESIZE_NWSE);
-                objects->items[i].as.selectable.resize = is_mouse_down ? RESIZE_TOP_LEFT : RESIZE_NONE;
-                resize_happening = true;
-            }
-            else if(CheckCollisionPointCircle(mouse_pos, rparts.bottom_right_corner, 10)) {
-                SetMouseCursor(MOUSE_CURSOR_RESIZE_NWSE);
-                objects->items[i].as.selectable.resize = is_mouse_down ? RESIZE_BOTTOM_RIGHT : RESIZE_NONE;
-                resize_happening = true;
-            }
-            else if(CheckCollisionPointCircle(mouse_pos, rparts.top_right_corner, 10)) {
-                SetMouseCursor(MOUSE_CURSOR_RESIZE_NESW);
-                objects->items[i].as.selectable.resize = is_mouse_down ? RESIZE_TOP_RIGHT : RESIZE_NONE;
-                resize_happening = true;
-            }
-            else if(CheckCollisionPointCircle(mouse_pos, rparts.bottom_left_corner, 10)) {
-                SetMouseCursor(MOUSE_CURSOR_RESIZE_NESW);
-                objects->items[i].as.selectable.resize = is_mouse_down ? RESIZE_BOTTOM_LEFT : RESIZE_NONE;
-                resize_happening = true;
-            }
-            else if(CheckCollisionPointRec(mouse_pos, rparts.top_side)) {
-                SetMouseCursor(MOUSE_CURSOR_RESIZE_NS);
-                objects->items[i].as.selectable.resize = is_mouse_down ? RESIZE_TOP : RESIZE_NONE;
-                resize_happening = true;
-            }
-            else if(CheckCollisionPointRec(mouse_pos, rparts.bottom_side)) {
-                SetMouseCursor(MOUSE_CURSOR_RESIZE_NS);
-                objects->items[i].as.selectable.resize = is_mouse_down ? RESIZE_BOTTOM : RESIZE_NONE;
-                resize_happening = true;
-            }
-            else if(CheckCollisionPointRec(mouse_pos, rparts.left_side)) {
-                SetMouseCursor(MOUSE_CURSOR_RESIZE_EW);
-                objects->items[i].as.selectable.resize = is_mouse_down ? RESIZE_LEFT : RESIZE_NONE;
-                resize_happening = true;
-            }
-            else if (CheckCollisionPointRec(mouse_pos, rparts.right_side)) {
-                SetMouseCursor(MOUSE_CURSOR_RESIZE_EW);
-                objects->items[i].as.selectable.resize = is_mouse_down ? RESIZE_RIGHT : RESIZE_NONE;
-                resize_happening = true;
             }
         }
     }
-    if(!resize_happening) {
+
+    if(none_is_selected) {
         SetMouseCursor(MOUSE_CURSOR_DEFAULT);
     }
-
     return resize_happening;
 }
 
