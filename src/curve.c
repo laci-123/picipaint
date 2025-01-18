@@ -7,10 +7,10 @@ Rectangle Curve_bounding_rec(const Curve *curve) {
     assert(curve);
     
     return (Rectangle){
-        .x = curve->min_x - curve->thickness,
-        .y = curve->min_y - curve->thickness,
-        .width = curve->max_x - curve->min_x + 2*curve->thickness,
-        .height = curve->max_y - curve->min_y + 2*curve->thickness,
+        .x = curve->min_x,// - curve->thickness,
+        .y = curve->min_y,// - curve->thickness,
+        .width = curve->max_x - curve->min_x,// + 2*curve->thickness,
+        .height = curve->max_y - curve->min_y,// + 2*curve->thickness,
     };
 }
 
@@ -88,7 +88,7 @@ bool Curve_is_under_mouse(Vector2 mouse_pos, const Curve *curve) {
     Rectangle rect = Curve_bounding_rec(curve);
     if(CheckCollisionPointRec(mouse_pos, rect)) {
         for(size_t i = 0; i < curve->points.size; ++i) {
-            if(CheckCollisionPointCircle(mouse_pos, curve->points.items[i], 2 * curve->thickness)) {
+            if(CheckCollisionPointCircle(mouse_pos, curve->points.items[i], 4 * curve->thickness)) {
                 return true;
             }
         }
@@ -113,9 +113,9 @@ void Curve_move(Vector2 mouse_delta, Curve *curve) {
 void Curve_resize(Rectangle new_size, Curve *curve) {
     assert(curve);
     
-    float scale = (float)new_size.width / (float)(curve->max_x - curve->min_x);
     for(size_t i = 0; i < curve->points.size; ++i) {
-        Vector2Scale(curve->points.items[i], scale);
+        curve->points.items[i].x = Remap(curve->points.items[i].x, curve->min_x, curve->max_x, new_size.x, new_size.x + new_size.width);
+        curve->points.items[i].y = Remap(curve->points.items[i].y, curve->min_y, curve->max_y, new_size.y, new_size.y + new_size.height);
     }
     
     curve->min_x = new_size.x;
