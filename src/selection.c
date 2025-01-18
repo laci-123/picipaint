@@ -80,51 +80,58 @@ static ResizeAndCursor resize_and_cursor(Rectangle bounding_rec, Vector2 mouse_p
 
 
 static bool update_resizing(Camera2D camera, Object_array *objects) {
-    Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
-    bool is_mouse_down = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
-    bool resize_happening = false;
-    bool none_is_selected = true;
-
+    Object *single_selected_object = NULL;
     for(size_t i = 0; i < objects->size; ++i) {
         if(objects->items[i].as.selectable.is_selected) {
-            none_is_selected = false;
-            Rectangle bounding_rec = Object_bounding_rec(&objects->items[i]);
-            Resize *resize = &objects->items[i].as.selectable.resize;
-
-            if(*resize != RESIZE_NONE && is_mouse_down) {
-                if(*resize & RESIZE_TOP){
-                    bounding_rec.height += bounding_rec.y - mouse_pos.y;
-                    bounding_rec.y = mouse_pos.y;
-                }
-                if(*resize & RESIZE_BOTTOM) {
-                    bounding_rec.height = mouse_pos.y - bounding_rec.y;
-                }
-                if(*resize & RESIZE_LEFT) {
-                    bounding_rec.width += bounding_rec.x - mouse_pos.x;
-                    bounding_rec.x = mouse_pos.x;
-                }
-                if(*resize & RESIZE_RIGHT) {
-                    bounding_rec.width = mouse_pos.x - bounding_rec.x;
-                }
-                if(bounding_rec.width > 1 && bounding_rec.height > 1) {
-                    Object_resize(bounding_rec, &objects->items[i]);
-                    resize_happening = true;
-                }
+            if(single_selected_object) {
+                return false;
             }
             else {
-                ResizeAndCursor rc = resize_and_cursor(bounding_rec, mouse_pos);
-                *resize = rc.resize;
-                SetMouseCursor(rc.cursor);
-                if(*resize != RESIZE_NONE && is_mouse_down) {
-                    resize_happening = true;
-                }
+                single_selected_object = &objects->items[i];
             }
         }
     }
+    
+    bool resize_happening = false;
+    if(single_selected_object) {
+        Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
+        Rectangle bounding_rec = Object_bounding_rec(single_selected_object);
+        bool is_mouse_down = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+        Resize *resize = &single_selected_object->as.selectable.resize;
 
-    if(none_is_selected) {
+        if(*resize != RESIZE_NONE && is_mouse_down) {
+            if(*resize & RESIZE_TOP){
+                bounding_rec.height += bounding_rec.y - mouse_pos.y;
+                bounding_rec.y = mouse_pos.y;
+            }
+            if(*resize & RESIZE_BOTTOM) {
+                bounding_rec.height = mouse_pos.y - bounding_rec.y;
+            }
+            if(*resize & RESIZE_LEFT) {
+                bounding_rec.width += bounding_rec.x - mouse_pos.x;
+                bounding_rec.x = mouse_pos.x;
+            }
+            if(*resize & RESIZE_RIGHT) {
+                bounding_rec.width = mouse_pos.x - bounding_rec.x;
+            }
+            if(bounding_rec.width > 1 && bounding_rec.height > 1) {
+                Object_resize(bounding_rec, single_selected_object);
+                resize_happening = true;
+            }
+        }
+        else {
+            ResizeAndCursor rc = resize_and_cursor(bounding_rec, mouse_pos);
+            *resize = rc.resize;
+            SetMouseCursor(rc.cursor);
+            if(*resize != RESIZE_NONE && is_mouse_down) {
+                resize_happening = true;
+            }
+        }
+    }
+    else {
         SetMouseCursor(MOUSE_CURSOR_DEFAULT);
     }
+
     return resize_happening;
 }
 
