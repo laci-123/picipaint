@@ -81,55 +81,75 @@ static ResizeAndCursor resize_and_cursor(Rectangle bounding_rec, Vector2 mouse_p
 
 static bool update_resizing(Camera2D camera, Object_array *objects) {
     Object *single_selected_object = NULL;
+    bool resize_happening = false;
+
     for(size_t i = 0; i < objects->size; ++i) {
         if(objects->items[i].as.selectable.is_selected) {
-            if(single_selected_object) {
-                return false;
+            if(single_selected_object == NULL) {
+                single_selected_object = &objects->items[i];
             }
             else {
-                single_selected_object = &objects->items[i];
+                return resize_happening;
             }
         }
     }
     
-    bool resize_happening = false;
-    if(single_selected_object) {
-        Vector2 mouse_pos = GetScreenToWorld2D(GetMousePosition(), camera);
-        Rectangle bounding_rec = Object_bounding_rec(single_selected_object);
-        bool is_mouse_down = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
-        Resize *resize = &single_selected_object->as.selectable.resize;
+    if(single_selected_object == NULL) {
+        SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+        return resize_happening;
+    }
 
-        if(*resize != RESIZE_NONE && is_mouse_down) {
-            if(*resize & RESIZE_TOP){
-                bounding_rec.height += bounding_rec.y - mouse_pos.y;
-                bounding_rec.y = mouse_pos.y;
+    Rectangle bounding_rec = Object_bounding_rec(single_selected_object);
+    Vector2 mouse_pos      = GetScreenToWorld2D(GetMousePosition(), camera);
+    bool is_mouse_down     = IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+    float d_width          = 0;
+    float d_height         = 0;
+    float aspect_ratio     = bounding_rec.width / bounding_rec.height;
+    Resize *resize         = &single_selected_object->as.selectable.resize;
+
+    if(*resize != RESIZE_NONE && is_mouse_down) {
+        if(*resize & RESIZE_TOP){
+            d_height = bounding_rec.y - mouse_pos.y;
+            bounding_rec.height += d_height;
+            bounding_rec.y = mouse_pos.y;
+        }
+        if(*resize & RESIZE_BOTTOM) {
+            d_height = mouse_pos.y - bounding_rec.y;
+            bounding_rec.height = d_height;
+        }
+        if(*resize & RESIZE_LEFT) {
+            d_width = bounding_rec.x - mouse_pos.x;
+            bounding_rec.width += d_width;
+            bounding_rec.x = mouse_pos.x;
+        }
+        if(*resize & RESIZE_RIGHT) {
+            d_width = mouse_pos.x - bounding_rec.x;
+            bounding_rec.width = d_width;
+        }
+
+        bool is_control_down = IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL);
+        bool is_corner       = (*resize & (*resize - 1)) != 0; // more than 1 bit is set (e.g. RESIZE_TOP | RESIZE_RIGHT)
+        if(is_control_down && is_corner) {
+            if(fabs(d_height) < fabs(d_width)) {
+                bounding_rec.width = bounding_rec.height * aspect_ratio;
             }
-            if(*resize & RESIZE_BOTTOM) {
-                bounding_rec.height = mouse_pos.y - bounding_rec.y;
-            }
-            if(*resize & RESIZE_LEFT) {
-                bounding_rec.width += bounding_rec.x - mouse_pos.x;
-                bounding_rec.x = mouse_pos.x;
-            }
-            if(*resize & RESIZE_RIGHT) {
-                bounding_rec.width = mouse_pos.x - bounding_rec.x;
-            }
-            if(bounding_rec.width > 1 && bounding_rec.height > 1) {
-                Object_resize(bounding_rec, single_selected_object);
-                resize_happening = true;
+            else {
+                bounding_rec.height = bounding_rec.width / aspect_ratio;
             }
         }
-        else {
-            ResizeAndCursor rc = resize_and_cursor(bounding_rec, mouse_pos);
-            *resize = rc.resize;
-            SetMouseCursor(rc.cursor);
-            if(*resize != RESIZE_NONE && is_mouse_down) {
-                resize_happening = true;
-            }
+
+        if(bounding_rec.width > 1 && bounding_rec.height > 1) {
+            Object_resize(bounding_rec, single_selected_object);
+            resize_happening = true;
         }
     }
     else {
-        SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+        ResizeAndCursor rc = resize_and_cursor(bounding_rec, mouse_pos);
+        *resize = rc.resize;
+        SetMouseCursor(rc.cursor);
+        if(*resize != RESIZE_NONE && is_mouse_down) {
+            resize_happening = true;
+        }
     }
 
     return resize_happening;
