@@ -13,6 +13,7 @@ int main(void) {
     InitWindow(1600, 900, "PiciPaint");
     SetWindowState(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     SetExitKey(KEY_NULL);
+    EnableEventWaiting();
 
     ObjectMaker object_maker = {
         .color = BLUE,
