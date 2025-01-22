@@ -22,7 +22,7 @@ jobs:
     - name: create release
       uses: softprops/action-gh-release@v2
       with:
-        files: bin/picipaint
+        files: bin/picipaint-linux-x86-64
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   build-windows:
@@ -41,7 +41,7 @@ jobs:
     - name: create release
       uses: softprops/action-gh-release@v2
       with:
-        files: bin/picipaint.exe
+        files: bin/picipaint-windows-x86-64.exe
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
