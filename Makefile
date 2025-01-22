@@ -12,15 +12,17 @@ C_FILES      = $(wildcard $(SRC_DIR)/*.c)
 H_FILES      = $(wildcard $(SRC_DIR)/*.h)
 
 ifeq ($(OS),Windows_NT)
-	NAME := $(NAME).exe
+	NAME := $(NAME)-windows-x86-64.exe
 	 #raylib
 	LINKFLAGS += -lgdi32 -lwinmm
 	 #nfd
 	LINKFLAGS += -lole32 -luuid -lshell32
 	 #use Windows subsystem
 	LINKFLAGS += -mwindows
+	 #CMake should use MinGW instead of default Windows toolchain
 	NFD_FLAGS += -G "MinGW Makefiles"
 else
+	NAME := $(NAME)-linux-x86-64
 	 #raylib
 	LINKFLAGS += `pkg-config --libs gtk+-3.0`
 endif
