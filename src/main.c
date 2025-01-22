@@ -10,7 +10,7 @@
 
 int main(void) {
     SetConfigFlags(FLAG_MSAA_4X_HINT);
-    InitWindow(800, 450, "PiciPaint");
+    InitWindow(1600, 900, "PiciPaint");
     SetWindowState(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
     SetExitKey(KEY_NULL);
 
