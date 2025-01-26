@@ -11,8 +11,8 @@ pub trait PaintObject {
 
 pub trait PaintObjectMaker<PO> {
     fn update_and_draw(&mut self, mouse_in_world: Vec2) -> Option<PO>;
-    fn reset(&mut self);
 }
 
 
 pub mod straight_line;
+pub mod freehand_curve;

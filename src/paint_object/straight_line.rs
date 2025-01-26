@@ -62,6 +62,7 @@ impl PaintObjectMaker<StraightLine> for StraightLineMaker {
             }
         }
         else if let Some(start) = self.start {
+            self.start = None;
             return Some(StraightLine {
                 start,
                 end: mouse_pos,
@@ -72,8 +73,5 @@ impl PaintObjectMaker<StraightLine> for StraightLineMaker {
         }
         return None;
     }
-
-    fn reset(&mut self) {
-        self.start = None;
-    }
 }
+
