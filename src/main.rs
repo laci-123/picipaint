@@ -1,31 +1,28 @@
+use paint_object::*;
+use paint_object::straight_line::*;
 use macroquad::prelude::*;
 
 
 #[macroquad::main("Picipaint")]
 async fn main() {
-    let mut position = Vec2::new(10.0, 20.0);
-    let mut velocity = Vec2::new(150.0, 100.0);
-    let radius = 10.0;
+    let mut objects = Vec::<Box<dyn PaintObject>>::new();
+    let mut line_maker = StraightLineMaker::new(GREEN, 2.0);
 
     loop {
         clear_background(BLACK);
 
-        let new_position = position + velocity * get_frame_time();
-        let mut bumped_into_wall = false;
-        if new_position.x - radius < 0.0 || screen_width() < new_position.x + radius {
-            velocity.x *= -1.0;
-            bumped_into_wall = true;
-        }
-        if new_position.y - radius < 0.0 || screen_height() < new_position.y + radius {
-            velocity.y *= -1.0;
-            bumped_into_wall = true;
-        }
-        if !bumped_into_wall {
-            position = new_position;
+        if let Some(line) = line_maker.update_and_draw(Vec2::from(mouse_position())) {
+            objects.push(Box::new(line));
+            line_maker.reset();
         }
 
-        draw_circle(position.x, position.y, radius, GREEN);
+        for object in objects.iter() {
+            object.draw();
+        }
 
         next_frame().await;
     }
 }
+
+
+mod paint_object;
