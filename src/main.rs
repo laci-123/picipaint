@@ -1,29 +1,42 @@
-use paint_object::*;
-use straight_line::*;
-use freehand_curve::*;
-use macroquad::prelude::*;
+// use paint_object::*;
+// use straight_line::*;
+// use freehand_curve::*;
+use eframe::egui;
 
 
-#[macroquad::main("Picipaint")]
-async fn main() {
-    let mut objects = Vec::<Box<dyn PaintObject>>::new();
-    // let mut line_maker = StraightLineMaker::new(GREEN, 2.0);
-    let mut curve_maker = FreehandCurveMaker::new(BLUE, 2.0);
+fn main() -> eframe::Result {
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default()
+                       .with_inner_size([800.0, 450.0])
+                       .with_min_inner_size([300.0, 200.0]),
+        ..Default::default()
+    };
 
-    loop {
-        clear_background(BLACK);
+    eframe::run_native("Próba", options, Box::new(|context| Ok(Box::new(App::new(context, "árvíztűrő tükörfúrógép")))))
+}
 
-        if let Some(line) = curve_maker.update_and_draw(Vec2::from(mouse_position())) {
-            objects.push(Box::new(line));
+
+struct App {
+    label: String,
+}
+
+impl App {
+    fn new(_context: &eframe::CreationContext, label: &str) -> Self {
+        Self {
+            label: String::from(label),
         }
+    }
+}
 
-        for object in objects.iter() {
-            object.draw();
-        }
-
-        next_frame().await;
+impl eframe::App for App {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        ctx.set_pixels_per_point(1.5);
+        
+        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+            ui.label(&self.label);
+        });
     }
 }
 
 
-mod paint_object;
+// mod paint_object;
