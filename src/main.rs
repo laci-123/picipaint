@@ -31,9 +31,19 @@ impl App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_pixels_per_point(1.5);
-        
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
+
+        egui::CentralPanel::default().show(ctx, |ui| {
             ui.label(&self.label);
+            egui::Frame::canvas(ui.style()).show(ui, |ui| {
+                let size = ui.available_size();
+                let (mut response, painter) = ui.allocate_painter(size, egui::Sense::drag());
+                painter.circle_filled(egui::Pos2 { x: 0.1, y: 0.1 }, 10.0, egui::ecolor::Color32::GREEN);
+
+                if let Some(pointer_pos) = response.interact_pointer_pos() {
+                    painter.circle_filled(pointer_pos, 10.0, egui::ecolor::Color32::GREEN);
+                    response.mark_changed();
+                }
+            });
         });
     }
 }
