@@ -47,8 +47,8 @@ impl StraightLineMaker {
     }
 }
 
-impl PaintObjectMaker<StraightLine> for StraightLineMaker {
-    fn update(&mut self, response: &egui::Response) -> Option<StraightLine> {
+impl PaintObjectMaker for StraightLineMaker {
+    fn update(&mut self, response: &egui::Response) -> Option<Box<dyn PaintObject>> {
         match self.start {
             None => {
                 if response.clicked_by(egui::PointerButton::Primary) {
@@ -64,12 +64,12 @@ impl PaintObjectMaker<StraightLine> for StraightLineMaker {
                     if response.clicked_by(egui::PointerButton::Primary) {
                         self.start = None;
                         self.end = None;
-                        return Some(StraightLine {
+                        return Some(Box::new(StraightLine {
                             start,
                             end,
                             stroke: self.stroke,
                             selected: false,
-                        });
+                        }));
                     }
                 }
             },

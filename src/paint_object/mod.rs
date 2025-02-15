@@ -9,8 +9,8 @@ pub trait PaintObject {
 }
 
 
-pub trait PaintObjectMaker<PO> {
-    fn update(&mut self, response: &egui::Response) -> Option<PO>;
+pub trait PaintObjectMaker {
+    fn update(&mut self, response: &egui::Response) -> Option<Box<dyn PaintObject>>;
     fn draw(&self, painter: &egui::Painter);
 }
 

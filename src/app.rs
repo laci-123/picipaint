@@ -7,15 +7,15 @@ pub const WINDOW_MIN_SIZE:  Vec2 = Vec2::new(300.0, 200.0);
 pub const NAME: &'static str     = "PiciPaint";
 
 pub struct App {
-    straight_line_maker: StraightLineMaker,
+    object_makers: Vec<Box<dyn PaintObjectMaker>>,
     objects: Vec<Box<dyn PaintObject>>,
 }
 
 impl App {
     pub fn new(_context: &eframe::CreationContext) -> Self {
         Self {
-            straight_line_maker: StraightLineMaker::new(egui::Stroke::new(3.0, egui::Color32::GREEN)),
-            objects: Vec::new(),
+            object_makers: vec![Box::new(StraightLineMaker::new(egui::Stroke::new(3.0, egui::Color32::GREEN)))],
+            objects: vec![],
         }
     }
 }
@@ -29,10 +29,13 @@ impl eframe::App for App {
             egui::Frame::canvas(ui.style()).show(ui, |ui| {
                 let size = ui.available_size();
                 let (response, painter) = ui.allocate_painter(size, egui::Sense::click());
-                if let Some(object) = self.straight_line_maker.update(&response) {
-                    self.objects.push(Box::new(object));
+
+                for object_maker in self.object_makers.iter_mut() {
+                    if let Some(object) = object_maker.update(&response) {
+                        self.objects.push(object);
+                    }
+                    object_maker.draw(&painter);
                 }
-                self.straight_line_maker.draw(&painter);
 
                 for object in self.objects.iter() {
                     object.draw(&painter);
