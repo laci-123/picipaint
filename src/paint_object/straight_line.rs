@@ -1,18 +1,16 @@
-use super::{PaintObject, PaintObjectMaker};
-use macroquad::prelude::*;
-
+use eframe::egui;
+use super::*;
 
 pub struct StraightLine {
-    start: Vec2,
-    end: Vec2,
-    color: Color,
-    thickness: f32,
+    start: egui::Pos2,
+    end: egui::Pos2,
+    stroke: egui::Stroke,
     selected: bool,
 }
 
 impl PaintObject for StraightLine {
-    fn draw(&self) {
-        draw_line(self.start.x, self.start.y, self.end.x, self.end.y, self.thickness, self.color);
+    fn draw(&self, painter: &egui::Painter) {
+        painter.line_segment([self.start, self.end], self.stroke);
     }
 
     fn is_selected(&self) -> bool {
@@ -23,10 +21,10 @@ impl PaintObject for StraightLine {
         self.selected = value;
     }
 
-    fn is_under_mouse(&self, mouse_pos: Vec2) -> bool {
+    fn is_under_mouse(&self, mouse_pos: egui::Vec2) -> bool {
         let length           = (self.end - self.start).length();
-        let mouse_from_start = (mouse_pos - self.start).length();
-        let mouse_from_end   = (mouse_pos - self.end).length();
+        let mouse_from_start = (mouse_pos - self.start.to_vec2()).length();
+        let mouse_from_end   = (mouse_pos - self.end.to_vec2()).length();
 
         mouse_from_start + mouse_from_end < length + 10.0
     }
@@ -34,44 +32,56 @@ impl PaintObject for StraightLine {
 
 
 pub struct StraightLineMaker {
-    start: Option<Vec2>,
-    color: Color,
-    thickness: f32,
+    start: Option<egui::Pos2>,
+    end: Option<egui::Pos2>,
+    stroke: egui::Stroke,
 }
 
 impl StraightLineMaker {
-    pub fn new(color: Color, thickness: f32) -> Self{
+    pub fn new(stroke: egui::Stroke) -> Self{
         Self {
             start: None,
-            color,
-            thickness,
+            end: None,
+            stroke,
         }
     }
 }
 
 impl PaintObjectMaker<StraightLine> for StraightLineMaker {
-    fn update_and_draw(&mut self, mouse_pos: Vec2) -> Option<StraightLine> {
-        if is_mouse_button_down(MouseButton::Left) {
-            match self.start {
-                None => {
-                    self.start = Some(mouse_pos);
-                },
-                Some(start) => {
-                    draw_line(start.x, start.y, mouse_pos.x, mouse_pos.y, self.thickness, self.color);
-                },
-            }
+    fn update(&mut self, response: &egui::Response) -> Option<StraightLine> {
+        match self.start {
+            None => {
+                if response.clicked_by(egui::PointerButton::Primary) {
+                    self.start = response.interact_pointer_pos();
+                }
+            },
+            Some(start) => {
+                if let Some(end) = response.hover_pos() {
+                    self.end = Some(end);
+                }
+
+                if let Some(end) = self.end {
+                    if response.clicked_by(egui::PointerButton::Primary) {
+                        self.start = None;
+                        self.end = None;
+                        return Some(StraightLine {
+                            start,
+                            end,
+                            stroke: self.stroke,
+                            selected: false,
+                        });
+                    }
+                }
+            },
         }
-        else if let Some(start) = self.start {
-            self.start = None;
-            return Some(StraightLine {
-                start,
-                end: mouse_pos,
-                color: self.color,
-                thickness: self.thickness,
-                selected: false
-            })
-        }
+
         return None;
+    }
+
+    fn draw(&self, painter: &egui::Painter) {
+        if let (Some(start), Some(end)) = (self.start, self.end) {
+            painter.line_segment([start, end], self.stroke);
+        }
     }
 }
 

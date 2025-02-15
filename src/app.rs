@@ -1,4 +1,5 @@
-use eframe::egui::{self, Vec2, ecolor::Color32};
+use eframe::egui::{self, Vec2};
+use crate::paint_object::{straight_line::*, PaintObject, PaintObjectMaker};
 
 
 pub const WINDOW_INIT_SIZE: Vec2 = Vec2::new(800.0, 450.0);
@@ -6,13 +7,15 @@ pub const WINDOW_MIN_SIZE:  Vec2 = Vec2::new(300.0, 200.0);
 pub const NAME: &'static str     = "PiciPaint";
 
 pub struct App {
-    label: String,
+    straight_line_maker: StraightLineMaker,
+    objects: Vec<Box<dyn PaintObject>>,
 }
 
 impl App {
-    pub fn new(_context: &eframe::CreationContext, label: &str) -> Self {
+    pub fn new(_context: &eframe::CreationContext) -> Self {
         Self {
-            label: String::from(label),
+            straight_line_maker: StraightLineMaker::new(egui::Stroke::new(3.0, egui::Color32::GREEN)),
+            objects: Vec::new(),
         }
     }
 }
@@ -22,15 +25,17 @@ impl eframe::App for App {
         ctx.set_pixels_per_point(1.5);
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.label(&self.label);
+            ui.label(NAME);
             egui::Frame::canvas(ui.style()).show(ui, |ui| {
                 let size = ui.available_size();
-                let (mut response, painter) = ui.allocate_painter(size, egui::Sense::drag());
-                painter.circle_filled(egui::Pos2 { x: 0.1, y: 0.1 }, 10.0, Color32::GREEN);
+                let (response, painter) = ui.allocate_painter(size, egui::Sense::click());
+                if let Some(object) = self.straight_line_maker.update(&response) {
+                    self.objects.push(Box::new(object));
+                }
+                self.straight_line_maker.draw(&painter);
 
-                if let Some(pointer_pos) = response.interact_pointer_pos() {
-                    painter.circle_filled(pointer_pos, 10.0, Color32::GREEN);
-                    response.mark_changed();
+                for object in self.objects.iter() {
+                    object.draw(&painter);
                 }
             });
         });
