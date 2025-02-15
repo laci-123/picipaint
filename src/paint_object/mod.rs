@@ -16,4 +16,4 @@ pub trait PaintObjectMaker {
 
 
 pub mod straight_line;
-//pub mod freehand_curve;
+pub mod freehand_curve;

@@ -1,5 +1,5 @@
 use eframe::egui::{self, Vec2};
-use crate::paint_object::{straight_line::*, PaintObject, PaintObjectMaker};
+use crate::paint_object::{freehand_curve::*, straight_line::*, *};
 
 
 pub const WINDOW_INIT_SIZE: Vec2 = Vec2::new(800.0, 450.0);
@@ -14,7 +14,10 @@ pub struct App {
 impl App {
     pub fn new(_context: &eframe::CreationContext) -> Self {
         Self {
-            object_makers: vec![Box::new(StraightLineMaker::new(egui::Stroke::new(3.0, egui::Color32::GREEN)))],
+            object_makers: vec![
+                Box::new(StraightLineMaker::new(egui::Stroke::new(3.0, egui::Color32::GREEN))),
+                Box::new(FreehandCurveMaker::new(egui::Stroke::new(2.0, egui::Color32::BLUE))),
+            ],
             objects: vec![],
         }
     }
@@ -28,7 +31,7 @@ impl eframe::App for App {
             ui.label(NAME);
             egui::Frame::canvas(ui.style()).show(ui, |ui| {
                 let size = ui.available_size();
-                let (response, painter) = ui.allocate_painter(size, egui::Sense::click());
+                let (response, painter) = ui.allocate_painter(size, egui::Sense::click_and_drag());
 
                 for object_maker in self.object_makers.iter_mut() {
                     if let Some(object) = object_maker.update(&response) {
