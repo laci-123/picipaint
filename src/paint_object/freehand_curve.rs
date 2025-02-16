@@ -89,4 +89,8 @@ impl PaintObjectMaker for FreehandCurveMaker {
     fn draw(&self, painter: &egui::Painter) {
         self.curve.draw(painter);
     }
+
+    fn display_name(&self) -> &str {
+        "curve"
+    }
 }

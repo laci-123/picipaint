@@ -83,5 +83,9 @@ impl PaintObjectMaker for StraightLineMaker {
             painter.line_segment([start, end], self.stroke);
         }
     }
+
+    fn display_name(&self) -> &str {
+        "straight line"
+    }
 }
 
