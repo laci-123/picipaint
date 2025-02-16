@@ -55,6 +55,12 @@ impl StraghtLineTool {
 
 impl Tool for StraghtLineTool {
     fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>) {
+        if response.contains_pointer() {
+            response.ctx.output_mut(|output| {
+                output.cursor_icon = egui::CursorIcon::Crosshair;
+            });
+        }
+
         match self.start {
             None => {
                 if response.clicked_by(egui::PointerButton::Primary) {
