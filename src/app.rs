@@ -60,6 +60,7 @@ impl eframe::App for App {
 
                 for object in self.objects.iter() {
                     object.draw(&painter);
+                    object.draw_selection(&painter);
                 }
             });
         });

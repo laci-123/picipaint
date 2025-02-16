@@ -18,12 +18,6 @@ impl PaintObject for FreehandCurve {
         for p1p2 in self.points.windows(2) {
             let [p1, p2] = p1p2 else {unreachable!()};
             painter.line_segment([*p1, *p2], self.stroke);
-
-            if self.selected {
-                painter.rect_stroke(egui::Rect::from_min_max(egui::Pos2::new(self.min_x, self.min_y), egui::Pos2::new(self.max_x, self.max_y)),
-                                    egui::Rounding::ZERO,
-                                    egui::Stroke::new(1.0, egui::Color32::WHITE));
-            }
         }
     }
 
@@ -46,6 +40,10 @@ impl PaintObject for FreehandCurve {
             }
         }
         return false;
+    }
+
+    fn get_bounding_rect(&self) -> egui::Rect {
+        egui::Rect::from_min_max(egui::Pos2::new(self.min_x, self.min_y), egui::Pos2::new(self.max_x, self.max_y))
     }
 }
 
