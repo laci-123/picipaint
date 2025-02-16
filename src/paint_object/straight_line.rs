@@ -40,26 +40,28 @@ impl PaintObject for StraightLine {
 pub struct StraghtLineTool {
     start: Option<egui::Pos2>,
     end: Option<egui::Pos2>,
-    stroke: egui::Stroke,
+    stroke: Option<egui::Stroke>,
 }
 
 impl StraghtLineTool {
-    pub fn new(stroke: egui::Stroke) -> Self{
+    pub fn new() -> Self{
         Self {
             start: None,
             end: None,
-            stroke,
+            stroke: None,
         }
     }
 }
 
 impl Tool for StraghtLineTool {
-    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>) {
+    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>, stroke: &egui::Stroke) {
         if response.contains_pointer() {
             response.ctx.output_mut(|output| {
                 output.cursor_icon = egui::CursorIcon::Crosshair;
             });
         }
+
+        self.stroke = Some(*stroke);
 
         match self.start {
             None => {
@@ -79,7 +81,7 @@ impl Tool for StraghtLineTool {
                         objects.push(Box::new(StraightLine {
                             start,
                             end,
-                            stroke: self.stroke,
+                            stroke: *stroke,
                             selected: false,
                         }));
                     }
@@ -89,8 +91,8 @@ impl Tool for StraghtLineTool {
     }
 
     fn draw(&self, painter: &egui::Painter) {
-        if let (Some(start), Some(end)) = (self.start, self.end) {
-            painter.line_segment([start, end], self.stroke);
+        if let (Some(start), Some(end), Some(stroke)) = (self.start, self.end, self.stroke) {
+            painter.line_segment([start, end], stroke);
         }
     }
 

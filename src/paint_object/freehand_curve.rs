@@ -53,15 +53,15 @@ pub struct FreehandCurveTool {
 }
 
 impl FreehandCurveTool {
-    pub fn new(stroke: egui::Stroke) -> Self {
+    pub fn new() -> Self {
         Self {
-            curve: Self::new_curve(stroke),
+            curve: Self::new_curve(),
         }
     }
 
-    fn new_curve(stroke: egui::Stroke) -> FreehandCurve {
+    fn new_curve() -> FreehandCurve {
         FreehandCurve {
-            stroke,
+            stroke: egui::Stroke::default(), // this will always be overwritten in update
             points: Vec::new(),
             min_x: f32::INFINITY,
             min_y: f32::INFINITY,
@@ -73,12 +73,14 @@ impl FreehandCurveTool {
 }
 
 impl Tool for FreehandCurveTool {
-    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>) {
+    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>, stroke: &egui::Stroke) {
         if response.contains_pointer() {
             response.ctx.output_mut(|output| {
                 output.cursor_icon = egui::CursorIcon::Crosshair;
             });
         }
+
+        self.curve.stroke = *stroke;
 
         if response.dragged_by(egui::PointerButton::Primary) {
             if let Some(point) = response.interact_pointer_pos() {
@@ -90,8 +92,7 @@ impl Tool for FreehandCurveTool {
             }
         }
         else if self.curve.points.len() > 0 {
-            let new_curve = Self::new_curve(self.curve.stroke);
-            objects.push(Box::new(std::mem::replace(&mut self.curve, new_curve)));
+            objects.push(Box::new(std::mem::replace(&mut self.curve, Self::new_curve())));
         }
     }
 

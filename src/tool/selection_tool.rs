@@ -10,7 +10,7 @@ impl SelectionTool {
 }
 
 impl Tool for SelectionTool {
-    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>) {
+    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>, _stroke: &egui::Stroke) {
         let is_shift_down =
         response.ctx.input(|input| {
             input.modifiers.matches_exact(egui::Modifiers::SHIFT)
