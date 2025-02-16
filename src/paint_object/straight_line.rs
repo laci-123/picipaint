@@ -54,14 +54,14 @@ impl StraghtLineTool {
 }
 
 impl Tool for StraghtLineTool {
-    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>, stroke: &egui::Stroke) {
+    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>, stroke: egui::Stroke) {
         if response.contains_pointer() {
             response.ctx.output_mut(|output| {
                 output.cursor_icon = egui::CursorIcon::Crosshair;
             });
         }
 
-        self.stroke = Some(*stroke);
+        self.stroke = Some(stroke);
 
         match self.start {
             None => {
@@ -81,7 +81,7 @@ impl Tool for StraghtLineTool {
                         objects.push(Box::new(StraightLine {
                             start,
                             end,
-                            stroke: *stroke,
+                            stroke,
                             selected: false,
                         }));
                     }

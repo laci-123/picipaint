@@ -13,7 +13,11 @@ pub struct App {
     tools: Vec<Box<dyn Tool>>,
     active_tool_index: usize,
     objects: Vec<Box<dyn PaintObject>>,
-    stroke: egui::Stroke,
+    fg_color_red: u8,
+    fg_color_green: u8,
+    fg_color_blue: u8,
+    line_thickness: f32,
+    fg_color_window_is_open: bool,
 }
 
 impl App {
@@ -26,7 +30,11 @@ impl App {
             ],
             active_tool_index: 0,
             objects: vec![],
-            stroke: egui::Stroke::new(1.0, egui::Color32::BLUE),
+            fg_color_red: 0,
+            fg_color_green: 0,
+            fg_color_blue: 255,
+            line_thickness: 1.0,
+            fg_color_window_is_open: false,
         }
     }
 }
@@ -53,7 +61,8 @@ impl eframe::App for App {
 
                 ui.separator();
 
-                ui.add(egui::Slider::new(&mut self.stroke.width, 0.5..=10.0)).on_hover_ui(|ui| {
+                ui.toggle_value(&mut self.fg_color_window_is_open, "color");
+                ui.add(egui::Slider::new(&mut self.line_thickness, 0.5..=10.0)).on_hover_ui_at_pointer(|ui| {
                     ui.label("line thickness");
                 });
             });
@@ -65,7 +74,8 @@ impl eframe::App for App {
                 let (response, painter) = ui.allocate_painter(size, egui::Sense::click_and_drag());
 
                 let active_tool = &mut self.tools[self.active_tool_index];
-                active_tool.update(&response, &mut self.objects, &self.stroke);
+                let stroke = egui::Stroke::new(self.line_thickness, egui::Color32::from_rgb(self.fg_color_red, self.fg_color_green, self.fg_color_blue));
+                active_tool.update(&response, &mut self.objects, stroke);
                 active_tool.draw(&painter);
 
                 for object in self.objects.iter() {
@@ -73,6 +83,17 @@ impl eframe::App for App {
                     object.draw_selection(&painter);
                 }
             });
+
+            if self.fg_color_window_is_open {
+                egui::Window::new("Foreground color")
+                    .collapsible(false)
+                    .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
+                    .show(ctx, |ui| {
+                        ui.add(egui::Slider::new(&mut self.fg_color_red, 0..=255).text("red"));
+                        ui.add(egui::Slider::new(&mut self.fg_color_green, 0..=255).text("green"));
+                        ui.add(egui::Slider::new(&mut self.fg_color_blue, 0..=255).text("blue"));
+                });
+            }
         });
     }
 }

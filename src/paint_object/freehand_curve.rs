@@ -73,14 +73,14 @@ impl FreehandCurveTool {
 }
 
 impl Tool for FreehandCurveTool {
-    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>, stroke: &egui::Stroke) {
+    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>, stroke: egui::Stroke) {
         if response.contains_pointer() {
             response.ctx.output_mut(|output| {
                 output.cursor_icon = egui::CursorIcon::Crosshair;
             });
         }
 
-        self.curve.stroke = *stroke;
+        self.curve.stroke = stroke;
 
         if response.dragged_by(egui::PointerButton::Primary) {
             if let Some(point) = response.interact_pointer_pos() {
