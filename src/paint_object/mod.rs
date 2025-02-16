@@ -9,12 +9,5 @@ pub trait PaintObject {
 }
 
 
-pub trait Tool {
-    fn update(&mut self, response: &egui::Response) -> Option<Box<dyn PaintObject>>;
-    fn draw(&self, painter: &egui::Painter);
-    fn display_name(&self) -> &str;
-}
-
-
 pub mod straight_line;
 pub mod freehand_curve;

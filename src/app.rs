@@ -1,11 +1,13 @@
 use eframe::egui::{self, Vec2};
 use crate::paint_object::{freehand_curve::*, straight_line::*, *};
+use crate::tool::Tool;
 
 
 pub const WINDOW_INIT_SIZE: Vec2 = Vec2::new(800.0, 450.0);
 pub const WINDOW_MIN_SIZE:  Vec2 = Vec2::new(300.0, 200.0);
 pub const UI_SCALE: f32          = 1.5;
 pub const NAME: &'static str     = "PiciPaint";
+
 
 pub struct App {
     tools: Vec<Box<dyn Tool>>,
@@ -45,9 +47,7 @@ impl eframe::App for App {
                 let (response, painter) = ui.allocate_painter(size, egui::Sense::click_and_drag());
 
                 let active_tool = &mut self.tools[self.active_tool_index];
-                if let Some(object) = active_tool.update(&response) {
-                    self.objects.push(object);
-                }
+                active_tool.update(&response, &mut self.objects);
                 active_tool.draw(&painter);
 
                 for object in self.objects.iter() {

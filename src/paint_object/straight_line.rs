@@ -1,5 +1,7 @@
 use eframe::egui;
+use crate::tool::Tool;
 use super::*;
+
 
 pub struct StraightLine {
     start: egui::Pos2,
@@ -64,7 +66,7 @@ impl Tool for StraghtLineTool {
                     if response.clicked_by(egui::PointerButton::Primary) {
                         self.start = None;
                         self.end = None;
-                        return Some(Box::new(StraightLine {
+                        objects.push(Box::new(StraightLine {
                             start,
                             end,
                             stroke: self.stroke,
@@ -74,8 +76,6 @@ impl Tool for StraghtLineTool {
                 }
             },
         }
-
-        return None;
     }
 
     fn draw(&self, painter: &egui::Painter) {

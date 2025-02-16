@@ -1,4 +1,5 @@
 use eframe::egui;
+use crate::tool::Tool;
 use super::*;
 
 
@@ -80,10 +81,8 @@ impl Tool for FreehandCurveTool {
         }
         else if self.curve.points.len() > 0 {
             let new_curve = Self::new_curve(self.curve.stroke);
-            return Some(Box::new(std::mem::replace(&mut self.curve, new_curve)));
+            objects.push(Box::new(std::mem::replace(&mut self.curve, new_curve)));
         }
-
-        return None;
     }
 
     fn draw(&self, painter: &egui::Painter) {

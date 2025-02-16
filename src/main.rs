@@ -13,3 +13,4 @@ fn main() -> eframe::Result {
 
 mod app;
 mod paint_object;
+mod tool;
