@@ -8,19 +8,19 @@ pub const UI_SCALE: f32          = 1.5;
 pub const NAME: &'static str     = "PiciPaint";
 
 pub struct App {
-    object_makers: Vec<Box<dyn PaintObjectMaker>>,
-    active_maker_index: usize,
+    tools: Vec<Box<dyn Tool>>,
+    active_tool_index: usize,
     objects: Vec<Box<dyn PaintObject>>,
 }
 
 impl App {
     pub fn new(_context: &eframe::CreationContext) -> Self {
         Self {
-            object_makers: vec![
-                Box::new(FreehandCurveMaker::new(egui::Stroke::new(2.0, egui::Color32::BLUE))),
-                Box::new(StraightLineMaker::new(egui::Stroke::new(3.0, egui::Color32::GREEN))),
+            tools: vec![
+                Box::new(FreehandCurveTool::new(egui::Stroke::new(2.0, egui::Color32::BLUE))),
+                Box::new(StraghtLineTool::new(egui::Stroke::new(3.0, egui::Color32::GREEN))),
             ],
-            active_maker_index: 0,
+            active_tool_index: 0,
             objects: vec![],
         }
     }
@@ -32,10 +32,10 @@ impl eframe::App for App {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
-                for (i, maker) in self.object_makers.iter().enumerate() {
-                    let mut selected =  i == self.active_maker_index;
-                    if ui.toggle_value(&mut selected, maker.display_name()).clicked() {
-                        self.active_maker_index = i;
+                for (i, tool) in self.tools.iter().enumerate() {
+                    let mut selected =  i == self.active_tool_index;
+                    if ui.toggle_value(&mut selected, tool.display_name()).clicked() {
+                        self.active_tool_index = i;
                     }
                 }
             });
@@ -44,11 +44,11 @@ impl eframe::App for App {
                 let size = ui.available_size();
                 let (response, painter) = ui.allocate_painter(size, egui::Sense::click_and_drag());
 
-                let active_maker = &mut self.object_makers[self.active_maker_index];
-                if let Some(object) = active_maker.update(&response) {
+                let active_tool = &mut self.tools[self.active_tool_index];
+                if let Some(object) = active_tool.update(&response) {
                     self.objects.push(object);
                 }
-                active_maker.draw(&painter);
+                active_tool.draw(&painter);
 
                 for object in self.objects.iter() {
                     object.draw(&painter);

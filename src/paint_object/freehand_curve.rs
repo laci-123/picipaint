@@ -43,11 +43,11 @@ impl PaintObject for FreehandCurve {
 }
 
 
-pub struct FreehandCurveMaker {
+pub struct FreehandCurveTool {
     curve: FreehandCurve,
 }
 
-impl FreehandCurveMaker {
+impl FreehandCurveTool {
     pub fn new(stroke: egui::Stroke) -> Self {
         Self {
             curve: Self::new_curve(stroke),
@@ -67,8 +67,8 @@ impl FreehandCurveMaker {
     }
 }
 
-impl PaintObjectMaker for FreehandCurveMaker {
-    fn update(&mut self, response: &egui::Response) -> Option<Box<dyn PaintObject>> {
+impl Tool for FreehandCurveTool {
+    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>) {
         if response.dragged_by(egui::PointerButton::Primary) {
             if let Some(point) = response.interact_pointer_pos() {
                 self.curve.min_x = self.curve.min_x.min(point.x);

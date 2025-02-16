@@ -9,7 +9,7 @@ pub trait PaintObject {
 }
 
 
-pub trait PaintObjectMaker {
+pub trait Tool {
     fn update(&mut self, response: &egui::Response) -> Option<Box<dyn PaintObject>>;
     fn draw(&self, painter: &egui::Painter);
     fn display_name(&self) -> &str;

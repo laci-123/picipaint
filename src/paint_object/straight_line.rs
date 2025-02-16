@@ -31,13 +31,13 @@ impl PaintObject for StraightLine {
 }
 
 
-pub struct StraightLineMaker {
+pub struct StraghtLineTool {
     start: Option<egui::Pos2>,
     end: Option<egui::Pos2>,
     stroke: egui::Stroke,
 }
 
-impl StraightLineMaker {
+impl StraghtLineTool {
     pub fn new(stroke: egui::Stroke) -> Self{
         Self {
             start: None,
@@ -47,8 +47,8 @@ impl StraightLineMaker {
     }
 }
 
-impl PaintObjectMaker for StraightLineMaker {
-    fn update(&mut self, response: &egui::Response) -> Option<Box<dyn PaintObject>> {
+impl Tool for StraghtLineTool {
+    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>) {
         match self.start {
             None => {
                 if response.clicked_by(egui::PointerButton::Primary) {
