@@ -13,6 +13,11 @@ pub struct StraightLine {
 impl PaintObject for StraightLine {
     fn draw(&self, painter: &egui::Painter) {
         painter.line_segment([self.start, self.end], self.stroke);
+        if self.selected {
+            painter.rect_stroke(egui::Rect::from_two_pos(self.start, self.end),
+                                egui::Rounding::ZERO,
+                                egui::Stroke::new(1.0, egui::Color32::WHITE));
+        }
     }
 
     fn is_selected(&self) -> bool {
@@ -28,7 +33,7 @@ impl PaintObject for StraightLine {
         let mouse_from_start = (mouse_pos - self.start.to_vec2()).length();
         let mouse_from_end   = (mouse_pos - self.end.to_vec2()).length();
 
-        mouse_from_start + mouse_from_end < length + 10.0
+        mouse_from_start + mouse_from_end < length + 0.5
     }
 }
 

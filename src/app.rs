@@ -1,6 +1,6 @@
 use eframe::egui::{self, Vec2};
 use crate::paint_object::{freehand_curve::*, straight_line::*, *};
-use crate::tool::Tool;
+use crate::tool::{Tool, selection_tool::*};
 
 
 pub const WINDOW_INIT_SIZE: Vec2 = Vec2::new(800.0, 450.0);
@@ -19,6 +19,7 @@ impl App {
     pub fn new(_context: &eframe::CreationContext) -> Self {
         Self {
             tools: vec![
+                Box::new(SelectionTool::new()),
                 Box::new(FreehandCurveTool::new(egui::Stroke::new(2.0, egui::Color32::BLUE))),
                 Box::new(StraghtLineTool::new(egui::Stroke::new(3.0, egui::Color32::GREEN))),
             ],
