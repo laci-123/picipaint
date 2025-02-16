@@ -19,6 +19,12 @@ impl Tool for SelectionTool {
     }
 
     fn draw(&self, _painter: &egui::Painter) {}
+
+    fn before_deactivate(&mut self, objects: &mut Vec<Box<dyn PaintObject>>) {
+        for object in objects.iter_mut() {
+            object.set_selected(false);
+        }
+    }
     
     fn display_name(&self) -> &str {
         "selection"

@@ -35,11 +35,18 @@ impl eframe::App for App {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
+                let mut old_active_tool_index = None;
+                
                 for (i, tool) in self.tools.iter().enumerate() {
                     let mut selected =  i == self.active_tool_index;
                     if ui.toggle_value(&mut selected, tool.display_name()).clicked() {
+                        old_active_tool_index = Some(self.active_tool_index);
                         self.active_tool_index = i;
                     }
+                }
+
+                if let Some(old_index) = old_active_tool_index {
+                    self.tools[old_index].before_deactivate(&mut self.objects);
                 }
             });
 

@@ -95,6 +95,8 @@ impl Tool for FreehandCurveTool {
         self.curve.draw(painter);
     }
 
+    fn before_deactivate(&mut self, _objects: &mut Vec<Box<dyn PaintObject>>) {}
+
     fn display_name(&self) -> &str {
         "curve"
     }
