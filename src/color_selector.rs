@@ -35,6 +35,12 @@ impl ColorSelector {
             }
 
             let response = window.show(ctx, |ui| {
+                egui::Frame::canvas(ui.style()).show(ui, |ui| {
+                    let size = egui::Vec2::new(100.0, 100.0);
+                    let (response, painter) = ui.allocate_painter(size, egui::Sense::hover());
+                    painter.rect_filled(response.rect, 0.0, *color);
+                });
+
                 // If Color32's r, g, b and a fields were public then it would be much easier to do this.
                 let mut red = color.r();
                 let mut green = color.g();
