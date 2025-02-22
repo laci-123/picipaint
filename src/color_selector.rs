@@ -2,13 +2,21 @@ use eframe::egui;
 use std::time::{Duration, Instant};
 
 
-#[derive(Default)]
 pub struct ColorSelector {
     pub is_open: bool,
     opening_time: Option<Instant>,
+    caption: String,
 }
 
 impl ColorSelector {
+    pub fn new(caption: &str) -> Self {
+        Self {
+            is_open: false,
+            opening_time: None,
+            caption: String::from(caption),
+        }
+    }
+    
     pub fn update(&mut self, ctx: &egui::Context, color: &mut egui::Color32) {
         ctx.input(|input| {
             if input.key_down(egui::Key::Escape) {
@@ -28,7 +36,7 @@ impl ColorSelector {
 
             let opening_time = self.opening_time.get_or_insert(Instant::now());
             
-            let mut window = egui::Window::new("Foreground color").collapsible(false).resizable(false);
+            let mut window = egui::Window::new(&self.caption).collapsible(false).resizable(false);
 
             if Instant::now().duration_since(*opening_time) < Duration::from_millis(100) {
                 window = window.anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO);

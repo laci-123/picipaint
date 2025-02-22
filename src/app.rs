@@ -15,7 +15,9 @@ pub struct App {
     active_tool_index: usize,
     objects: Vec<Box<dyn PaintObject>>,
     stroke: egui::Stroke,
-    color_selector: ColorSelector,
+    bg_color: egui::Color32,
+    fg_color_selector: ColorSelector,
+    bg_color_selector: ColorSelector,
 }
 
 impl App {
@@ -29,7 +31,9 @@ impl App {
             active_tool_index: 0,
             objects: vec![],
             stroke: egui::Stroke::new(2.0, egui::Color32::BLUE),
-            color_selector: ColorSelector::default(),
+            bg_color: egui::Color32::BLACK,
+            fg_color_selector: ColorSelector::new("Foreground color"),
+            bg_color_selector: ColorSelector::new("Background color"),
         }
     }
 }
@@ -56,7 +60,8 @@ impl eframe::App for App {
 
                 ui.separator();
 
-                ui.toggle_value(&mut self.color_selector.is_open, "color");
+                ui.toggle_value(&mut self.fg_color_selector.is_open, "fg color");
+                ui.toggle_value(&mut self.bg_color_selector.is_open, "bg color");
                 ui.add(egui::Slider::new(&mut self.stroke.width, 0.5..=10.0)).on_hover_ui_at_pointer(|ui| {
                     ui.label("line thickness");
                 });
@@ -68,6 +73,7 @@ impl eframe::App for App {
                 let size = ui.available_size();
                 let (response, painter) = ui.allocate_painter(size, egui::Sense::click_and_drag());
 
+                painter.rect_filled(response.rect, 0.0, self.bg_color);
                 let active_tool = &mut self.tools[self.active_tool_index];
                 active_tool.update(&response, &mut self.objects, self.stroke);
                 active_tool.draw(&painter);
@@ -78,7 +84,8 @@ impl eframe::App for App {
                 }
             });
 
-            self.color_selector.update(ctx, &mut self.stroke.color);
+            self.fg_color_selector.update(ctx, &mut self.stroke.color);
+            self.bg_color_selector.update(ctx, &mut self.bg_color);
         });
     }
 }
