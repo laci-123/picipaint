@@ -6,6 +6,7 @@ pub struct ColorSelector {
     pub is_open: bool,
     opening_time: Option<Instant>,
     caption: String,
+    old_color: Option<egui::Color32>,
 }
 
 impl ColorSelector {
@@ -14,6 +15,7 @@ impl ColorSelector {
             is_open: false,
             opening_time: None,
             caption: String::from(caption),
+            old_color: None,
         }
     }
     
@@ -35,7 +37,6 @@ impl ColorSelector {
             // We have to actually wait for a little while.
 
             let opening_time = self.opening_time.get_or_insert(Instant::now());
-            
             let mut window = egui::Window::new(&self.caption).collapsible(false).resizable(false);
 
             if Instant::now().duration_since(*opening_time) < Duration::from_millis(100) {
@@ -43,10 +44,14 @@ impl ColorSelector {
             }
 
             let response = window.show(ctx, |ui| {
+                let old_color = self.old_color.get_or_insert(*color);
                 egui::Frame::canvas(ui.style()).show(ui, |ui| {
-                    let size = egui::Vec2::new(100.0, 100.0);
-                    let (response, painter) = ui.allocate_painter(size, egui::Sense::hover());
-                    painter.rect_filled(response.rect, 0.0, *color);
+                    let w = 100.0;
+                    let h = 100.0;
+                    let (response, painter) = ui.allocate_painter(egui::Vec2::new(w, h), egui::Sense::hover());
+                    let origin = response.rect.min;
+                    painter.rect_filled(egui::Rect::from_min_size(origin,                                 egui::Vec2::new(w / 2.0, h)), 0.0, *old_color);
+                    painter.rect_filled(egui::Rect::from_min_size(origin + egui::Vec2::new(w / 2.0, 0.0), egui::Vec2::new(w / 2.0, h)), 0.0, *color);
                 });
 
                 // If Color32's r, g, b and a fields were public then it would be much easier to do this.
@@ -61,13 +66,16 @@ impl ColorSelector {
             });
 
             if let Some(r) = response {
-                if r.response.clicked_elsewhere() && Instant::now().duration_since(*opening_time) > Duration::from_millis(100) {
+                // Have to wait a little bit to not register the click that opened this window as clicking elsewhere.
+                let been_open_for_a_while = Instant::now().duration_since(*opening_time) > Duration::from_millis(100);
+                if r.response.clicked_elsewhere() && been_open_for_a_while {
                     self.is_open = false;
                 }
             }
         }
         else {
             self.opening_time = None;
+            self.old_color = None;
         }
     }
 }
