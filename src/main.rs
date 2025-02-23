@@ -15,3 +15,4 @@ mod app;
 mod paint_object;
 mod tool;
 mod color_selector;
+mod view_transform;

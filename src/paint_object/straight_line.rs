@@ -11,8 +11,10 @@ pub struct StraightLine {
 }
 
 impl PaintObject for StraightLine {
-    fn draw(&self, painter: &egui::Painter) {
-        painter.line_segment([self.start, self.end], self.stroke);
+    fn draw(&self, tr: &ViewTransform, painter: &egui::Painter) {
+        let start = tr.world_to_screen(self.start);
+        let end   = tr.world_to_screen(self.end);
+        painter.line_segment([start, end], self.stroke);
     }
 
     fn is_selected(&self) -> bool {
@@ -54,7 +56,7 @@ impl StraghtLineTool {
 }
 
 impl Tool for StraghtLineTool {
-    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>, stroke: egui::Stroke) {
+    fn update(&mut self, response: &egui::Response, tr: &ViewTransform, objects: &mut Vec<Box<dyn PaintObject>>, stroke: egui::Stroke) {
         if response.contains_pointer() {
             response.ctx.output_mut(|output| {
                 output.cursor_icon = egui::CursorIcon::Crosshair;
@@ -66,12 +68,12 @@ impl Tool for StraghtLineTool {
         match self.start {
             None => {
                 if response.clicked_by(egui::PointerButton::Primary) {
-                    self.start = response.interact_pointer_pos();
+                    self.start = response.interact_pointer_pos().map(|p| tr.screen_to_world(p));
                 }
             },
             Some(start) => {
                 if let Some(end) = response.hover_pos() {
-                    self.end = Some(end);
+                    self.end = Some(tr.screen_to_world(end));
                 }
 
                 if let Some(end) = self.end {
@@ -90,9 +92,9 @@ impl Tool for StraghtLineTool {
         }
     }
 
-    fn draw(&self, painter: &egui::Painter) {
+    fn draw(&self, tr: &ViewTransform, painter: &egui::Painter) {
         if let (Some(start), Some(end), Some(stroke)) = (self.start, self.end, self.stroke) {
-            painter.line_segment([start, end], stroke);
+            painter.line_segment([tr.world_to_screen(start), tr.world_to_screen(end)], stroke);
         }
     }
 

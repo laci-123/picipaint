@@ -2,6 +2,7 @@ use eframe::egui::{self, Vec2};
 use crate::color_selector::ColorSelector;
 use crate::paint_object::{freehand_curve::*, straight_line::*, *};
 use crate::tool::{Tool, selection_tool::*};
+use crate::view_transform::ViewTransform;
 
 
 pub const WINDOW_INIT_SIZE: Vec2 = Vec2::new(1000.0, 600.0);
@@ -18,6 +19,7 @@ pub struct App {
     bg_color: egui::Color32,
     fg_color_selector: ColorSelector,
     bg_color_selector: ColorSelector,
+    view_transform: ViewTransform,
 }
 
 impl App {
@@ -34,6 +36,7 @@ impl App {
             bg_color: egui::Color32::BLACK,
             fg_color_selector: ColorSelector::new("Foreground color"),
             bg_color_selector: ColorSelector::new("Background color"),
+            view_transform: ViewTransform::default(),
         }
     }
 }
@@ -73,14 +76,16 @@ impl eframe::App for App {
                 let size = ui.available_size();
                 let (response, painter) = ui.allocate_painter(size, egui::Sense::click_and_drag());
 
+                self.view_transform.update(&response);
+
                 painter.rect_filled(response.rect, 0.0, self.bg_color);
                 let active_tool = &mut self.tools[self.active_tool_index];
-                active_tool.update(&response, &mut self.objects, self.stroke);
-                active_tool.draw(&painter);
+                active_tool.update(&response, &self.view_transform, &mut self.objects, self.stroke);
+                active_tool.draw(&self.view_transform, &painter);
 
                 for object in self.objects.iter() {
-                    object.draw(&painter);
-                    object.draw_selection(&painter);
+                    object.draw(&self.view_transform, &painter);
+                    object.draw_selection(&self.view_transform, &painter);
                 }
             });
 

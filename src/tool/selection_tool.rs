@@ -10,7 +10,7 @@ impl SelectionTool {
 }
 
 impl Tool for SelectionTool {
-    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>, _stroke: egui::Stroke) {
+    fn update(&mut self, response: &egui::Response, tr: &ViewTransform, objects: &mut Vec<Box<dyn PaintObject>>, _stroke: egui::Stroke) {
         let is_shift_down =
         response.ctx.input(|input| {
             input.modifiers.matches_exact(egui::Modifiers::SHIFT)
@@ -19,7 +19,7 @@ impl Tool for SelectionTool {
         if response.clicked_by(egui::PointerButton::Primary) {
             if let Some(mouse_pos) = response.interact_pointer_pos() {
                 for object in objects.iter_mut() {
-                    let is_under_mouse = object.is_under_mouse(mouse_pos.to_vec2());
+                    let is_under_mouse = object.is_under_mouse(tr.screen_to_world(mouse_pos).to_vec2());
 
                     if is_shift_down {
                         if is_under_mouse {
@@ -34,7 +34,7 @@ impl Tool for SelectionTool {
         }
     }
 
-    fn draw(&self, _painter: &egui::Painter) {}
+    fn draw(&self, _tr: &ViewTransform, _painter: &egui::Painter) {}
 
     fn before_deactivate(&mut self, objects: &mut Vec<Box<dyn PaintObject>>) {
         for object in objects.iter_mut() {

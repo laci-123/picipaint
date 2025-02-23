@@ -14,10 +14,11 @@ pub struct FreehandCurve {
 }
 
 impl PaintObject for FreehandCurve {
-    fn draw(&self, painter: &egui::Painter) {
+    fn draw(&self, tr: &ViewTransform, painter: &egui::Painter) {
         for p1p2 in self.points.windows(2) {
-            let [p1, p2] = p1p2 else {unreachable!()};
-            painter.line_segment([*p1, *p2], self.stroke);
+            let p1 = tr.world_to_screen(p1p2[0]);
+            let p2 = tr.world_to_screen(p1p2[1]);
+            painter.line_segment([p1, p2], self.stroke);
         }
     }
 
@@ -73,7 +74,7 @@ impl FreehandCurveTool {
 }
 
 impl Tool for FreehandCurveTool {
-    fn update(&mut self, response: &egui::Response, objects: &mut Vec<Box<dyn PaintObject>>, stroke: egui::Stroke) {
+    fn update(&mut self, response: &egui::Response, tr: &ViewTransform, objects: &mut Vec<Box<dyn PaintObject>>, stroke: egui::Stroke) {
         if response.contains_pointer() {
             response.ctx.output_mut(|output| {
                 output.cursor_icon = egui::CursorIcon::Crosshair;
@@ -84,11 +85,12 @@ impl Tool for FreehandCurveTool {
 
         if response.dragged_by(egui::PointerButton::Primary) {
             if let Some(point) = response.interact_pointer_pos() {
-                self.curve.min_x = self.curve.min_x.min(point.x);
-                self.curve.min_y = self.curve.min_y.min(point.y);
-                self.curve.max_x = self.curve.max_x.max(point.x);
-                self.curve.max_y = self.curve.max_y.max(point.y);
-                self.curve.points.push(point);
+                let p = tr.screen_to_world(point);
+                self.curve.min_x = self.curve.min_x.min(p.x);
+                self.curve.min_y = self.curve.min_y.min(p.y);
+                self.curve.max_x = self.curve.max_x.max(p.x);
+                self.curve.max_y = self.curve.max_y.max(p.y);
+                self.curve.points.push(p);
             }
         }
         else if self.curve.points.len() > 0 {
@@ -96,8 +98,8 @@ impl Tool for FreehandCurveTool {
         }
     }
 
-    fn draw(&self, painter: &egui::Painter) {
-        self.curve.draw(painter);
+    fn draw(&self, tr: &ViewTransform, painter: &egui::Painter) {
+        self.curve.draw(tr, painter);
     }
 
     fn before_deactivate(&mut self, _objects: &mut Vec<Box<dyn PaintObject>>) {}
