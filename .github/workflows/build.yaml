@@ -36,10 +36,18 @@ jobs:
           fi
         shell: bash
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload Linux artifact
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v2
         with:
-          name: binaries
+          name: linux-binaries
+          path: output/
+
+      - name: Upload Windows artifact
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v2
+        with:
+          name: windows-binaries
           path: output/
 
   release:
@@ -49,10 +57,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Download artifacts
+      - name: Download Linux artifacts
         uses: actions/download-artifact@v2
         with:
-          name: binaries
+          name: linux-binaries
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-binaries
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
