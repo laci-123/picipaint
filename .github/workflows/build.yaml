@@ -10,7 +10,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: picipaint
+            asset_name: picipaint-linux
+          - os: windows-latest
+            artifact_name: picipaint.exe
+            asset_name: picipaint-windows
 
     steps:
       - name: Checkout code
@@ -26,41 +32,10 @@ jobs:
       - name: Build the application
         run: cargo build --release
 
-      - name: Prepare binaries
-        run: |
-          mkdir -p output
-          if [[ "$RUNNER_OS" == "Linux" ]]; then
-            cp target/release/picipaint output/picipaint_linux
-          elif [[ "$RUNNER_OS" == "Windows" ]]; then
-            cp target/release/picipaint.exe output/picipaint_windows.exe
-          fi
-        shell: bash
-
-      - name: Upload Linux artifact
-        if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          name: linux-binaries
-          path: output/
-
-      - name: Upload Windows artifact
-        if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-binaries
-          path: output/
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/release/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          tag: ${{ github.ref }}
