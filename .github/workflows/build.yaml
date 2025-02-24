@@ -34,6 +34,7 @@ jobs:
           elif [[ "$RUNNER_OS" == "Windows" ]]; then
             cp target/release/picipaint.exe output/picipaint_windows.exe
           fi
+        shell: bash
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
