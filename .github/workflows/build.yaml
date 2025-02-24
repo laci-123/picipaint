@@ -1,0 +1,64 @@
+name: Build and create release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          override-with: rustup
+
+      - name: Build the application
+        run: cargo build --release
+
+      - name: Prepare binaries
+        run: |
+          mkdir -p output
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            cp target/release/picipaint output/picipaint_linux
+          elif [[ "$RUNNER_OS" == "Windows" ]]; then
+            cp target/release/picipaint.exe output/picipaint_windows.exe
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: binaries
+          path: output/
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: binaries
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag: ${{ github.ref }}
+          files: |
+            output/picipaint_linux
+            output/picipaint_windows.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
