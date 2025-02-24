@@ -68,9 +68,8 @@ jobs:
           name: windows-binaries
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          tag: ${{ github.ref }}
           files: |
             linux-binaries/picipaint_linux
             windows-binaries/picipaint_windows.exe
