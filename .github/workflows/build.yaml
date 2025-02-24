@@ -16,23 +16,16 @@ jobs:
             asset_name: picipaint-linux
           - os: windows-latest
             artifact_name: picipaint.exe
-            asset_name: picipaint-windows
+            asset_name: picipaint-windows.exe
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-          override-with: rustup
-
       - name: Build the application
         run: cargo build --release
 
-      - name: Upload binaries to release
+      - name: Create release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
