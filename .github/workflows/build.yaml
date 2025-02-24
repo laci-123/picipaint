@@ -72,7 +72,7 @@ jobs:
         with:
           tag: ${{ github.ref }}
           files: |
-            output/picipaint_linux
-            output/picipaint_windows.exe
+            linux-binaries/picipaint_linux
+            windows-binaries/picipaint_windows.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
