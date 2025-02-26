@@ -1,3 +1,4 @@
+#![windows_subsystem = "windows"]
 fn main() -> eframe::Result {
     let viewport = eframe::egui::ViewportBuilder::default()
                        .with_inner_size(app::WINDOW_INIT_SIZE)
