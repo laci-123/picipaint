@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul};
+use std::ops::{Add, Mul, Sub};
 
 
 #[derive(Clone, Copy)]
@@ -27,6 +27,17 @@ impl Add for Vector2 {
     }
 }
 
+impl Sub for Vector2 {
+    type Output = Self;
+    
+    fn sub(self, other: Self) -> Self {
+        Self {
+            x: self.x - other.x,
+            y: self.y - other.y,
+        }
+    }
+}
+
 impl Mul<f32> for Vector2 {
     type Output = Self;
 
@@ -35,6 +46,31 @@ impl Mul<f32> for Vector2 {
             x: self.x * other,
             y: self.y * other,
         }
+    }
+}
+
+
+pub struct Camera {
+    position: Vector2,
+    zoom: f32,
+}
+
+impl Default for Camera {
+    fn default() -> Self {
+        Self {
+            position: Vector2::zero(),
+            zoom: 1.0,
+        }
+    }
+}
+
+impl Camera {
+    pub fn convert_to_screen_coordinates(&self, point: Vector2) -> Vector2 {
+        (point - self.position) * self.zoom
+    }
+
+    pub fn convert_to_world_coordinates(&self, point: Vector2) -> Vector2 {
+        point * (1.0 / self.zoom) + self.position
     }
 }
 
@@ -121,20 +157,10 @@ pub enum UserInput {
     }
 }
 
-impl UserInput {
-    fn map_position<F: FnOnce(Vector2) -> Vector2>(self, f: F) -> Self {
-        match self {
-            Self::MouseClick { position, button, is_shift_down } => Self::MouseClick { position: f(position), button, is_shift_down },
-            Self::MouseMove  { position, is_shift_down }         => Self::MouseMove  { position: f(position), is_shift_down },
-            other => other,
-        }
-    }
-}
-
 
 pub trait PaintObject<P: Painter> {
-    fn update(&mut self, input: &UserInput);
-    fn draw(&self, painter: &P);
+    fn update(&mut self, input: &UserInput, camera: &Camera);
+    fn draw(&self, painter: &P, camera: &Camera);
     fn is_selected(&self) -> bool;
     fn set_selected(&mut self, value: bool);
     fn is_under_mouse(&self) -> bool;
@@ -143,8 +169,8 @@ pub trait PaintObject<P: Painter> {
 
 
 pub trait Tool<P: Painter> {
-    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<P>>>, stroke: Stroke);
-    fn draw(&self, painter: &P);
+    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<P>>>, stroke: Stroke, camera: &Camera);
+    fn draw(&self, painter: &P, camera: &Camera);
     fn before_deactivate(&mut self, objects: &mut Vec<Box<dyn PaintObject<P>>>);
     fn display_name(&self) -> &str;
 }
@@ -177,8 +203,7 @@ pub struct Engine<P: Painter> {
     selected_tool_index: usize,
     view_width: f32,
     view_height: f32,
-    camera_position: Vector2,
-    camera_zoom: f32,
+    camera: Camera,
     background_color: Color,
 }
 
@@ -190,8 +215,7 @@ impl<P: Painter> Engine<P> {
             selected_tool_index: 0,
             view_width,
             view_height,
-            camera_position: Vector2{ x: view_width / 2.0, y: view_height / 2.0 },
-            camera_zoom: 1.0,
+            camera: Camera::default(),
             background_color: Color::from_rgb(0, 0, 0),
         }
     }
@@ -201,17 +225,16 @@ impl<P: Painter> Engine<P> {
 
         match input {
             UserInput::Pan { delta } => {
-                self.camera_position = self.camera_position + delta;
+                self.camera.position = self.camera.position + self.camera.convert_to_world_coordinates(delta);
             },
             UserInput::Zoom { delta } => {
-                self.camera_zoom += delta;
+                self.camera.zoom += delta;
             },
             UserInput::Resize { new_width, new_height } => {
                 self.view_width = new_width;
                 self.view_height = new_height;
             },
             _ => {
-                // TODO: transform input based on camera position and zoom
                 self.update_tools_and_objects(input, stroke);
             },
         }
@@ -219,11 +242,11 @@ impl<P: Painter> Engine<P> {
 
     fn update_tools_and_objects(&mut self, input: UserInput, stroke: Stroke) {
         for tool in self.tools.iter_mut() {
-            tool.update(&input, &mut self.objects, stroke);
+            tool.update(&input, &mut self.objects, stroke, &self.camera);
         }
 
         for object in self.objects.iter_mut() {
-            object.update(&input);
+            object.update(&input, &self.camera);
         }
     }
 
@@ -231,11 +254,11 @@ impl<P: Painter> Engine<P> {
         painter.draw_rectangle_filled(Rectangle::from_point_and_size(Vector2::zero(), self.view_width, self.view_height), self.background_color, None);
         
         for object in self.objects.iter() {
-            object.draw(painter);
+            object.draw(painter, &self.camera);
         }
 
         for tool in self.tools.iter() {
-            tool.draw(painter);
+            tool.draw(painter, &self.camera);
         }
     }
 
