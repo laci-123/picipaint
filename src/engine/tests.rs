@@ -1,11 +1,91 @@
 use core::f32;
 use approx::{assert_relative_eq, relative_eq};
-use mockall::predicate;
+use mockall::{predicate, Sequence};
 use super::*;
 
 
 const STROKE: Stroke = Stroke { color: Color{ red: 255, green: 255, blue: 255, alpha: 255 }, thickness: 1.0 };
 const BG_COLOR: Color = Color{ red: 0, green: 0, blue: 0, alpha: 255 };
+
+
+#[test]
+fn object_draw_order() {
+    // First the background color is drawn then
+    // the methods of PaintObjects are called in the same order as the objects were created.
+
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let mut seq = Sequence::new();
+
+    let mut object1 = MockPaintObject::new();
+    object1.expect_update().once().return_const(());
+    object1.expect_draw().once().returning(|painter, camera| {
+        painter.draw_circle(Vector2::zero(), 1.0, STROKE, camera);
+    });
+    engine.objects.push(Box::new(object1));
+
+    let mut object2 = MockPaintObject::new();
+    object2.expect_update().once().in_sequence(&mut seq).return_const(());
+    object2.expect_draw().once().returning(|painter, camera| {
+        painter.draw_line(Vector2::zero(), Vector2::zero(), STROKE, camera);
+    });
+    engine.objects.push(Box::new(object2));
+
+    let mut painter = MockScreenPainter::new();
+    painter.expect_draw_rectangle_filled().once().in_sequence(&mut seq).return_const(()); // background color
+    painter.expect_draw_circle().once().in_sequence(&mut seq).return_const(());           // object1
+    painter.expect_draw_line().once().in_sequence(&mut seq).return_const(());             // object2
+
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+}
+
+
+#[test]
+fn tools_iterator() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let mut tool1 = MockTool::new();
+    tool1.expect_display_name().once().return_const(String::from("tool1"));
+    engine.tools.push(Box::new(tool1));
+
+    let mut tool2 = MockTool::new();
+    tool2.expect_display_name().once().return_const(String::from("tool2"));
+    engine.tools.push(Box::new(tool2));
+
+    let mut tools_iter = engine.tools_iter();
+    assert_eq!(tools_iter.next(), Some(String::from("tool1")));
+    assert_eq!(tools_iter.next(), Some(String::from("tool2")));
+    assert_eq!(tools_iter.next(), None);
+}
+
+#[test]
+fn tool_selection() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let mut tool1 = MockTool::new();
+    tool1.expect_before_deactivate().once().return_const(());
+    engine.tools.push(Box::new(tool1));
+
+    let mut tool2 = MockTool::new();
+    tool2.expect_before_deactivate().never().return_const(());
+    engine.tools.push(Box::new(tool2));
+
+    assert_eq!(engine.selected_tool_index, 0);
+    engine.select_tool(1);
+    assert_eq!(engine.selected_tool_index, 1);
+    engine.select_tool(1);
+    assert_eq!(engine.selected_tool_index, 1);
+}
 
 
 #[test]

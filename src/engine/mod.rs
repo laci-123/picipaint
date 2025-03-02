@@ -213,9 +213,10 @@ pub trait PaintObject<P: ScreenPainter> {
 }
 
 
+#[cfg_attr(test, mockall::automock)]
 pub trait Tool<P: ScreenPainter> {
     fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<P>>>, stroke: Stroke, camera: &Camera);
-    fn draw(&self, painter: &mut WorldPainter<P>, camera: &Camera);
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, camera: &Camera);
     fn before_deactivate(&mut self, objects: &mut Vec<Box<dyn PaintObject<P>>>);
     fn display_name(&self) -> &str;
 }
