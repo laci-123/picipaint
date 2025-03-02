@@ -315,9 +315,11 @@ impl<P: ScreenPainter> Engine<P> {
     }
 
     pub fn select_tool(&mut self, index: usize) {
-        let current_tool = &mut self.tools[self.selected_tool_index];
-        current_tool.before_deactivate(&mut self.objects);
-        self.selected_tool_index = index;
+        if(index != self.selected_tool_index) {
+            let current_tool = &mut self.tools[self.selected_tool_index];
+            current_tool.before_deactivate(&mut self.objects);
+            self.selected_tool_index = index;
+        }
     }
 }
 
