@@ -8,3 +8,4 @@ eframe = { version = "0.30.0", default-features = false, features = ["default_fo
 
 [dev-dependencies]
 approx = "0.5.1"
+mockall = "0.13.1"

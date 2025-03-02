@@ -125,6 +125,7 @@ pub struct Stroke {
 }
 
 
+#[cfg_attr(test, mockall::automock)]
 pub trait ScreenPainter {
     fn draw_line(&mut self, start: Vector2, end: Vector2, stroke: Stroke);
     fn draw_circle(&mut self, center: Vector2, radius: f32, stroke: Stroke);
@@ -201,9 +202,10 @@ pub enum UserInput {
 }
 
 
+#[cfg_attr(test, mockall::automock)]
 pub trait PaintObject<P: ScreenPainter> {
     fn update(&mut self, input: &UserInput, camera: &Camera);
-    fn draw(&self, painter: &mut WorldPainter<P>, camera: &Camera);
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, camera: &Camera);
     fn is_selected(&self) -> bool;
     fn set_selected(&mut self, value: bool);
     fn is_under_mouse(&self) -> bool;
