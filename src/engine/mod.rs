@@ -1,7 +1,8 @@
+#![allow(unused)]
 use std::ops::{Add, Mul, Sub};
 
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Vector2 {
     pub x: f32,
     pub y: f32,
@@ -13,6 +14,12 @@ impl Vector2 {
             x: 0.0,
             y: 0.0,
         }
+    }
+}
+
+impl Vector2 {
+    pub fn length(&self) -> f32 {
+        (self.x * self.x + self.y * self.y).sqrt()
     }
 }
 
@@ -118,11 +125,46 @@ pub struct Stroke {
 }
 
 
-pub trait Painter {
-    fn draw_line(&self, start: Vector2, end: Vector2, stroke: Stroke);
-    fn draw_circle(&self, center: Vector2, radius: f32, stroke: Stroke);
-    fn draw_rectangle(&self, rectangle: Rectangle, stroke: Stroke);
-    fn draw_rectangle_filled(&self, rectangle: Rectangle, color: Color, stroke: Option<Stroke>);
+pub trait ScreenPainter {
+    fn draw_line(&mut self, start: Vector2, end: Vector2, stroke: Stroke);
+    fn draw_circle(&mut self, center: Vector2, radius: f32, stroke: Stroke);
+    fn draw_rectangle(&mut self, rectangle: Rectangle, stroke: Stroke);
+    fn draw_rectangle_filled(&mut self, rectangle: Rectangle, color: Color, stroke: Option<Stroke>);
+}
+
+
+pub struct WorldPainter<'a, P: ScreenPainter> {
+    screen_painter: &'a mut P,
+}
+
+impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
+    fn draw_line(&mut self, start: Vector2, end: Vector2, stroke: Stroke, camera: &Camera) {
+        let s = camera.convert_to_screen_coordinates(start);
+        let e = camera.convert_to_screen_coordinates(end);
+        self.screen_painter.draw_line(s, e, stroke);
+    }
+    
+    fn draw_circle(&mut self, center: Vector2, radius: f32, stroke: Stroke, camera: &Camera) {
+        let c = camera.convert_to_screen_coordinates(center);
+        let r = camera.zoom * radius;
+        self.screen_painter.draw_circle(c, r, stroke);
+    }
+    
+    fn draw_rectangle(&mut self, rectangle: Rectangle, stroke: Stroke, camera: &Camera) {
+        let rect = Rectangle {
+            p1: camera.convert_to_screen_coordinates(rectangle.p1),
+            p2: camera.convert_to_screen_coordinates(rectangle.p2),
+        };
+        self.screen_painter.draw_rectangle(rect, stroke);
+    }
+    
+    fn draw_rectangle_filled(&mut self, rectangle: Rectangle, color: Color, stroke: Option<Stroke>, camera: &Camera) {
+        let rect = Rectangle {
+            p1: camera.convert_to_screen_coordinates(rectangle.p1),
+            p2: camera.convert_to_screen_coordinates(rectangle.p2),
+        };
+        self.screen_painter.draw_rectangle_filled(rect, color, stroke);
+    }
 }
 
 
@@ -134,6 +176,7 @@ pub enum MouseButton {
 
 
 pub enum UserInput {
+    Nothing,
     MouseClick {
         position: Vector2,
         button: MouseButton,
@@ -158,9 +201,9 @@ pub enum UserInput {
 }
 
 
-pub trait PaintObject<P: Painter> {
+pub trait PaintObject<P: ScreenPainter> {
     fn update(&mut self, input: &UserInput, camera: &Camera);
-    fn draw(&self, painter: &P, camera: &Camera);
+    fn draw(&self, painter: &mut WorldPainter<P>, camera: &Camera);
     fn is_selected(&self) -> bool;
     fn set_selected(&mut self, value: bool);
     fn is_under_mouse(&self) -> bool;
@@ -168,20 +211,20 @@ pub trait PaintObject<P: Painter> {
 }
 
 
-pub trait Tool<P: Painter> {
+pub trait Tool<P: ScreenPainter> {
     fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<P>>>, stroke: Stroke, camera: &Camera);
-    fn draw(&self, painter: &P, camera: &Camera);
+    fn draw(&self, painter: &mut WorldPainter<P>, camera: &Camera);
     fn before_deactivate(&mut self, objects: &mut Vec<Box<dyn PaintObject<P>>>);
     fn display_name(&self) -> &str;
 }
 
 
-pub struct ToolIterator<'a, P: Painter> {
+pub struct ToolIterator<'a, P: ScreenPainter> {
     tools: &'a Vec<Box<dyn Tool<P>>>,
     index: usize,
 }
 
-impl<'a, P: Painter> Iterator for ToolIterator<'a, P> {
+impl<'a, P: ScreenPainter> Iterator for ToolIterator<'a, P> {
     type Item = String;
 
     fn next(&mut self) -> Option<String> {
@@ -197,7 +240,7 @@ impl<'a, P: Painter> Iterator for ToolIterator<'a, P> {
 }
 
 
-pub struct Engine<P: Painter> {
+pub struct Engine<P: ScreenPainter> {
     objects: Vec<Box<dyn PaintObject<P>>>,
     tools: Vec<Box<dyn Tool<P>>>,
     selected_tool_index: usize,
@@ -207,7 +250,7 @@ pub struct Engine<P: Painter> {
     background_color: Color,
 }
 
-impl<P: Painter> Engine<P> {
+impl<P: ScreenPainter> Engine<P> {
     pub fn new(tools: Vec<Box<dyn Tool<P>>>, view_width: f32, view_height: f32) -> Self {
         Self {
             objects: Vec::new(),
@@ -250,15 +293,17 @@ impl<P: Painter> Engine<P> {
         }
     }
 
-    pub fn draw(&self, painter: &P) {
-        painter.draw_rectangle_filled(Rectangle::from_point_and_size(Vector2::zero(), self.view_width, self.view_height), self.background_color, None);
+    pub fn draw(&self, screen_painter: &mut P) {
+        screen_painter.draw_rectangle_filled(Rectangle::from_point_and_size(Vector2::zero(), self.view_width, self.view_height), self.background_color, None);
+
+        let mut world_painter = WorldPainter { screen_painter };
         
         for object in self.objects.iter() {
-            object.draw(painter, &self.camera);
+            object.draw(&mut world_painter, &self.camera);
         }
 
         for tool in self.tools.iter() {
-            tool.draw(painter, &self.camera);
+            tool.draw(&mut world_painter, &self.camera);
         }
     }
 
@@ -272,3 +317,7 @@ impl<P: Painter> Engine<P> {
         self.selected_tool_index = index;
     }
 }
+
+
+#[cfg(test)]
+mod tests;
