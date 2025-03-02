@@ -2,7 +2,7 @@
 use std::ops::{Add, Mul, Sub};
 
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Vector2 {
     pub x: f32,
     pub y: f32,
@@ -268,7 +268,7 @@ impl<P: ScreenPainter> Engine<P> {
 
         match input {
             UserInput::Pan { delta } => {
-                self.camera.position = self.camera.position + self.camera.convert_to_world_coordinates(delta);
+                self.camera.position = self.camera.position + delta * (1.0 / self.camera.zoom);
             },
             UserInput::Zoom { delta } => {
                 self.camera.zoom += delta;
