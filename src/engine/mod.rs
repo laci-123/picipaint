@@ -284,7 +284,7 @@ impl<P: ScreenPainter> Engine<P> {
     }
 
     fn update_tools_and_objects(&mut self, input: UserInput, stroke: Stroke) {
-        for tool in self.tools.iter_mut() {
+        if let Some(tool) = self.tools.get_mut(self.selected_tool_index) {
             tool.update(&input, &mut self.objects, stroke, &self.camera);
         }
 
@@ -302,7 +302,7 @@ impl<P: ScreenPainter> Engine<P> {
             object.draw(&mut world_painter, &self.camera);
         }
 
-        for tool in self.tools.iter() {
+        if let Some(tool) = self.tools.get(self.selected_tool_index) {
             tool.draw(&mut world_painter, &self.camera);
         }
     }
