@@ -192,3 +192,97 @@ fn zooming_not_centered_around_camera_position() {
         assert_relative_eq!(center.length(), 0.5 * distance_at_no_zoom);
     }
 }
+
+#[test]
+fn user_input_zoom() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockPainter>::new(tools, view_width, view_height);
+
+    let old_zoom = engine.camera.zoom;
+    engine.update(UserInput::Zoom { delta: 0.0 }, STROKE, BG_COLOR);
+    assert_relative_eq!(engine.camera.zoom, old_zoom + 0.0);
+
+    let old_zoom = engine.camera.zoom;
+    engine.update(UserInput::Zoom { delta: 1.0 }, STROKE, BG_COLOR);
+    assert_relative_eq!(engine.camera.zoom, old_zoom + 1.0);
+
+    let old_zoom = engine.camera.zoom;
+    engine.update(UserInput::Zoom { delta: -1.0 }, STROKE, BG_COLOR);
+    assert_relative_eq!(engine.camera.zoom, old_zoom - 1.0);
+
+    let old_zoom = engine.camera.zoom;
+    engine.update(UserInput::Zoom { delta: 10.0 }, STROKE, BG_COLOR);
+    engine.update(UserInput::Zoom { delta: -10.0 }, STROKE, BG_COLOR);
+    assert_relative_eq!(engine.camera.zoom, old_zoom);
+
+    let old_zoom = engine.camera.zoom;
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 50.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Zoom { delta: 10.0 }, STROKE, BG_COLOR);
+    assert_relative_eq!(engine.camera.zoom, old_zoom + 10.0);
+
+    let old_zoom = engine.camera.zoom;
+    engine.update(UserInput::Zoom { delta: 10.0 }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 50.0 } }, STROKE, BG_COLOR);
+    assert_relative_eq!(engine.camera.zoom, old_zoom + 10.0);
+}
+
+#[test]
+fn user_input_pan() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockPainter>::new(tools, view_width, view_height);
+
+    engine.camera.zoom = 1.0;
+    engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
+    engine.update(UserInput::Pan { delta: Vector2 { x: 0.0, y: 0.0 } }, STROKE, BG_COLOR);
+    assert_relative_eq!(engine.camera.position.x, 0.0);
+    assert_relative_eq!(engine.camera.position.y, 0.0);
+
+    engine.camera.zoom = 1.0;
+    engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    assert_relative_eq!(engine.camera.position.x, 10.0);
+    assert_relative_eq!(engine.camera.position.y, 1.0);
+
+    engine.camera.zoom = 1.0;
+    engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    assert_relative_eq!(engine.camera.position.x, 20.0);
+    assert_relative_eq!(engine.camera.position.y, 2.0);
+
+    // The interesting part begins here:
+    // The pan delta is received in screen coordinates,
+    // but the camera position is in world coordinates.
+    // The more zoomed in the camera is, the less a given delta moves it.
+
+    engine.camera.zoom = 10.0;
+    engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 100.0 } }, STROKE, BG_COLOR);
+    assert_relative_eq!(engine.camera.position.x, 1.0);
+    assert_relative_eq!(engine.camera.position.y, 10.0);
+
+    engine.camera.zoom = 0.5;
+    engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    assert_relative_eq!(engine.camera.position.x, 20.0);
+    assert_relative_eq!(engine.camera.position.y, 2.0);
+
+    engine.camera.zoom = 0.5;
+    engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    assert_relative_eq!(engine.camera.position.x, 40.0);
+    assert_relative_eq!(engine.camera.position.y, 4.0);
+
+    engine.camera.zoom = 1.0;
+    engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    engine.camera.zoom = 0.5;
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    assert_relative_eq!(engine.camera.position.x, 30.0);
+    assert_relative_eq!(engine.camera.position.y, 3.0);
+}
