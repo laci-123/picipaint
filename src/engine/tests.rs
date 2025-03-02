@@ -87,6 +87,39 @@ fn tool_selection() {
     assert_eq!(engine.selected_tool_index, 1);
 }
 
+#[test]
+fn only_the_selected_tool_is_used() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let mut painter = MockScreenPainter::new();
+    painter.expect_draw_rectangle_filled().return_const(()); // draw background color
+
+    let mut seq = Sequence::new();
+
+    let mut tool1 = MockTool::new();
+    tool1.expect_update().once().in_sequence(&mut seq).return_const(());
+    tool1.expect_draw().once().in_sequence(&mut seq).return_const(());
+    tool1.expect_before_deactivate().once().in_sequence(&mut seq).return_const(());
+    engine.tools.push(Box::new(tool1));
+
+    let mut tool2 = MockTool::new();
+    tool2.expect_update().once().in_sequence(&mut seq).return_const(());
+    tool2.expect_draw().once().in_sequence(&mut seq).return_const(());
+    tool2.expect_before_deactivate().never().return_const(());
+    engine.tools.push(Box::new(tool2));
+
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+
+    engine.select_tool(1);
+
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+}
+
 
 #[test]
 fn zooming_centered_around_camera_position() {
