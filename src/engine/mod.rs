@@ -95,6 +95,11 @@ impl Rectangle {
             p2: p + Vector2{ x: width, y: height },
         }
     }
+
+    fn contains_point(&self, p: Vector2) -> bool {
+        self.p1.x <= p.x && p.x <= self.p2.x &&
+        self.p1.y <= p.y && p.y <= self.p2.y
+    }
 }
 
 
@@ -202,7 +207,6 @@ pub enum UserInput {
 }
 
 
-#[cfg_attr(test, mockall::automock)]
 pub trait PaintObject<P: ScreenPainter> {
     fn update(&mut self, input: &UserInput, camera: &Camera);
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, camera: &Camera);

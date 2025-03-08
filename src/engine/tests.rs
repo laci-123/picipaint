@@ -8,6 +8,68 @@ const STROKE: Stroke = Stroke { color: Color{ red: 255, green: 255, blue: 255, a
 const BG_COLOR: Color = Color{ red: 0, green: 0, blue: 0, alpha: 255 };
 
 
+struct FakePaintObject {
+    under_mouse: bool,
+    selected: bool,
+    bounding_rect: Rectangle,
+    p1: Option<Vector2>,
+    p2: Option<Vector2>,
+}
+
+impl Default for FakePaintObject {
+    fn default() -> Self {
+        Self {
+            under_mouse: false,
+            selected: false,
+            bounding_rect: Rectangle { p1: Vector2::zero(), p2: Vector2::zero() },
+            p1: None,
+            p2: None,
+        }
+    }
+}
+
+impl PaintObject<MockScreenPainter> for FakePaintObject {
+    fn update(&mut self, input: &UserInput, camera: &Camera) {
+        match input {
+            UserInput::MouseClick { position, .. } => {
+                self.under_mouse = self.bounding_rect.contains_point(*position);
+            },
+            UserInput::MouseMove { position, .. } => {
+                self.under_mouse = self.bounding_rect.contains_point(*position);
+            },
+            _ => {/* do nothing */},
+        }
+    }
+    
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, MockScreenPainter>, camera: &Camera) {
+        if let Some(p1) = self.p1 {
+            if let Some(p2) = self.p2 {
+                painter.draw_line(p1, p2, STROKE, camera);
+            }
+            else {
+            painter.draw_circle(p1, 1.0, STROKE, camera);
+            }
+        }
+    }
+    
+    fn is_selected(&self) -> bool {
+        self.selected
+    }
+    
+    fn set_selected(&mut self, value: bool) {
+        self.selected = value;
+    }
+    
+    fn is_under_mouse(&self) -> bool {
+        self.under_mouse
+    }
+    
+    fn get_bounding_rect(&self) -> Rectangle {
+        self.bounding_rect
+    }
+}
+
+
 #[test]
 fn object_draw_order() {
     // First the background color is drawn then
@@ -20,20 +82,10 @@ fn object_draw_order() {
 
     let mut seq = Sequence::new();
 
-    let mut object1 = MockPaintObject::new();
-    object1.expect_update().once().return_const(());
-    object1.expect_draw().once().returning(|painter, camera| {
-        painter.draw_circle(Vector2::zero(), 1.0, STROKE, camera);
-    });
-    object1.expect_set_selected().return_const(());
+    let object1 = FakePaintObject { p1: Some(Vector2::zero()), ..Default::default() };
     engine.objects.push(Box::new(object1));
 
-    let mut object2 = MockPaintObject::new();
-    object2.expect_update().once().in_sequence(&mut seq).return_const(());
-    object2.expect_draw().once().returning(|painter, camera| {
-        painter.draw_line(Vector2::zero(), Vector2::zero(), STROKE, camera);
-    });
-    object2.expect_set_selected().return_const(());
+    let object2 = FakePaintObject { p1: Some(Vector2::zero()), p2: Some(Vector2::zero()), ..Default::default() };
     engine.objects.push(Box::new(object2));
 
     let mut painter = MockScreenPainter::new();
@@ -138,16 +190,13 @@ fn zooming_centered_around_camera_position() {
     let little_r = 1.0;
     for i in 0..objects_count {
         let angle = (i as f32) * angle_step;
-        let mut object = MockPaintObject::new();
-        object.expect_update().return_const(());
-        object.expect_draw().returning(move |painter, camera| {
-            let center = Vector2{
+        let object = FakePaintObject {
+            p1: Some(Vector2{
                 x: middle.x + big_r * angle.cos(),
                 y: middle.y + big_r * angle.sin()
-            };
-            painter.draw_circle(center, little_r, STROKE, camera);
-        });
-        object.expect_set_selected().return_const(());
+            }),
+            ..Default::default()
+        };
         engine.objects.push(Box::new(object));
     }
 
@@ -207,16 +256,13 @@ fn zooming_not_centered_around_camera_position() {
     let little_r = 1.0;
     for i in 0..objects_count {
         let angle = (i as f32) * angle_step;
-        let mut object = MockPaintObject::new();
-        object.expect_update().return_const(());
-        object.expect_draw().returning(move |painter, camera| {
-            let center = Vector2{
+        let object = FakePaintObject {
+            p1: Some(Vector2{
                 x: middle.x + big_r * angle.cos(),
                 y: middle.y + big_r * angle.sin()
-            };
-            painter.draw_circle(center, little_r, STROKE, camera);
-        });
-        object.expect_set_selected().return_const(());
+            }),
+            ..Default::default()
+        };
         engine.objects.push(Box::new(object));
     }
 
@@ -351,36 +397,35 @@ fn no_selection_without_user_input() {
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
 
-    // no relevant user input so it should never be selected
-    let mut object1 = MockPaintObject::new();
-    object1.expect_update().return_const(());
-    object1.expect_draw().return_const(());
-    object1.expect_is_under_mouse().returning(|| true);
-    object1.expect_set_selected().times(1..).with(predicate::eq(false)).return_const(());
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
     engine.objects.push(Box::new(object1));
 
-    // no relevant user input so it should never be selected
-    let mut object2 = MockPaintObject::new();
-    object2.expect_update().return_const(());
-    object2.expect_draw().return_const(());
-    object2.expect_is_under_mouse().returning(|| false);
-    object2.expect_set_selected().times(1..).with(predicate::eq(false)).return_const(());
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
     engine.objects.push(Box::new(object2));
 
-    let mut painter = MockScreenPainter::new();
-    painter.expect_draw_rectangle_filled().return_const(()); // background color
+    // None of the following user inputs should cause any objects to be selected.
 
     engine.update(UserInput::Nothing, STROKE, BG_COLOR);
-    engine.draw(&mut painter);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::MouseMove { position: Vector2{x: 10.0, y: 23.4}, is_shift_down: false }, STROKE, BG_COLOR);
-    engine.draw(&mut painter);
+    engine.update(UserInput::MouseMove { position: Vector2{x: 5.0, y: 5.4}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
 
     engine.update(UserInput::Pan { delta: Vector2{x: 1.0, y: 0.1 } }, STROKE, BG_COLOR);
-    engine.draw(&mut painter);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::MouseClick { button: MouseButton::Right, position: Vector2{x: 10.0, y: 23.4}, is_shift_down: false }, STROKE, BG_COLOR);
-    engine.draw(&mut painter);
+    engine.update(UserInput::MouseClick { button: MouseButton::Right, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
 }
 
 #[test]
@@ -390,27 +435,32 @@ fn single_selection() {
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
 
-    // always under mouse so it should be selected
-    let mut object1 = MockPaintObject::new();
-    object1.expect_update().return_const(());
-    object1.expect_draw().return_const(());
-    object1.expect_is_under_mouse().returning(|| true);
-    object1.expect_set_selected().times(1..).with(predicate::eq(true)).return_const(());
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
     engine.objects.push(Box::new(object1));
 
-    // never under mouse so it should never be selected
-    let mut object2 = MockPaintObject::new();
-    object2.expect_update().return_const(());
-    object2.expect_draw().return_const(());
-    object2.expect_is_under_mouse().returning(|| false);
-    object2.expect_set_selected().times(1..).with(predicate::eq(false)).return_const(());
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
     engine.objects.push(Box::new(object2));
 
-    let mut painter = MockScreenPainter::new();
-    painter.expect_draw_rectangle_filled().return_const(()); // background color
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 10.0, y: 23.4}, is_shift_down: false }, STROKE, BG_COLOR);
-    engine.draw(&mut painter);
+    // click object #2
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), true);
+
+    // click neither
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
 }
 
 #[test]
@@ -420,45 +470,40 @@ fn single_selection_with_shift() {
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
 
-    let mut seq = Sequence::new();
+    // When shift is held down and the same object is clicked multiple times,
+    // it should be alternately selected and deselected.
 
-    // when shift is held down and the same object is clicked multiple times,
-    // it should be alternately selected and deselected
-    // (mock: `is_selected` always returns the last value set in `set_selected`)
-    let mut object1 = MockPaintObject::new();
-    object1.expect_update().return_const(());
-    object1.expect_draw().return_const(());
-    object1.expect_is_under_mouse().returning(|| true);
-    object1.expect_is_selected() .once().in_sequence(&mut seq).returning(|| false);
-    object1.expect_set_selected().once().in_sequence(&mut seq).with(predicate::eq(true)).return_const(());
-    object1.expect_is_selected() .once().in_sequence(&mut seq).returning(|| true);
-    object1.expect_set_selected().once().in_sequence(&mut seq).with(predicate::eq(false)).return_const(());
-    object1.expect_is_selected() .once().in_sequence(&mut seq).returning(|| false);
-    object1.expect_set_selected().once().in_sequence(&mut seq).with(predicate::eq(true)).return_const(());
-    object1.expect_is_selected() .once().in_sequence(&mut seq).returning(|| true);
-    object1.expect_set_selected().once().in_sequence(&mut seq).with(predicate::eq(false)).return_const(());
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
     engine.objects.push(Box::new(object1));
 
-    // never under mouse so it should never be selected
-    let mut object2 = MockPaintObject::new();
-    object2.expect_update().return_const(());
-    object2.expect_draw().return_const(());
-    object2.expect_is_under_mouse().returning(|| false);
-    object2.expect_is_selected().returning(|| false);
-    object2.expect_set_selected().times(1..).with(predicate::eq(false)).return_const(());
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
     engine.objects.push(Box::new(object2));
 
-    let mut painter = MockScreenPainter::new();
-    painter.expect_draw_rectangle_filled().return_const(()); // background color
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 10.0, y: 23.4}, is_shift_down: true }, STROKE, BG_COLOR);
-    engine.draw(&mut painter);
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 10.0, y: 23.4}, is_shift_down: true }, STROKE, BG_COLOR);
-    engine.draw(&mut painter);
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 10.0, y: 23.4}, is_shift_down: true }, STROKE, BG_COLOR);
-    engine.draw(&mut painter);
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 10.0, y: 23.4}, is_shift_down: true }, STROKE, BG_COLOR);
-    engine.draw(&mut painter);
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
 }
 
 #[test]
@@ -468,48 +513,60 @@ fn multiple_selection_with_shift() {
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
 
-    let mut seq = Sequence::new();
+    // While shift is being held down, all objects are selected that the user clicks,
+    // even if they click somewhere where there is no object.
+    // BUT if they click a selected object it will be deselected again.
 
-    let mut object1 = MockPaintObject::new();
-    object1.expect_update().return_const(());
-    object1.expect_draw().return_const(());
-    let mut object2 = MockPaintObject::new();
-    object2.expect_update().return_const(());
-    object2.expect_draw().return_const(());
-    object2.expect_is_under_mouse().returning(|| true);
-    object2.expect_set_selected().times(1..).with(predicate::eq(true)).return_const(());
-
-    // while shift is held down, once an object is clicked it is always selected
-    // (mock: `is_selected` always returns the last value set in `set_selected`)
-
-    // 1st click
-    object1.expect_is_under_mouse().once().in_sequence(&mut seq).returning(|| true);
-    object1.expect_is_selected()   .once().in_sequence(&mut seq).returning(|| false);
-    object1.expect_set_selected()  .once().in_sequence(&mut seq).with(predicate::eq(true)).return_const(()); 
-    object2.expect_is_under_mouse().once().in_sequence(&mut seq).returning(|| false);
-    object2.expect_set_selected()  .once().in_sequence(&mut seq).with(predicate::eq(false)).return_const(());
-    // 2nd click
-    object1.expect_is_under_mouse().once().in_sequence(&mut seq).returning(|| false);
-    object1.expect_set_selected()  .once().in_sequence(&mut seq).with(predicate::eq(true)).return_const(());
-    object2.expect_is_under_mouse().once().in_sequence(&mut seq).returning(|| true);
-    object2.expect_is_selected()   .once().in_sequence(&mut seq).returning(|| false);
-    object2.expect_set_selected()  .once().in_sequence(&mut seq).with(predicate::eq(true)).return_const(());
-    // 3rd click
-    object1.expect_is_under_mouse().once().in_sequence(&mut seq).returning(|| false);
-    object1.expect_set_selected()  .once().in_sequence(&mut seq).with(predicate::eq(true)).return_const(());
-    object2.expect_is_under_mouse().once().in_sequence(&mut seq).returning(|| false);
-    object2.expect_set_selected()  .once().in_sequence(&mut seq).with(predicate::eq(true)).return_const(());
-
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
     engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
     engine.objects.push(Box::new(object2));
 
-    let mut painter = MockScreenPainter::new();
-    painter.expect_draw_rectangle_filled().return_const(()); // background color
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 10.0, y: 23.4}, is_shift_down: true }, STROKE, BG_COLOR);
-    engine.draw(&mut painter);
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 10.0, y: 23.4}, is_shift_down: true }, STROKE, BG_COLOR);
-    engine.draw(&mut painter);
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 10.0, y: 23.4}, is_shift_down: true }, STROKE, BG_COLOR);
-    engine.draw(&mut painter);
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // click neither
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // click object #2
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), true);
+
+    // click neither
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), true);
+
+    // click object #2
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
 }
+
