@@ -786,3 +786,121 @@ fn zoom_and_pan_do_not_affect_selection() {
     engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
     assert_eq!(engine.objects[0].is_selected(), true);
 }
+
+#[test]
+fn no_selection_marker_when_no_objects_selected() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    let mut painter = MockScreenPainter::new();
+    painter.expect_draw_rectangle_filled().return_const(()); // background color
+    painter.expect_draw_rectangle().never(); // As long as nothing is selected, nothing should draw unfilled rectangles.
+
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+
+    // click somewhere else
+    engine.update(UserInput::MouseClick { position: Vector2 { x: 100.0, y: 100.0 }, button: MouseButton::Left, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+
+    // click on object #1 with right click
+    engine.update(UserInput::MouseClick { position: Vector2 { x: 5.0, y: 5.0 }, button: MouseButton::Right, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+
+    engine.update(UserInput::Zoom { delta: 0.1 }, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+
+    engine.update(UserInput::Pan { delta: Vector2 { x: -1.0, y: -10.0 } }, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+}
+
+
+#[test]
+fn selection_marker_around_selected_object() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    let mut painter = MockScreenPainter::new();
+    painter.expect_draw_rectangle_filled().return_const(()); // background color
+    // There should be a rectangle drawn around the selected object.
+    painter.expect_draw_rectangle()
+           .once()
+           .with(predicate::eq(Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } }), predicate::always())
+           .return_const(());
+
+    // select object #1
+    engine.update(UserInput::MouseClick { position: Vector2 { x: 5.0, y: 5.0 }, button: MouseButton::Left, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+}
+
+#[test]
+fn selection_markers_with_multiple_selected_objects() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    let mut painter = MockScreenPainter::new();
+    painter.expect_draw_rectangle_filled().return_const(()); // background color
+    // There should be a rectangle drawn around each selected object.
+    painter.expect_draw_rectangle()
+           .once()
+           .with(predicate::eq(Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } }), predicate::always())
+           .return_const(());
+    painter.expect_draw_rectangle()
+           .once()
+           .with(predicate::eq(Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } }), predicate::always())
+           .return_const(());
+
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+}

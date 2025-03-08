@@ -57,6 +57,7 @@ impl Mul<f32> for Vector2 {
 }
 
 
+#[derive(Debug)]
 pub struct Camera {
     position: Vector2,
     zoom: f32,
@@ -82,7 +83,7 @@ impl Camera {
 }
 
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Rectangle {
     pub p1: Vector2,
     pub p2: Vector2,
@@ -334,6 +335,9 @@ impl<P: ScreenPainter> Engine<P> {
         
         for object in self.objects.iter() {
             object.draw(&mut world_painter, &self.camera);
+            if object.is_selected() {
+                world_painter.draw_rectangle(object.get_bounding_rect(), Stroke { color: Color::from_rgb(255, 255, 255), thickness: 1.0 }, &self.camera);
+            }
         }
 
         if let Some(tool) = self.tools.get(self.selected_tool_index) {
