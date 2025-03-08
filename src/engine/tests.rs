@@ -97,6 +97,16 @@ fn object_draw_order() {
     engine.draw(&mut painter);
 }
 
+#[test]
+fn tools_iterator_empty() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let mut tools_iter = engine.tools_iter();
+    assert_eq!(tools_iter.next(), None);
+}
 
 #[test]
 fn tools_iterator() {
@@ -120,25 +130,32 @@ fn tools_iterator() {
 }
 
 #[test]
-fn tool_selection() {
+fn nothing_is_drawn_if_no_tool_is_selected() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
 
+    let mut painter = MockScreenPainter::new();
+    painter.expect_draw_rectangle_filled().return_const(()); // draw background color
+
     let mut tool1 = MockTool::new();
-    tool1.expect_before_deactivate().once().return_const(());
+    tool1.expect_update().never().return_const(());
+    tool1.expect_draw().never().return_const(());
     engine.tools.push(Box::new(tool1));
 
     let mut tool2 = MockTool::new();
-    tool2.expect_before_deactivate().never().return_const(());
+    tool2.expect_update().never().return_const(());
+    tool2.expect_draw().never().return_const(());
     engine.tools.push(Box::new(tool2));
 
-    assert_eq!(engine.selected_tool_index, 0);
-    engine.select_tool(1);
-    assert_eq!(engine.selected_tool_index, 1);
-    engine.select_tool(1);
-    assert_eq!(engine.selected_tool_index, 1);
+    engine.select_tool(None);
+
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
 }
 
 #[test]
@@ -156,20 +173,18 @@ fn only_the_selected_tool_is_used() {
     let mut tool1 = MockTool::new();
     tool1.expect_update().once().in_sequence(&mut seq).return_const(());
     tool1.expect_draw().once().in_sequence(&mut seq).return_const(());
-    tool1.expect_before_deactivate().once().in_sequence(&mut seq).return_const(());
     engine.tools.push(Box::new(tool1));
 
     let mut tool2 = MockTool::new();
     tool2.expect_update().once().in_sequence(&mut seq).return_const(());
     tool2.expect_draw().once().in_sequence(&mut seq).return_const(());
-    tool2.expect_before_deactivate().never().return_const(());
     engine.tools.push(Box::new(tool2));
 
+    engine.select_tool(Some(0));
     engine.update(UserInput::Nothing, STROKE, BG_COLOR);
     engine.draw(&mut painter);
 
-    engine.select_tool(1);
-
+    engine.select_tool(Some(1));
     engine.update(UserInput::Nothing, STROKE, BG_COLOR);
     engine.draw(&mut painter);
 }
@@ -424,6 +439,46 @@ fn no_selection_without_user_input() {
     assert_eq!(engine.objects[1].is_selected(), false);
 
     engine.update(UserInput::MouseClick { button: MouseButton::Right, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+}
+
+#[test]
+fn no_selection_if_a_tool_is_selected() {
+    let mut tool1 = MockTool::new();
+    tool1.expect_update().return_const(());
+    tool1.expect_draw().return_const(());
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(vec![Box::new(tool1)], view_width, view_height);
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    engine.select_tool(Some(0));
+
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 }
