@@ -206,7 +206,8 @@ pub enum UserInput {
     Resize {
         new_width: f32,
         new_height: f32,
-    }
+    },
+    Delete,
 }
 
 
@@ -298,9 +299,9 @@ impl<P: ScreenPainter> Engine<P> {
             tool.update(&input, &mut self.objects, stroke, &self.camera);
         }
 
-        for object in self.objects.iter_mut() {
-            object.update(&input, &self.camera);
+        let mut to_be_deleted = Vec::with_capacity(self.objects.len());
 
+        for (i, object) in self.objects.iter_mut().enumerate() {
             if input == UserInput::SelectAll {
                 object.set_selected(true);
                 continue;
@@ -309,6 +310,12 @@ impl<P: ScreenPainter> Engine<P> {
                 object.set_selected(false);
                 continue;
             }
+            if input == UserInput::Delete && object.is_selected() {
+                to_be_deleted.push(i);
+                continue;
+            }
+
+            object.update(&input, &self.camera);
 
             let left_click    = matches!(input, UserInput::MouseClick { button: MouseButton::Left, .. });
             let shift_is_down = matches!(input, UserInput::MouseClick { is_shift_down: true, .. });
@@ -325,6 +332,11 @@ impl<P: ScreenPainter> Engine<P> {
                     object.set_selected(false);
                 }
             }
+        }
+
+        for i in to_be_deleted.iter().rev() {
+            // going in reverse order to avoid shifting indeces
+            self.objects.swap_remove(*i);
         }
     }
 

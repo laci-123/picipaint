@@ -904,3 +904,74 @@ fn selection_markers_with_multiple_selected_objects() {
     engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
     engine.draw(&mut painter);
 }
+
+#[test]
+fn delete_input_does_nothing_with_nothing_selected() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        p1: Some(Vector2{x: 1.0, y: 2.0}),
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        p1: Some(Vector2{x: 11.0, y: 12.0}),
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    let mut painter = MockScreenPainter::new();
+    painter.expect_draw_rectangle_filled().return_const(()); // background color
+    // draw a circle for each object before the delete input and after the delete input
+    painter.expect_draw_circle()
+           .times(4)
+           .return_const(());
+
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+
+    engine.update(UserInput::Delete, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+}
+
+#[test]
+fn delete_input_deletes_all_selected_objects() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        p1: Some(Vector2{x: 1.0, y: 2.0}),
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        p1: Some(Vector2{x: 11.0, y: 12.0}),
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    let mut painter = MockScreenPainter::new();
+    painter.expect_draw_rectangle_filled().return_const(()); // background color
+    painter.expect_draw_rectangle().return_const(()); // selection markers
+    // draw a circle for each object before the delete input but not after it
+    painter.expect_draw_circle()
+           .times(2)
+           .return_const(());
+
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+
+    engine.update(UserInput::Delete, STROKE, BG_COLOR);
+    engine.draw(&mut painter);
+}
