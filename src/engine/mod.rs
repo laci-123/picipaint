@@ -174,6 +174,7 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
 }
 
 
+#[derive(PartialEq)]
 pub enum MouseButton {
     Left,
     Middle,
@@ -181,6 +182,7 @@ pub enum MouseButton {
 }
 
 
+#[derive(PartialEq)]
 pub enum UserInput {
     Nothing,
     MouseClick {
@@ -297,6 +299,15 @@ impl<P: ScreenPainter> Engine<P> {
 
         for object in self.objects.iter_mut() {
             object.update(&input, &self.camera);
+
+            if input == UserInput::SelectAll {
+                object.set_selected(true);
+                continue;
+            }
+            if input == UserInput::DeselectAll {
+                object.set_selected(false);
+                continue;
+            }
 
             let left_click    = matches!(input, UserInput::MouseClick { button: MouseButton::Left, .. });
             let shift_is_down = matches!(input, UserInput::MouseClick { is_shift_down: true, .. });

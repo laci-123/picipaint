@@ -570,3 +570,85 @@ fn multiple_selection_with_shift() {
     assert_eq!(engine.objects[1].is_selected(), false);
 }
 
+#[test]
+fn select_all_input_selects_all() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), true);
+
+    // It even works when we start with only some of the objects selected.
+
+    // (first we click somewhere else to deselect all objects then click on #1 to select it)
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), true);
+}
+
+#[test]
+fn deselect_all_input_deselects_all() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    // When we start with no objects selected it has no effect.
+
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // It works with some objects selected.
+
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // And with all objects selected.
+
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), true);
+
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+}
