@@ -97,7 +97,7 @@ impl Rectangle {
         }
     }
 
-    fn contains_point(&self, p: Vector2) -> bool {
+    pub fn contains_point(&self, p: Vector2) -> bool {
         self.p1.x <= p.x && p.x <= self.p2.x &&
         self.p1.y <= p.y && p.y <= self.p2.y
     }
@@ -145,19 +145,19 @@ pub struct WorldPainter<'a, P: ScreenPainter> {
 }
 
 impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
-    fn draw_line(&mut self, start: Vector2, end: Vector2, stroke: Stroke, camera: &Camera) {
+    pub fn draw_line(&mut self, start: Vector2, end: Vector2, stroke: Stroke, camera: &Camera) {
         let s = camera.convert_to_screen_coordinates(start);
         let e = camera.convert_to_screen_coordinates(end);
         self.screen_painter.draw_line(s, e, stroke);
     }
     
-    fn draw_circle(&mut self, center: Vector2, radius: f32, stroke: Stroke, camera: &Camera) {
+    pub fn draw_circle(&mut self, center: Vector2, radius: f32, stroke: Stroke, camera: &Camera) {
         let c = camera.convert_to_screen_coordinates(center);
         let r = camera.zoom * radius;
         self.screen_painter.draw_circle(c, r, stroke);
     }
     
-    fn draw_rectangle(&mut self, rectangle: Rectangle, stroke: Stroke, camera: &Camera) {
+    pub fn draw_rectangle(&mut self, rectangle: Rectangle, stroke: Stroke, camera: &Camera) {
         let rect = Rectangle {
             p1: camera.convert_to_screen_coordinates(rectangle.p1),
             p2: camera.convert_to_screen_coordinates(rectangle.p2),
@@ -165,7 +165,7 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
         self.screen_painter.draw_rectangle(rect, stroke);
     }
     
-    fn draw_rectangle_filled(&mut self, rectangle: Rectangle, color: Color, stroke: Option<Stroke>, camera: &Camera) {
+    pub fn draw_rectangle_filled(&mut self, rectangle: Rectangle, color: Color, stroke: Option<Stroke>, camera: &Camera) {
         let rect = Rectangle {
             p1: camera.convert_to_screen_coordinates(rectangle.p1),
             p2: camera.convert_to_screen_coordinates(rectangle.p2),
