@@ -464,50 +464,7 @@ fn single_selection() {
 }
 
 #[test]
-fn single_selection_with_shift() {
-    let tools = Vec::new();
-    let view_width = 1000.0;
-    let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
-
-    // When shift is held down and the same object is clicked multiple times,
-    // it should be alternately selected and deselected.
-
-    let object1 = FakePaintObject {
-        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
-        ..Default::default()
-    };
-    engine.objects.push(Box::new(object1));
-
-    let object2 = FakePaintObject {
-        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
-        ..Default::default()
-    };
-    engine.objects.push(Box::new(object2));
-
-    // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
-    assert_eq!(engine.objects[0].is_selected(), true);
-    assert_eq!(engine.objects[1].is_selected(), false);
-
-    // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
-    assert_eq!(engine.objects[0].is_selected(), false);
-    assert_eq!(engine.objects[1].is_selected(), false);
-
-    // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
-    assert_eq!(engine.objects[0].is_selected(), true);
-    assert_eq!(engine.objects[1].is_selected(), false);
-
-    // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
-    assert_eq!(engine.objects[0].is_selected(), false);
-    assert_eq!(engine.objects[1].is_selected(), false);
-}
-
-#[test]
-fn multiple_selection_with_shift() {
+fn selection_with_shift() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
@@ -566,6 +523,146 @@ fn multiple_selection_with_shift() {
 
     // click object #1
     engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+}
+
+#[test]
+fn selection_with_shift_except_first() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    // This is exactly the same as the `selection_with_shift` test,
+    // except that shift is NOT held down during the FIRST click.
+    // Everything should work the same.
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // click neither
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // click object #2
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), true);
+
+    // click neither
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), true);
+
+    // click object #2
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+}
+
+#[test]
+fn single_selection_after_multiple_selection() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    // When an object is clicked without shift, that object is selected
+    // but all other objects are deselected.
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    // select all
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), true);
+
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
+}
+
+#[test]
+fn clicking_elsewhere_deselects_all() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    // When the user clicks someshere where there are no objects without shift,
+    // all objects are deselected.
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    // select all
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), true);
+
+    // click elsewhere
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // select some
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // click elsewhere
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: false }, STROKE, BG_COLOR);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 }
@@ -651,4 +748,41 @@ fn deselect_all_input_deselects_all() {
     engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
+}
+
+#[test]
+fn zoom_and_pan_do_not_affect_selection() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    // control tests
+    assert_eq!(engine.objects[0].is_selected(), false);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 11.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+
+    // reset
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+
+    engine.update(UserInput::Zoom { delta: 20.0 }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+
+    // reset
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+
+    engine.update(UserInput::Pan { delta: Vector2 { x: 100.0, y: -500.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
 }
