@@ -225,7 +225,6 @@ pub trait PaintObject<P: ScreenPainter> {
 pub trait Tool<P: ScreenPainter> {
     fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<P>>>, stroke: Stroke, camera: &Camera);
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, camera: &Camera);
-    fn before_deactivate(&mut self, objects: &mut Vec<Box<dyn PaintObject<P>>>);
     fn display_name(&self) -> &str;
 }
 
@@ -254,7 +253,7 @@ impl<'a, P: ScreenPainter> Iterator for ToolIterator<'a, P> {
 pub struct Engine<P: ScreenPainter> {
     objects: Vec<Box<dyn PaintObject<P>>>,
     tools: Vec<Box<dyn Tool<P>>>,
-    selected_tool_index: usize,
+    selected_tool_index: Option<usize>,
     view_width: f32,
     view_height: f32,
     camera: Camera,
@@ -266,7 +265,7 @@ impl<P: ScreenPainter> Engine<P> {
         Self {
             objects: Vec::new(),
             tools,
-            selected_tool_index: 0,
+            selected_tool_index: None,
             view_width,
             view_height,
             camera: Camera::default(),
@@ -295,41 +294,45 @@ impl<P: ScreenPainter> Engine<P> {
     }
 
     fn update_tools_and_objects(&mut self, input: UserInput, stroke: Stroke) {
-        if let Some(tool) = self.tools.get_mut(self.selected_tool_index) {
-            tool.update(&input, &mut self.objects, stroke, &self.camera);
+        if let Some(tool_index) = self.selected_tool_index {
+            if let Some(tool) = self.tools.get_mut(tool_index) {
+                tool.update(&input, &mut self.objects, stroke, &self.camera);
+            }
         }
 
         let mut to_be_deleted = Vec::with_capacity(self.objects.len());
 
         for (i, object) in self.objects.iter_mut().enumerate() {
-            if input == UserInput::SelectAll {
-                object.set_selected(true);
-                continue;
-            }
-            if input == UserInput::DeselectAll {
-                object.set_selected(false);
-                continue;
-            }
-            if input == UserInput::Delete && object.is_selected() {
-                to_be_deleted.push(i);
-                continue;
-            }
-
             object.update(&input, &self.camera);
 
-            let left_click    = matches!(input, UserInput::MouseClick { button: MouseButton::Left, .. });
-            let shift_is_down = matches!(input, UserInput::MouseClick { is_shift_down: true, .. });
-            if left_click && object.is_under_mouse() {
-                if shift_is_down {
-                    object.set_selected(!object.is_selected());
+            if self.selected_tool_index.is_none() {
+                if input == UserInput::SelectAll {
+                    object.set_selected(true);
+                    continue;
+                }
+                if input == UserInput::DeselectAll {
+                    object.set_selected(false);
+                    continue;
+                }
+                if input == UserInput::Delete && object.is_selected() {
+                    to_be_deleted.push(i);
+                    continue;
+                }
+
+                let left_click    = matches!(input, UserInput::MouseClick { button: MouseButton::Left, .. });
+                let shift_is_down = matches!(input, UserInput::MouseClick { is_shift_down: true, .. });
+                if left_click && object.is_under_mouse() {
+                    if shift_is_down {
+                        object.set_selected(!object.is_selected());
+                    }
+                    else {
+                        object.set_selected(true);
+                    }
                 }
                 else {
-                    object.set_selected(true);
-                }
-            }
-            else {
-                if !shift_is_down {
-                    object.set_selected(false);
+                    if !shift_is_down {
+                        object.set_selected(false);
+                    }
                 }
             }
         }
@@ -352,8 +355,10 @@ impl<P: ScreenPainter> Engine<P> {
             }
         }
 
-        if let Some(tool) = self.tools.get(self.selected_tool_index) {
-            tool.draw(&mut world_painter, &self.camera);
+        if let Some(tool_index) = self.selected_tool_index {
+            if let Some(tool) = self.tools.get(tool_index) {
+                tool.draw(&mut world_painter, &self.camera);
+            }
         }
     }
 
@@ -361,11 +366,10 @@ impl<P: ScreenPainter> Engine<P> {
         ToolIterator { tools: &self.tools, index: 0 }
     }
 
-    pub fn select_tool(&mut self, index: usize) {
-        if(index != self.selected_tool_index) {
-            let current_tool = &mut self.tools[self.selected_tool_index];
-            current_tool.before_deactivate(&mut self.objects);
-            self.selected_tool_index = index;
+    pub fn select_tool(&mut self, index: Option<usize>) {
+        self.selected_tool_index = index;
+        if let Some(i) = index {
+            let current_tool = &mut self.tools[i];
         }
     }
 }
