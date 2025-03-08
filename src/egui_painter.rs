@@ -2,33 +2,29 @@ use eframe::egui;
 use crate::engine;
 
 
-pub struct EguiPainter<'a> {
-    pub painter: &'a egui::Painter,
-}
-
-impl<'a> engine::ScreenPainter for EguiPainter<'a> {
+impl engine::ScreenPainter for egui::Painter {
     fn draw_line(&mut self, start: engine::Vector2, end: engine::Vector2, stroke: engine::Stroke) {
-        self.painter.line_segment([egui::Pos2::from(start), egui::Pos2::from(end)], egui::Stroke::from(stroke));
+        self.line_segment([egui::Pos2::from(start), egui::Pos2::from(end)], egui::Stroke::from(stroke));
     }
     
     fn draw_circle(&mut self, center: engine::Vector2, radius: f32, stroke: engine::Stroke) {
-        self.painter.circle_filled(egui::Pos2::from(center), radius, stroke.color);
+        self.circle_filled(egui::Pos2::from(center), radius, stroke.color);
     }
     
     fn draw_rectangle(&mut self, rectangle: engine::Rectangle, stroke: engine::Stroke) {
         let rect = egui::Rect::from_min_max(egui::Pos2::from(rectangle.p1), egui::Pos2::from(rectangle.p2));
         let corner_rounding = 0.0;
-        self.painter.rect_stroke(rect, corner_rounding, stroke);
+        self.rect_stroke(rect, corner_rounding, stroke);
     }
     
     fn draw_rectangle_filled(&mut self, rectangle: engine::Rectangle, color: engine::Color, stroke: Option<engine::Stroke>) {
         let rect = egui::Rect::from_min_max(egui::Pos2::from(rectangle.p1), egui::Pos2::from(rectangle.p2));
         let corner_rounding = 0.0;
         if let Some(s) = stroke {
-            self.painter.rect(rect, corner_rounding, color, s);
+            self.rect(rect, corner_rounding, color, s);
         }
         else {
-            self.painter.rect_filled(rect, corner_rounding, color);
+            self.rect_filled(rect, corner_rounding, color);
         }
     }
 }

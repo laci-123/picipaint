@@ -126,8 +126,8 @@ impl Color {
 
 #[derive(Clone, Copy)]
 pub struct Stroke {
-    color: Color,
-    thickness: f32,
+    pub color: Color,
+    pub thickness: f32,
 }
 
 
