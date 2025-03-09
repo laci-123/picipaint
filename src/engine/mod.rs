@@ -18,6 +18,9 @@ impl Vector2 {
 }
 
 impl Vector2 {
+    pub fn length_squared(&self) -> f32 {
+        self.x * self.x + self.y * self.y
+    }
     pub fn length(&self) -> f32 {
         (self.x * self.x + self.y * self.y).sqrt()
     }
@@ -177,6 +180,7 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
 
 #[derive(PartialEq)]
 pub enum MouseButton {
+    None,
     Left,
     Middle,
     Right,
@@ -193,6 +197,7 @@ pub enum UserInput {
     },
     MouseMove {
         position: Vector2,
+        button: MouseButton,
         is_shift_down: bool,
     },
     SelectAll,
