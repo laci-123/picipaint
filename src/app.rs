@@ -69,52 +69,9 @@ impl eframe::App for App {
                 let size = ui.available_size();
                 let (response, mut painter) = ui.allocate_painter(size, egui::Sense::click_and_drag());
 
-                let is_shift_down = ui.input(|input| input.modifiers.shift);
-                let mouse_wheel_delta = ui.input(|input| input.smooth_scroll_delta.y * 0.001);
-                let mut input = UserInput::Nothing;
-                if mouse_wheel_delta != 0.0 {
-                    input = UserInput::Zoom { delta: mouse_wheel_delta };
-                }
-                else if ui.input(|input| input.key_pressed(egui::Key::A) && input.modifiers.command) {
-                    input = UserInput::SelectAll;
-                }
-                else if ui.input(|input| input.key_pressed(egui::Key::Escape)) {
-                    input = UserInput::DeselectAll;
-                }
-                else if ui.input(|input| input.key_pressed(egui::Key::Delete)) {
-                    input = UserInput::Delete;
-                }
-                else if response.clicked_by(egui::PointerButton::Primary) {
-                    if let Some(position) = response.interact_pointer_pos() {
-                        input = UserInput::MouseClick { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Left, is_shift_down };
-                    }
-                }
-                else if response.clicked_by(egui::PointerButton::Secondary) {
-                    if let Some(position) = response.interact_pointer_pos() {
-                        input = UserInput::MouseClick { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Right, is_shift_down };
-                    }
-                }
-                else if response.dragged_by(egui::PointerButton::Primary) {
-                    if let Some(position) = response.interact_pointer_pos() {
-                        input = UserInput::MouseMove { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Left, is_shift_down };
-                    }
-                }
-                else if response.dragged_by(egui::PointerButton::Secondary) {
-                    if let Some(position) = response.interact_pointer_pos() {
-                        input = UserInput::MouseMove { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Right, is_shift_down };
-                    }
-                }
-                else if response.dragged_by(egui::PointerButton::Middle) {
-                    let delta = response.drag_delta();
-                    input = UserInput::Pan { delta: Vector2 {x: -1.0 * delta.x, y: -1.0 * delta.y } };
-                }
-                else if response.hovered() {
-                    if let Some(position) = response.hover_pos() {
-                        input = UserInput::MouseMove { position: Vector2{x: position.x, y: position.y}, button: MouseButton::None, is_shift_down };
-                    }
-                }
+                let user_input = map_user_input(&response, ui);
 
-                self.engine.update(input, self.stroke, self.bg_color);
+                self.engine.update(user_input, self.stroke, self.bg_color);
                 self.engine.draw(&mut painter);
             });
 
@@ -122,4 +79,52 @@ impl eframe::App for App {
             self.bg_color_selector.update(ctx, &mut self.bg_color);
         });
     }
+}
+
+fn map_user_input(response: &egui::Response, ui: &egui::Ui) -> UserInput {
+    let is_shift_down = ui.input(|input| input.modifiers.shift);
+    let mouse_wheel_delta = ui.input(|input| input.smooth_scroll_delta.y * 0.001);
+
+    if mouse_wheel_delta != 0.0 {
+        return UserInput::Zoom { delta: mouse_wheel_delta };
+    }
+    if ui.input(|input| input.key_pressed(egui::Key::A) && input.modifiers.command) {
+        return UserInput::SelectAll;
+    }
+    if ui.input(|input| input.key_pressed(egui::Key::Escape)) {
+        return UserInput::DeselectAll;
+    }
+    if ui.input(|input| input.key_pressed(egui::Key::Delete)) {
+        return UserInput::Delete;
+    }
+    if response.clicked_by(egui::PointerButton::Primary) {
+        if let Some(position) = response.interact_pointer_pos() {
+            return UserInput::MouseClick { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Left, is_shift_down };
+        }
+    }
+    if response.clicked_by(egui::PointerButton::Secondary) {
+        if let Some(position) = response.interact_pointer_pos() {
+            return UserInput::MouseClick { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Right, is_shift_down };
+        }
+    }
+    if response.dragged_by(egui::PointerButton::Primary) {
+        if let Some(position) = response.interact_pointer_pos() {
+            return UserInput::MouseMove { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Left, is_shift_down };
+        }
+    }
+    if response.dragged_by(egui::PointerButton::Secondary) {
+        if let Some(position) = response.interact_pointer_pos() {
+            return UserInput::MouseMove { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Right, is_shift_down };
+        }
+    }
+    if response.dragged_by(egui::PointerButton::Middle) {
+        let delta = response.drag_delta();
+        return UserInput::Pan { delta: Vector2 {x: -1.0 * delta.x, y: -1.0 * delta.y } };
+    }
+    if response.hovered() {
+        if let Some(position) = response.hover_pos() {
+            return UserInput::MouseMove { position: Vector2{x: position.x, y: position.y}, button: MouseButton::None, is_shift_down };
+        }
+    }
+    return UserInput::Nothing;
 }
