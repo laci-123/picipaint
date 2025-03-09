@@ -32,10 +32,10 @@ impl PaintObject<MockScreenPainter> for FakePaintObject {
     fn update(&mut self, input: &UserInput, camera: &Camera) {
         match input {
             UserInput::MouseClick { position, .. } => {
-                self.under_mouse = self.bounding_rect.contains_point(*position);
+                self.under_mouse = self.bounding_rect.contains_point(camera.convert_to_world_coordinates(*position));
             },
             UserInput::MouseMove { position, .. } => {
-                self.under_mouse = self.bounding_rect.contains_point(*position);
+                self.under_mouse = self.bounding_rect.contains_point(camera.convert_to_world_coordinates(*position));
             },
             _ => {/* do nothing */},
         }
@@ -842,43 +842,6 @@ fn deselect_all_input_deselects_all() {
     engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
-}
-
-#[test]
-fn zoom_and_pan_do_not_affect_selection() {
-    let tools = Vec::new();
-    let view_width = 1000.0;
-    let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
-
-    let object1 = FakePaintObject {
-        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
-        ..Default::default()
-    };
-    engine.objects.push(Box::new(object1));
-
-    // control tests
-    assert_eq!(engine.objects[0].is_selected(), false);
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 11.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
-    assert_eq!(engine.objects[0].is_selected(), false);
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
-    assert_eq!(engine.objects[0].is_selected(), true);
-
-    // reset
-    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
-    assert_eq!(engine.objects[0].is_selected(), false);
-
-    engine.update(UserInput::Zoom { delta: 20.0 }, STROKE, BG_COLOR);
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
-    assert_eq!(engine.objects[0].is_selected(), true);
-
-    // reset
-    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
-    assert_eq!(engine.objects[0].is_selected(), false);
-
-    engine.update(UserInput::Pan { delta: Vector2 { x: 100.0, y: -500.0 } }, STROKE, BG_COLOR);
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
-    assert_eq!(engine.objects[0].is_selected(), true);
 }
 
 #[test]

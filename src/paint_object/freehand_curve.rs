@@ -17,10 +17,10 @@ impl PaintObject<egui::Painter> for FreehandCurve {
     fn update(&mut self, input: &UserInput, camera: &Camera) {
         match input {
             UserInput::MouseMove { position, .. } => {
-                self.mouse_pos = *position;
+                self.mouse_pos = camera.convert_to_world_coordinates(*position);
             },
             UserInput::MouseClick { position, .. } => {
-                self.mouse_pos = *position;
+                self.mouse_pos = camera.convert_to_world_coordinates(*position);
             },
             _ => {
                 // do nothing
@@ -93,20 +93,21 @@ impl Tool<egui::Painter> for FreehandCurveTool {
     fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<egui::Painter>>>, stroke: Stroke, camera: &Camera) {
         self.curve.stroke = Some(stroke);
         if let UserInput::MouseMove { position, button: MouseButton::Left, is_shift_down: false } = input {
+            let p = camera.convert_to_world_coordinates(*position);
             let last_point = self.curve.points.last();
-            if last_point.is_none() || last_point.is_some_and(|lp| lp != position) {
-                self.curve.points.push(*position);
-                if position.x < self.curve.min_x {
-                    self.curve.min_x = position.x;
+            if last_point.is_none() || last_point.is_some_and(|lp| *lp != p) {
+                self.curve.points.push(p);
+                if p.x < self.curve.min_x {
+                    self.curve.min_x = p.x;
                 }
-                if position.y < self.curve.min_y {
-                    self.curve.min_y = position.y;
+                if p.y < self.curve.min_y {
+                    self.curve.min_y = p.y;
                 }
-                if position.x > self.curve.max_x {
-                    self.curve.max_x = position.x;
+                if p.x > self.curve.max_x {
+                    self.curve.max_x = p.x;
                 }
-                if position.y > self.curve.max_y {
-                    self.curve.max_y = position.y;
+                if p.y > self.curve.max_y {
+                    self.curve.max_y = p.y;
                 }
             }
         }
