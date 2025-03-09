@@ -228,7 +228,7 @@ pub enum UserInput {
 
 
 pub trait PaintObject<P: ScreenPainter> {
-    fn update(&mut self, input: &UserInput);
+    fn update(&mut self, input: &UserInput, camera: &Camera);
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, camera: &Camera);
     fn is_selected(&self) -> bool;
     fn set_selected(&mut self, value: bool);
@@ -239,7 +239,7 @@ pub trait PaintObject<P: ScreenPainter> {
 
 #[cfg_attr(test, mockall::automock)]
 pub trait Tool<P: ScreenPainter> {
-    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<P>>>, stroke: Stroke);
+    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<P>>>, stroke: Stroke, camera: &Camera);
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, camera: &Camera);
     fn display_name(&self) -> &str;
 }
@@ -312,14 +312,14 @@ impl<P: ScreenPainter> Engine<P> {
     fn update_tools_and_objects(&mut self, input: UserInput, stroke: Stroke) {
         if let Some(tool_index) = self.selected_tool_index {
             if let Some(tool) = self.tools.get_mut(tool_index) {
-                tool.update(&input, &mut self.objects, stroke);
+                tool.update(&input, &mut self.objects, stroke, &self.camera);
             }
         }
 
         let mut to_be_deleted = Vec::with_capacity(self.objects.len());
 
         for (i, object) in self.objects.iter_mut().enumerate() {
-            object.update(&input);
+            object.update(&input, &self.camera);
 
             if self.selected_tool_index.is_none() {
                 if input == UserInput::SelectAll {
