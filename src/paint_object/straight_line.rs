@@ -50,7 +50,6 @@ impl PaintObject<egui::Painter> for StraightLine {
 
 pub struct StraghtLineTool {
     start: Option<Vector2>,
-    end: Option<Vector2>,
     stroke: Option<Stroke>, // Only optional because Stroke doesn't have a default value, so we have to wait until the first call to `update` to set it.
     mouse_pos: Vector2,
 }
@@ -59,7 +58,6 @@ impl StraghtLineTool {
     pub fn new() -> Self{
         Self {
             start: None,
-            end: None,
             stroke: None,
             mouse_pos: Vector2::zero(),
         }
@@ -76,21 +74,15 @@ impl Tool<egui::Painter> for StraghtLineTool {
             },
             UserInput::MouseClick { position, button: MouseButton::Left, is_shift_down: false } => {
                 if let Some(start) = self.start {
-                    if let Some(end) = self.end {
-                        let line = StraightLine {
-                            start,
-                            end,
-                            stroke,
-                            selected: false,
-                            mouse_pos: self.mouse_pos,
-                        };
-                        objects.push(Box::new(line));
-                        self.start = None;
-                        self.end = None;
-                    }
-                    else {
-                        self.end = Some(*position);
-                    }
+                    let line = StraightLine {
+                        start,
+                        end: *position,
+                        stroke,
+                        selected: false,
+                        mouse_pos: *position,
+                    };
+                    objects.push(Box::new(line));
+                    self.start = None;
                 }
                 else {
                     self.start = Some(*position);
@@ -106,12 +98,7 @@ impl Tool<egui::Painter> for StraghtLineTool {
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, egui::Painter>, camera: &Camera) {
         if let Some(stroke) = self.stroke {
             if let Some(start) = self.start {
-                if let Some(end) = self.end {
-                    painter.draw_line(start, end, stroke, camera);
-                }
-                else {
-                    painter.draw_line(start, self.mouse_pos, stroke, camera);
-                }
+                painter.draw_line(start, self.mouse_pos, stroke, camera);
             }
         }
     }
