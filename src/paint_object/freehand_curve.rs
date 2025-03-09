@@ -17,10 +17,10 @@ impl PaintObject<egui::Painter> for FreehandCurve {
     fn update(&mut self, input: &UserInput, camera: &Camera) {
         match input {
             UserInput::MouseMove { position, .. } => {
-                self.mouse_pos = position;
+                self.mouse_pos = *position;
             },
             UserInput::MouseClick { position, .. } => {
-                self.mouse_pos = position;
+                self.mouse_pos = *position;
             },
             _ => {
                 // do nothing
@@ -30,8 +30,8 @@ impl PaintObject<egui::Painter> for FreehandCurve {
     
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, egui::Painter>, camera: &Camera) {
         if let Some(stroke) = self.stroke {
-            for [p1, p2, ..] in self.points.windows(2) {
-                painter.draw_line(p1, p2, stroke, camera);
+            for p1p2 in self.points.windows(2) {
+                painter.draw_line(p1p2[0], p1p2[1], stroke, camera);
             }
         }
     }
@@ -47,7 +47,7 @@ impl PaintObject<egui::Painter> for FreehandCurve {
     fn is_under_mouse(&self) -> bool {
         if self.get_bounding_rect().contains_point(self.mouse_pos) {
             for point in self.points.iter() {
-                if (point - self.mouse_pos).length_squared() < 25.0 {
+                if (*point - self.mouse_pos).length_squared() < 25.0 {
                     return true;
                 }
             }
@@ -95,7 +95,7 @@ impl Tool<egui::Painter> for FreehandCurveTool {
         if let UserInput::MouseMove { position, button: MouseButton::Left, is_shift_down: false } = input {
             let last_point = self.curve.points.last();
             if last_point.is_none() || last_point.is_some_and(|lp| lp != position) {
-                self.curve.points.push(position);
+                self.curve.points.push(*position);
                 if position.x < self.curve.min_x {
                     self.curve.min_x = position.x;
                 }
@@ -112,7 +112,7 @@ impl Tool<egui::Painter> for FreehandCurveTool {
         }
         else if self.curve.points.len() > 0 {
             let new_object = std::mem::replace(&mut self.curve, Self::new_curve());
-            objects.push(new_object);
+            objects.push(Box::new(new_object));
         }
     }
 

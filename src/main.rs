@@ -15,7 +15,5 @@ fn main() -> eframe::Result {
 mod app;
 mod engine;
 mod paint_object;
-mod tool;
 mod color_selector;
-mod view_transform;
 mod egui_painter;

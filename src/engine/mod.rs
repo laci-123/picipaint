@@ -178,7 +178,7 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
 }
 
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum MouseButton {
     None,
     Left,
@@ -187,7 +187,7 @@ pub enum MouseButton {
 }
 
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum UserInput {
     Nothing,
     MouseClick {
@@ -376,6 +376,10 @@ impl<P: ScreenPainter> Engine<P> {
         if let Some(i) = index {
             let current_tool = &mut self.tools[i];
         }
+    }
+
+    pub fn get_selected_tool_index(&self) -> Option<usize> {
+        self.selected_tool_index
     }
 }
 

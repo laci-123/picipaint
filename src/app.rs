@@ -1,8 +1,7 @@
 use eframe::egui::{self, Vec2};
 use crate::color_selector::ColorSelector;
-use crate::paint_object::{freehand_curve::*, straight_line::*, *};
-use crate::tool::{Tool, selection_tool::*};
-use crate::view_transform::ViewTransform;
+use crate::engine::*;
+use crate::paint_object::{freehand_curve::*, straight_line::*};
 
 
 pub const WINDOW_INIT_SIZE: Vec2 = Vec2::new(1000.0, 600.0);
@@ -12,31 +11,24 @@ pub const NAME: &'static str     = "PiciPaint";
 
 
 pub struct App {
-    tools: Vec<Box<dyn Tool>>,
-    active_tool_index: usize,
-    objects: Vec<Box<dyn PaintObject>>,
-    stroke: egui::Stroke,
-    bg_color: egui::Color32,
+    engine: Engine<egui::Painter>,
+    stroke: Stroke,
+    bg_color: Color,
     fg_color_selector: ColorSelector,
     bg_color_selector: ColorSelector,
-    view_transform: ViewTransform,
 }
 
 impl App {
     pub fn new(_context: &eframe::CreationContext) -> Self {
         Self {
-            tools: vec![
-                Box::new(SelectionTool::new()),
+            engine: Engine::new(vec![
                 Box::new(FreehandCurveTool::new()),
                 Box::new(StraghtLineTool::new()),
-            ],
-            active_tool_index: 0,
-            objects: vec![],
-            stroke: egui::Stroke::new(2.0, egui::Color32::BLUE),
-            bg_color: egui::Color32::BLACK,
+            ], 1000.0, 600.0),
+            stroke: Stroke { color: Color::from_rgb(0, 0, 200), thickness: 2.0 },
+            bg_color: Color::from_rgb(0, 0, 0),
             fg_color_selector: ColorSelector::new("Foreground color"),
             bg_color_selector: ColorSelector::new("Background color"),
-            view_transform: ViewTransform::default(),
         }
     }
 }
@@ -47,25 +39,26 @@ impl eframe::App for App {
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.horizontal(|ui| {
-                let mut old_active_tool_index = None;
-                
-                for (i, tool) in self.tools.iter().enumerate() {
-                    let mut selected =  i == self.active_tool_index;
-                    if ui.toggle_value(&mut selected, tool.display_name()).clicked() {
-                        old_active_tool_index = Some(self.active_tool_index);
-                        self.active_tool_index = i;
+                let mut selected = self.engine.get_selected_tool_index().is_none();
+                if ui.toggle_value(&mut selected, "selection").clicked() {
+                    self.engine.select_tool(None);
+                }
+                let mut selected_index = None;
+                for (i, tool_name) in self.engine.tools_iter().enumerate() {
+                    let mut selected = self.engine.get_selected_tool_index().is_some_and(|index| index == i);
+                    if ui.toggle_value(&mut selected, tool_name).clicked() {
+                        selected_index = Some(i);
                     }
                 }
-
-                if let Some(old_index) = old_active_tool_index {
-                    self.tools[old_index].before_deactivate(&mut self.objects);
+                if selected_index.is_some() {
+                    self.engine.select_tool(selected_index);
                 }
 
                 ui.separator();
 
                 ui.toggle_value(&mut self.fg_color_selector.is_open, "fg color");
                 ui.toggle_value(&mut self.bg_color_selector.is_open, "bg color");
-                ui.add(egui::Slider::new(&mut self.stroke.width, 0.5..=10.0)).on_hover_ui_at_pointer(|ui| {
+                ui.add(egui::Slider::new(&mut self.stroke.thickness, 0.5..=10.0)).on_hover_ui_at_pointer(|ui| {
                     ui.label("line thickness");
                 });
             });
@@ -74,19 +67,55 @@ impl eframe::App for App {
 
             egui::Frame::canvas(ui.style()).show(ui, |ui| {
                 let size = ui.available_size();
-                let (response, painter) = ui.allocate_painter(size, egui::Sense::click_and_drag());
+                let (response, mut painter) = ui.allocate_painter(size, egui::Sense::click_and_drag());
 
-                self.view_transform.update(&response);
-
-                painter.rect_filled(response.rect, 0.0, self.bg_color);
-                let active_tool = &mut self.tools[self.active_tool_index];
-                active_tool.update(&response, &self.view_transform, &mut self.objects, self.stroke);
-                active_tool.draw(&self.view_transform, &painter);
-
-                for object in self.objects.iter() {
-                    object.draw(&self.view_transform, &painter);
-                    object.draw_selection(&self.view_transform, &painter);
+                let is_shift_down = ui.input(|input| input.modifiers.shift);
+                let mouse_wheel_delta = ui.input(|input| input.smooth_scroll_delta.y * 0.001);
+                let mut input = UserInput::Nothing;
+                if mouse_wheel_delta != 0.0 {
+                    input = UserInput::Zoom { delta: mouse_wheel_delta };
                 }
+                else if ui.input(|input| input.key_pressed(egui::Key::A) && input.modifiers.command) {
+                    input = UserInput::SelectAll;
+                }
+                else if ui.input(|input| input.key_pressed(egui::Key::Escape)) {
+                    input = UserInput::DeselectAll;
+                }
+                else if ui.input(|input| input.key_pressed(egui::Key::Delete)) {
+                    input = UserInput::Delete;
+                }
+                else if response.clicked_by(egui::PointerButton::Primary) {
+                    if let Some(position) = response.interact_pointer_pos() {
+                        input = UserInput::MouseClick { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Left, is_shift_down };
+                    }
+                }
+                else if response.clicked_by(egui::PointerButton::Secondary) {
+                    if let Some(position) = response.interact_pointer_pos() {
+                        input = UserInput::MouseClick { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Right, is_shift_down };
+                    }
+                }
+                else if response.dragged_by(egui::PointerButton::Primary) {
+                    if let Some(position) = response.interact_pointer_pos() {
+                        input = UserInput::MouseMove { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Left, is_shift_down };
+                    }
+                }
+                else if response.dragged_by(egui::PointerButton::Secondary) {
+                    if let Some(position) = response.interact_pointer_pos() {
+                        input = UserInput::MouseMove { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Right, is_shift_down };
+                    }
+                }
+                else if response.dragged_by(egui::PointerButton::Middle) {
+                    let delta = response.drag_delta();
+                    input = UserInput::Pan { delta: Vector2 {x: -1.0 * delta.x, y: -1.0 * delta.y } };
+                }
+                else if response.hovered() {
+                    if let Some(position) = response.hover_pos() {
+                        input = UserInput::MouseMove { position: Vector2{x: position.x, y: position.y}, button: MouseButton::None, is_shift_down };
+                    }
+                }
+
+                self.engine.update(input, self.stroke, self.bg_color);
+                self.engine.draw(&mut painter);
             });
 
             self.fg_color_selector.update(ctx, &mut self.stroke.color);

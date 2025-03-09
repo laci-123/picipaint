@@ -430,7 +430,7 @@ fn no_selection_without_user_input() {
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::MouseMove { position: Vector2{x: 5.0, y: 5.4}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseMove { position: Vector2{x: 5.0, y: 5.4}, button: MouseButton::None, is_shift_down: false }, STROKE, BG_COLOR);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 

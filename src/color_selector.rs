@@ -1,12 +1,13 @@
-use eframe::egui;
 use std::time::{Duration, Instant};
+use crate::engine::*;
+use eframe::egui;
 
 
 pub struct ColorSelector {
     pub is_open: bool,
     opening_time: Option<Instant>,
     caption: String,
-    old_color: Option<egui::Color32>,
+    old_color: Option<Color>,
 }
 
 impl ColorSelector {
@@ -19,7 +20,7 @@ impl ColorSelector {
         }
     }
     
-    pub fn update(&mut self, ctx: &egui::Context, color: &mut egui::Color32) {
+    pub fn update(&mut self, ctx: &egui::Context, color: &mut Color) {
         ctx.input(|input| {
             if input.key_down(egui::Key::Escape) {
                 self.is_open = false;
@@ -54,15 +55,9 @@ impl ColorSelector {
                     painter.rect_filled(egui::Rect::from_min_size(origin + egui::Vec2::new(w / 2.0, 0.0), egui::Vec2::new(w / 2.0, h)), 0.0, *color);
                 });
 
-                // If Color32's r, g, b and a fields were public then it would be much easier to do this.
-                let mut red = color.r();
-                let mut green = color.g();
-                let mut blue = color.b();
-                let alpha = color.a();
-                ui.add(egui::Slider::new(&mut red, 0..=255).text("red"));
-                ui.add(egui::Slider::new(&mut green, 0..=255).text("green"));
-                ui.add(egui::Slider::new(&mut blue, 0..=255).text("blue"));
-                *color = egui::Color32::from_rgba_premultiplied(red, green, blue, alpha);
+                ui.add(egui::Slider::new(&mut color.red, 0..=255).text("red"));
+                ui.add(egui::Slider::new(&mut color.green, 0..=255).text("green"));
+                ui.add(egui::Slider::new(&mut color.blue, 0..=255).text("blue"));
             });
 
             if let Some(r) = response {

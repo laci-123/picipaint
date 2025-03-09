@@ -14,10 +14,10 @@ impl PaintObject<egui::Painter> for StraightLine {
     fn update(&mut self, input: &UserInput, camera: &Camera) {
         match input {
             UserInput::MouseMove { position, .. } => {
-                self.mouse_pos = position;
+                self.mouse_pos = *position;
             },
             UserInput::MouseClick { position, .. } => {
-                self.mouse_pos = position;
+                self.mouse_pos = *position;
             },
             _ => {
                 // do nothing
@@ -72,7 +72,7 @@ impl Tool<egui::Painter> for StraghtLineTool {
         
         match input {
             UserInput::MouseMove { position, .. } => {
-                self.mouse_pos = position;
+                self.mouse_pos = *position;
             },
             UserInput::MouseClick { position, button: MouseButton::Left, is_shift_down: false } => {
                 if let Some(start) = self.start {
@@ -89,13 +89,13 @@ impl Tool<egui::Painter> for StraghtLineTool {
                         self.end = None;
                     }
                     else {
-                        self.end = Some(position);
+                        self.end = Some(*position);
                     }
                 }
                 else {
-                    self.start = Some(position);
+                    self.start = Some(*position);
                 }
-                self.mouse_pos = position;
+                self.mouse_pos = *position;
             },
             _ => {
                 // do nothing
