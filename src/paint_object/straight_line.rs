@@ -39,11 +39,11 @@ impl PaintObject<egui::Painter> for StraightLine {
     
     fn is_under_mouse(&self) -> bool {
         let epsilon = 10.0;
-        (self.start - self.mouse_pos).length() + (self.end - self.mouse_pos).length() < (self.end - self.mouse_pos).length() + epsilon
+        (self.start - self.mouse_pos).length() + (self.end - self.mouse_pos).length() < (self.end - self.start).length() + epsilon
     }
     
     fn get_bounding_rect(&self) -> Rectangle {
-        Rectangle { p1: self.start, p2: self.end }
+        Rectangle::from_points_well_ordered(self.start, self.end)
     }
 }
 

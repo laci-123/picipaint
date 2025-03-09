@@ -100,6 +100,17 @@ impl Rectangle {
         }
     }
 
+    pub fn from_points_well_ordered(p1: Vector2, p2: Vector2) -> Self {
+        let x1 = p1.x.min(p2.x);
+        let x2 = p1.x.max(p2.x);
+        let y1 = p1.y.min(p2.y);
+        let y2 = p1.y.max(p2.y);
+        Self {
+            p1: Vector2{ x: x1, y: y1 },
+            p2: Vector2{ x: x2, y: y2 },
+        }
+    }
+
     pub fn contains_point(&self, p: Vector2) -> bool {
         self.p1.x <= p.x && p.x <= self.p2.x &&
         self.p1.y <= p.y && p.y <= self.p2.y
