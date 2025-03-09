@@ -326,17 +326,19 @@ impl<P: ScreenPainter> Engine<P> {
 
                 let left_click    = matches!(input, UserInput::MouseClick { button: MouseButton::Left, .. });
                 let shift_is_down = matches!(input, UserInput::MouseClick { is_shift_down: true, .. });
-                if left_click && object.is_under_mouse() {
-                    if shift_is_down {
-                        object.set_selected(!object.is_selected());
+                if left_click {
+                    if object.is_under_mouse() {
+                        if shift_is_down {
+                            object.set_selected(!object.is_selected());
+                        }
+                        else {
+                            object.set_selected(true);
+                        }
                     }
                     else {
-                        object.set_selected(true);
-                    }
-                }
-                else {
-                    if !shift_is_down {
-                        object.set_selected(false);
+                        if !shift_is_down {
+                            object.set_selected(false);
+                        }
                     }
                 }
             }

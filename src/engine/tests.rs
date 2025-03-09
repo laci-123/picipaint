@@ -189,7 +189,6 @@ fn only_the_selected_tool_is_used() {
     engine.draw(&mut painter);
 }
 
-
 #[test]
 fn zooming_centered_around_camera_position() {
     let tools = Vec::new();
@@ -580,6 +579,46 @@ fn selection_with_shift() {
     engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
+}
+
+#[test]
+fn selection_remains_if_no_input() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    // click object #1
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // do nothing
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), false);
+
+    // click object #2
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), true);
+
+    // irrelevant input
+    engine.update(UserInput::MouseMove { button: MouseButton::None, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), true);
 }
 
 #[test]
