@@ -78,7 +78,7 @@ fn object_draw_order() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let mut seq = Sequence::new();
 
@@ -93,7 +93,7 @@ fn object_draw_order() {
     painter.expect_draw_circle().once().in_sequence(&mut seq).return_const(());           // object1
     painter.expect_draw_line().once().in_sequence(&mut seq).return_const(());             // object2
 
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 }
 
@@ -102,7 +102,7 @@ fn tools_iterator_empty() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let mut tools_iter = engine.tools_iter();
     assert_eq!(tools_iter.next(), None);
@@ -113,7 +113,7 @@ fn tools_iterator() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let mut tool1 = MockTool::new();
     tool1.expect_display_name().once().return_const(String::from("tool1"));
@@ -134,7 +134,7 @@ fn nothing_is_drawn_if_no_tool_is_selected() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let mut painter = MockScreenPainter::new();
     painter.expect_draw_rectangle_filled().return_const(()); // draw background color
@@ -151,10 +151,10 @@ fn nothing_is_drawn_if_no_tool_is_selected() {
 
     engine.select_tool(None);
 
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 }
 
@@ -163,7 +163,7 @@ fn only_the_selected_tool_is_used() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let mut painter = MockScreenPainter::new();
     painter.expect_draw_rectangle_filled().return_const(()); // draw background color
@@ -181,11 +181,11 @@ fn only_the_selected_tool_is_used() {
     engine.tools.push(Box::new(tool2));
 
     engine.select_tool(Some(0));
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
     engine.select_tool(Some(1));
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 }
 
@@ -194,7 +194,7 @@ fn zooming_centered_around_camera_position() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     // Place some circles equally spaced along a circle around some arbitrary point (`middle`).
     let middle = Vector2 { x: 100.0, y: 50.0 };
@@ -226,7 +226,7 @@ fn zooming_centered_around_camera_position() {
                                 .times(objects_count)
                                 .return_const(());
     engine.camera = Camera{ position: middle, zoom: 1.0 };
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
     // With zoom == 2.0, they are all twice as far away, and their radius are also twice as big.
@@ -238,7 +238,7 @@ fn zooming_centered_around_camera_position() {
                                 .times(objects_count)
                                 .return_const(());
     engine.camera = Camera{ position: middle, zoom: 2.0 };
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
     // With zoom == 0.5, they are all half as far away, and their radius are also half as big.
@@ -250,7 +250,7 @@ fn zooming_centered_around_camera_position() {
                                 .times(objects_count)
                                 .return_const(());
     engine.camera = Camera{ position: middle, zoom: 0.5 };
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 }
 
@@ -260,7 +260,7 @@ fn zooming_not_centered_around_camera_position() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     // Place some circles equally spaced along a circle around some arbitrary point (`middle`).
     let middle = Vector2 { x: 100.0, y: 50.0 };
@@ -293,7 +293,7 @@ fn zooming_not_centered_around_camera_position() {
                                 .times(objects_count)
                                 .return_const(());
     engine.camera = Camera{ position: middle + camera_from_middle, zoom: 1.0 };
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
     // With zoom == 2.0, their radius is twice as big.
@@ -305,7 +305,7 @@ fn zooming_not_centered_around_camera_position() {
                                 .times(objects_count)
                                 .return_const(());
     engine.camera = Camera{ position: middle, zoom: 2.0 };
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 }
 
@@ -315,33 +315,33 @@ fn user_input_zoom() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let old_zoom = engine.camera.zoom;
-    engine.update(UserInput::Zoom { delta: 0.0 }, STROKE, BG_COLOR);
+    engine.update(UserInput::Zoom { delta: 0.0 }, STROKE, BG_COLOR, view_width, view_height);
     assert_relative_eq!(engine.camera.zoom, old_zoom + 0.0);
 
     let old_zoom = engine.camera.zoom;
-    engine.update(UserInput::Zoom { delta: 1.0 }, STROKE, BG_COLOR);
+    engine.update(UserInput::Zoom { delta: 1.0 }, STROKE, BG_COLOR, view_width, view_height);
     assert_relative_eq!(engine.camera.zoom, old_zoom + 1.0);
 
     let old_zoom = engine.camera.zoom;
-    engine.update(UserInput::Zoom { delta: -1.0 }, STROKE, BG_COLOR);
+    engine.update(UserInput::Zoom { delta: -1.0 }, STROKE, BG_COLOR, view_width, view_height);
     assert_relative_eq!(engine.camera.zoom, old_zoom - 1.0);
 
     let old_zoom = engine.camera.zoom;
-    engine.update(UserInput::Zoom { delta: 10.0 }, STROKE, BG_COLOR);
-    engine.update(UserInput::Zoom { delta: -10.0 }, STROKE, BG_COLOR);
+    engine.update(UserInput::Zoom { delta: 10.0 }, STROKE, BG_COLOR, view_width, view_height);
+    engine.update(UserInput::Zoom { delta: -10.0 }, STROKE, BG_COLOR, view_width, view_height);
     assert_relative_eq!(engine.camera.zoom, old_zoom);
 
     let old_zoom = engine.camera.zoom;
-    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 50.0 } }, STROKE, BG_COLOR);
-    engine.update(UserInput::Zoom { delta: 10.0 }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 50.0 } }, STROKE, BG_COLOR, view_width, view_height);
+    engine.update(UserInput::Zoom { delta: 10.0 }, STROKE, BG_COLOR, view_width, view_height);
     assert_relative_eq!(engine.camera.zoom, old_zoom + 10.0);
 
     let old_zoom = engine.camera.zoom;
-    engine.update(UserInput::Zoom { delta: 10.0 }, STROKE, BG_COLOR);
-    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 50.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Zoom { delta: 10.0 }, STROKE, BG_COLOR, view_width, view_height);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 50.0 } }, STROKE, BG_COLOR, view_width, view_height);
     assert_relative_eq!(engine.camera.zoom, old_zoom + 10.0);
 }
 
@@ -350,24 +350,24 @@ fn user_input_pan() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     engine.camera.zoom = 1.0;
     engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
-    engine.update(UserInput::Pan { delta: Vector2 { x: 0.0, y: 0.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 0.0, y: 0.0 } }, STROKE, BG_COLOR, view_width, view_height);
     assert_relative_eq!(engine.camera.position.x, 0.0);
     assert_relative_eq!(engine.camera.position.y, 0.0);
 
     engine.camera.zoom = 1.0;
     engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
-    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR, view_width, view_height);
     assert_relative_eq!(engine.camera.position.x, 10.0);
     assert_relative_eq!(engine.camera.position.y, 1.0);
 
     engine.camera.zoom = 1.0;
     engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
-    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
-    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR, view_width, view_height);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR, view_width, view_height);
     assert_relative_eq!(engine.camera.position.x, 20.0);
     assert_relative_eq!(engine.camera.position.y, 2.0);
 
@@ -378,28 +378,28 @@ fn user_input_pan() {
 
     engine.camera.zoom = 10.0;
     engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
-    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 100.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 100.0 } }, STROKE, BG_COLOR, view_width, view_height);
     assert_relative_eq!(engine.camera.position.x, 1.0);
     assert_relative_eq!(engine.camera.position.y, 10.0);
 
     engine.camera.zoom = 0.5;
     engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
-    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR, view_width, view_height);
     assert_relative_eq!(engine.camera.position.x, 20.0);
     assert_relative_eq!(engine.camera.position.y, 2.0);
 
     engine.camera.zoom = 0.5;
     engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
-    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
-    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR, view_width, view_height);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR, view_width, view_height);
     assert_relative_eq!(engine.camera.position.x, 40.0);
     assert_relative_eq!(engine.camera.position.y, 4.0);
 
     engine.camera.zoom = 1.0;
     engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
-    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR, view_width, view_height);
     engine.camera.zoom = 0.5;
-    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2 { x: 10.0, y: 1.0 } }, STROKE, BG_COLOR, view_width, view_height);
     assert_relative_eq!(engine.camera.position.x, 30.0);
     assert_relative_eq!(engine.camera.position.y, 3.0);
 }
@@ -409,7 +409,7 @@ fn no_selection_without_user_input() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -425,19 +425,19 @@ fn no_selection_without_user_input() {
 
     // None of the following user inputs should cause any objects to be selected.
 
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::MouseMove { position: Vector2{x: 5.0, y: 5.4}, button: MouseButton::None, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseMove { position: Vector2{x: 5.0, y: 5.4}, button: MouseButton::None, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::Pan { delta: Vector2{x: 1.0, y: 0.1 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2{x: 1.0, y: 0.1 } }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::MouseClick { button: MouseButton::Right, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Right, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 }
@@ -449,7 +449,7 @@ fn no_selection_if_a_tool_is_selected() {
     tool1.expect_draw().return_const(());
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(vec![Box::new(tool1)], view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(vec![Box::new(tool1)]);
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -465,19 +465,19 @@ fn no_selection_if_a_tool_is_selected() {
 
     engine.select_tool(Some(0));
 
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 }
@@ -487,7 +487,7 @@ fn single_selection() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -502,17 +502,17 @@ fn single_selection() {
     engine.objects.push(Box::new(object2));
 
     // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // click object #2
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), true);
 
     // click neither
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 }
@@ -522,7 +522,7 @@ fn selection_with_shift() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     // While shift is being held down, all objects are selected that the user clicks,
     // even if they click somewhere where there is no object.
@@ -541,42 +541,42 @@ fn selection_with_shift() {
     engine.objects.push(Box::new(object2));
 
     // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // click neither
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // click object #2
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), true);
 
     // click neither
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), true);
 
     // click object #2
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 }
@@ -586,7 +586,7 @@ fn selection_remains_if_no_input() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -601,22 +601,22 @@ fn selection_remains_if_no_input() {
     engine.objects.push(Box::new(object2));
 
     // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // do nothing
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // click object #2
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), true);
 
     // irrelevant input
-    engine.update(UserInput::MouseMove { button: MouseButton::None, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseMove { button: MouseButton::None, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), true);
 }
@@ -626,7 +626,7 @@ fn selection_with_shift_except_first() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     // This is exactly the same as the `selection_with_shift` test,
     // except that shift is NOT held down during the FIRST click.
@@ -645,42 +645,42 @@ fn selection_with_shift_except_first() {
     engine.objects.push(Box::new(object2));
 
     // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // click neither
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // click object #2
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), true);
 
     // click neither
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), true);
 
     // click object #2
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 }
@@ -690,7 +690,7 @@ fn single_selection_after_multiple_selection() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     // When an object is clicked without shift, that object is selected
     // but all other objects are deselected.
@@ -708,12 +708,12 @@ fn single_selection_after_multiple_selection() {
     engine.objects.push(Box::new(object2));
 
     // select all
-    engine.update(UserInput::SelectAll, STROKE, BG_COLOR);
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), true);
 
     // click object #1
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), false);
 }
@@ -723,7 +723,7 @@ fn clicking_elsewhere_deselects_all() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     // When the user clicks someshere where there are no objects without shift,
     // all objects are deselected.
@@ -741,22 +741,22 @@ fn clicking_elsewhere_deselects_all() {
     engine.objects.push(Box::new(object2));
 
     // select all
-    engine.update(UserInput::SelectAll, STROKE, BG_COLOR);
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), true);
 
     // click elsewhere
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // select some
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // click elsewhere
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 }
@@ -766,7 +766,7 @@ fn select_all_input_selects_all() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -780,19 +780,19 @@ fn select_all_input_selects_all() {
     };
     engine.objects.push(Box::new(object2));
 
-    engine.update(UserInput::SelectAll, STROKE, BG_COLOR);
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), true);
 
     // It even works when we start with only some of the objects selected.
 
     // (first we click somewhere else to deselect all objects then click on #1 to select it)
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: false }, STROKE, BG_COLOR);
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 100.0, y: 100.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::SelectAll, STROKE, BG_COLOR);
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), true);
 }
@@ -802,7 +802,7 @@ fn deselect_all_input_deselects_all() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -818,28 +818,28 @@ fn deselect_all_input_deselects_all() {
 
     // When we start with no objects selected it has no effect.
 
-    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // It works with some objects selected.
 
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), false);
 
-    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 
     // And with all objects selected.
 
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR);
-    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 5.0, y: 5.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
+    engine.update(UserInput::MouseClick { button: MouseButton::Left, position: Vector2{x: 15.0, y: 15.0}, is_shift_down: true }, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), true);
     assert_eq!(engine.objects[1].is_selected(), true);
 
-    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR, view_width, view_height);
     assert_eq!(engine.objects[0].is_selected(), false);
     assert_eq!(engine.objects[1].is_selected(), false);
 }
@@ -849,7 +849,7 @@ fn no_selection_marker_when_no_objects_selected() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -867,24 +867,24 @@ fn no_selection_marker_when_no_objects_selected() {
     painter.expect_draw_rectangle_filled().return_const(()); // background color
     painter.expect_draw_rectangle().never(); // As long as nothing is selected, nothing should draw unfilled rectangles.
 
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
     // click somewhere else
-    engine.update(UserInput::MouseClick { position: Vector2 { x: 100.0, y: 100.0 }, button: MouseButton::Left, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { position: Vector2 { x: 100.0, y: 100.0 }, button: MouseButton::Left, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
     // click on object #1 with right click
-    engine.update(UserInput::MouseClick { position: Vector2 { x: 5.0, y: 5.0 }, button: MouseButton::Right, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { position: Vector2 { x: 5.0, y: 5.0 }, button: MouseButton::Right, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
-    engine.update(UserInput::Zoom { delta: 0.1 }, STROKE, BG_COLOR);
+    engine.update(UserInput::Zoom { delta: 0.1 }, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
-    engine.update(UserInput::Pan { delta: Vector2 { x: -1.0, y: -10.0 } }, STROKE, BG_COLOR);
+    engine.update(UserInput::Pan { delta: Vector2 { x: -1.0, y: -10.0 } }, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
-    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 }
 
@@ -894,7 +894,7 @@ fn selection_marker_around_selected_object() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -917,10 +917,10 @@ fn selection_marker_around_selected_object() {
            .return_const(());
 
     // select object #1
-    engine.update(UserInput::MouseClick { position: Vector2 { x: 5.0, y: 5.0 }, button: MouseButton::Left, is_shift_down: false }, STROKE, BG_COLOR);
+    engine.update(UserInput::MouseClick { position: Vector2 { x: 5.0, y: 5.0 }, button: MouseButton::Left, is_shift_down: false }, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
-    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 }
 
@@ -929,7 +929,7 @@ fn selection_markers_with_multiple_selected_objects() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -955,10 +955,10 @@ fn selection_markers_with_multiple_selected_objects() {
            .with(predicate::eq(Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } }), predicate::always())
            .return_const(());
 
-    engine.update(UserInput::SelectAll, STROKE, BG_COLOR);
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
-    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR);
+    engine.update(UserInput::DeselectAll, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 }
 
@@ -967,7 +967,7 @@ fn delete_input_does_nothing_with_nothing_selected() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -990,10 +990,10 @@ fn delete_input_does_nothing_with_nothing_selected() {
            .times(4)
            .return_const(());
 
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR);
+    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
-    engine.update(UserInput::Delete, STROKE, BG_COLOR);
+    engine.update(UserInput::Delete, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 }
 
@@ -1002,7 +1002,7 @@ fn delete_input_deletes_all_selected_objects() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools, view_width, view_height);
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -1026,9 +1026,9 @@ fn delete_input_deletes_all_selected_objects() {
            .times(2)
            .return_const(());
 
-    engine.update(UserInput::SelectAll, STROKE, BG_COLOR);
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
-    engine.update(UserInput::Delete, STROKE, BG_COLOR);
+    engine.update(UserInput::Delete, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 }

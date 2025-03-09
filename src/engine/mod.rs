@@ -219,10 +219,6 @@ pub enum UserInput {
     Pan {
         delta: Vector2,
     },
-    Resize {
-        new_width: f32,
-        new_height: f32,
-    },
     Delete,
 }
 
@@ -277,20 +273,22 @@ pub struct Engine<P: ScreenPainter> {
 }
 
 impl<P: ScreenPainter> Engine<P> {
-    pub fn new(tools: Vec<Box<dyn Tool<P>>>, view_width: f32, view_height: f32) -> Self {
+    pub fn new(tools: Vec<Box<dyn Tool<P>>>) -> Self {
         Self {
             objects: Vec::new(),
             tools,
             selected_tool_index: None,
-            view_width,
-            view_height,
+            view_width: 0.0,
+            view_height: 0.0,
             camera: Camera::default(),
             background_color: Color::from_rgb(0, 0, 0),
         }
     }
     
-    pub fn update(&mut self, input: UserInput, stroke: Stroke, background_color: Color) {
+    pub fn update(&mut self, input: UserInput, stroke: Stroke, background_color: Color, view_width: f32, view_height: f32) {
         self.background_color = background_color;
+        self.view_width = view_width;
+        self.view_height = view_height;
 
         match input {
             UserInput::Pan { delta } => {
@@ -298,10 +296,6 @@ impl<P: ScreenPainter> Engine<P> {
             },
             UserInput::Zoom { delta } => {
                 self.camera.zoom += delta;
-            },
-            UserInput::Resize { new_width, new_height } => {
-                self.view_width = new_width;
-                self.view_height = new_height;
             },
             _ => {
                 self.update_tools_and_objects(input, stroke);

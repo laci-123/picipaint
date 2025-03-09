@@ -24,7 +24,7 @@ impl App {
             engine: Engine::new(vec![
                 Box::new(FreehandCurveTool::new()),
                 Box::new(StraghtLineTool::new()),
-            ], 1000.0, 600.0),
+            ]),
             stroke: Stroke { color: Color::from_rgb(0, 0, 200), thickness: 2.0 },
             bg_color: Color::from_rgb(0, 0, 0),
             fg_color_selector: ColorSelector::new("Foreground color"),
@@ -71,7 +71,8 @@ impl eframe::App for App {
 
                 let user_input = map_user_input(&response, ui);
 
-                self.engine.update(user_input, self.stroke, self.bg_color);
+                let screen_rect = ui.ctx().input(|input| input.screen_rect);
+                self.engine.update(user_input, self.stroke, self.bg_color, screen_rect.width(), screen_rect.height());
                 self.engine.draw(&mut painter);
             });
 
