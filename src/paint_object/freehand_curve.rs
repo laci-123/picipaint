@@ -14,7 +14,7 @@ pub struct FreehandCurve {
 }
 
 impl PaintObject<egui::Painter> for FreehandCurve {
-    fn update(&mut self, input: &UserInput, camera: &Camera) {
+    fn update(&mut self, input: &UserInput) {
         match input {
             UserInput::MouseMove { position, .. } => {
                 self.mouse_pos = *position;
@@ -90,7 +90,7 @@ impl FreehandCurveTool {
 }
 
 impl Tool<egui::Painter> for FreehandCurveTool {
-    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<egui::Painter>>>, stroke: Stroke, camera: &Camera) {
+    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<egui::Painter>>>, stroke: Stroke) {
         self.curve.stroke = Some(stroke);
         if let UserInput::MouseMove { position, button: MouseButton::Left, is_shift_down: false } = input {
             let last_point = self.curve.points.last();

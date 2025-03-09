@@ -11,7 +11,7 @@ pub struct StraightLine {
 }
 
 impl PaintObject<egui::Painter> for StraightLine {
-    fn update(&mut self, input: &UserInput, camera: &Camera) {
+    fn update(&mut self, input: &UserInput) {
         match input {
             UserInput::MouseMove { position, .. } => {
                 self.mouse_pos = *position;
@@ -67,7 +67,7 @@ impl StraghtLineTool {
 }
 
 impl Tool<egui::Painter> for StraghtLineTool {
-    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<egui::Painter>>>, stroke: Stroke, camera: &Camera) {
+    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<egui::Painter>>>, stroke: Stroke) {
         self.stroke = Some(stroke);
         
         match input {

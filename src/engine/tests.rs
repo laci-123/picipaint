@@ -29,7 +29,7 @@ impl Default for FakePaintObject {
 }
 
 impl PaintObject<MockScreenPainter> for FakePaintObject {
-    fn update(&mut self, input: &UserInput, camera: &Camera) {
+    fn update(&mut self, input: &UserInput) {
         match input {
             UserInput::MouseClick { position, .. } => {
                 self.under_mouse = self.bounding_rect.contains_point(*position);
