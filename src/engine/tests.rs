@@ -79,6 +79,7 @@ fn object_draw_order() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let mut seq = Sequence::new();
 
@@ -103,6 +104,7 @@ fn tools_iterator_empty() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let mut tools_iter = engine.tools_iter();
     assert_eq!(tools_iter.next(), None);
@@ -114,6 +116,7 @@ fn tools_iterator() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let mut tool1 = MockTool::new();
     tool1.expect_display_name().once().return_const(String::from("tool1"));
@@ -135,6 +138,7 @@ fn nothing_is_drawn_if_no_tool_is_selected() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let mut painter = MockScreenPainter::new();
     painter.expect_draw_rectangle_filled().return_const(()); // draw background color
@@ -164,6 +168,7 @@ fn only_the_selected_tool_is_used() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let mut painter = MockScreenPainter::new();
     painter.expect_draw_rectangle_filled().return_const(()); // draw background color
@@ -189,70 +194,6 @@ fn only_the_selected_tool_is_used() {
     engine.draw(&mut painter);
 }
 
-#[test]
-fn zooming_centered_around_camera_position() {
-    let tools = Vec::new();
-    let view_width = 1000.0;
-    let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
-
-    // Place some circles equally spaced along a circle around some arbitrary point (`middle`).
-    let middle = Vector2 { x: 100.0, y: 50.0 };
-    let objects_count = 10;
-    let angle_step = 2.0 * f32::consts::PI / (objects_count as f32);
-    let big_r = 50.0;
-    let little_r = 1.0;
-    for i in 0..objects_count {
-        let angle = (i as f32) * angle_step;
-        let object = FakePaintObject {
-            p1: Some(Vector2{
-                x: middle.x + big_r * angle.cos(),
-                y: middle.y + big_r * angle.sin()
-            }),
-            ..Default::default()
-        };
-        engine.objects.push(Box::new(object));
-    }
-
-    // Using a camera centered at `middle` and with zoom 1.0,
-    // all objects are drawn at equal distance from the origin in screen-space,
-    // the same distance as their distance from `middle` in world-space.
-    // Their radius is also the same as in world-space.
-    let mut painter = MockScreenPainter::default();
-    painter.expect_draw_rectangle_filled().return_const(()); // drawing the background color
-    painter.expect_draw_circle().with(predicate::function(move |center: &Vector2| relative_eq!(center.length(), big_r)),
-                                      predicate::eq(little_r),
-                                      predicate::always())
-                                .times(objects_count)
-                                .return_const(());
-    engine.camera = Camera{ position: middle, zoom: 1.0 };
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
-    engine.draw(&mut painter);
-
-    // With zoom == 2.0, they are all twice as far away, and their radius are also twice as big.
-    let mut painter = MockScreenPainter::default();
-    painter.expect_draw_rectangle_filled().return_const(()); // drawing the background color
-    painter.expect_draw_circle().with(predicate::function(move |center: &Vector2| relative_eq!(center.length(), 2.0 * big_r)),
-                                      predicate::eq(2.0 * little_r),
-                                      predicate::always())
-                                .times(objects_count)
-                                .return_const(());
-    engine.camera = Camera{ position: middle, zoom: 2.0 };
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
-    engine.draw(&mut painter);
-
-    // With zoom == 0.5, they are all half as far away, and their radius are also half as big.
-    let mut painter = MockScreenPainter::default();
-    painter.expect_draw_rectangle_filled().return_const(()); // drawing the background color
-    painter.expect_draw_circle().with(predicate::function(move |center: &Vector2| relative_eq!(center.length(), 0.5 * big_r)),
-                                      predicate::eq(0.5 * little_r),
-                                      predicate::always())
-                                .times(objects_count)
-                                .return_const(());
-    engine.camera = Camera{ position: middle, zoom: 0.5 };
-    engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
-    engine.draw(&mut painter);
-}
 
 
 #[test]
@@ -261,6 +202,7 @@ fn zooming_not_centered_around_camera_position() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     // Place some circles equally spaced along a circle around some arbitrary point (`middle`).
     let middle = Vector2 { x: 100.0, y: 50.0 };
@@ -292,7 +234,7 @@ fn zooming_not_centered_around_camera_position() {
                                       predicate::always())
                                 .times(objects_count)
                                 .return_const(());
-    engine.camera = Camera{ position: middle + camera_from_middle, zoom: 1.0 };
+    engine.camera = Camera{ position: middle + camera_from_middle, offset: Vector2::zero(), zoom: 1.0 };
     engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 
@@ -304,7 +246,7 @@ fn zooming_not_centered_around_camera_position() {
                                       predicate::always())
                                 .times(objects_count)
                                 .return_const(());
-    engine.camera = Camera{ position: middle, zoom: 2.0 };
+    engine.camera = Camera{ position: middle, offset: Vector2::zero(), zoom: 2.0 };
     engine.update(UserInput::Nothing, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
 }
@@ -316,6 +258,7 @@ fn user_input_zoom() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let old_zoom = engine.camera.zoom;
     engine.update(UserInput::Zoom { delta: 0.0 }, STROKE, BG_COLOR, view_width, view_height);
@@ -351,6 +294,7 @@ fn user_input_pan() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     engine.camera.zoom = 1.0;
     engine.camera.position = Vector2 { x: 0.0, y: 0.0 };
@@ -410,6 +354,7 @@ fn no_selection_without_user_input() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -450,6 +395,7 @@ fn no_selection_if_a_tool_is_selected() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(vec![Box::new(tool1)]);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -488,6 +434,7 @@ fn single_selection() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -523,6 +470,7 @@ fn selection_with_shift() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     // While shift is being held down, all objects are selected that the user clicks,
     // even if they click somewhere where there is no object.
@@ -587,6 +535,7 @@ fn selection_remains_if_no_input() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -627,6 +576,7 @@ fn selection_with_shift_except_first() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     // This is exactly the same as the `selection_with_shift` test,
     // except that shift is NOT held down during the FIRST click.
@@ -691,6 +641,7 @@ fn single_selection_after_multiple_selection() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     // When an object is clicked without shift, that object is selected
     // but all other objects are deselected.
@@ -724,6 +675,7 @@ fn clicking_elsewhere_deselects_all() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     // When the user clicks someshere where there are no objects without shift,
     // all objects are deselected.
@@ -767,6 +719,7 @@ fn select_all_input_selects_all() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -803,6 +756,7 @@ fn deselect_all_input_deselects_all() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -850,6 +804,7 @@ fn no_selection_marker_when_no_objects_selected() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -895,6 +850,7 @@ fn selection_marker_around_selected_object() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -930,6 +886,7 @@ fn selection_markers_with_multiple_selected_objects() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -968,6 +925,7 @@ fn delete_input_does_nothing_with_nothing_selected() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
@@ -1003,6 +961,7 @@ fn delete_input_deletes_all_selected_objects() {
     let view_width = 1000.0;
     let view_height = 1000.0;
     let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
         bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },

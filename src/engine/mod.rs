@@ -63,6 +63,7 @@ impl Mul<f32> for Vector2 {
 #[derive(Debug)]
 pub struct Camera {
     position: Vector2,
+    offset: Vector2,
     zoom: f32,
 }
 
@@ -70,6 +71,7 @@ impl Default for Camera {
     fn default() -> Self {
         Self {
             position: Vector2::zero(),
+            offset: Vector2::zero(),
             zoom: 1.0,
         }
     }
@@ -77,11 +79,11 @@ impl Default for Camera {
 
 impl Camera {
     pub fn convert_to_screen_coordinates(&self, point: Vector2) -> Vector2 {
-        (point - self.position) * self.zoom
+        (point - self.position) * self.zoom + self.offset
     }
 
     pub fn convert_to_world_coordinates(&self, point: Vector2) -> Vector2 {
-        point * (1.0 / self.zoom) + self.position
+        (point - self.offset) * (1.0 / self.zoom) + self.position
     }
 }
 
@@ -289,6 +291,7 @@ impl<P: ScreenPainter> Engine<P> {
         self.background_color = background_color;
         self.view_width = view_width;
         self.view_height = view_height;
+        self.camera.offset = Vector2 { x: view_width / 2.0, y: view_height / 2.0 };
 
         match input {
             UserInput::Pan { delta } => {
