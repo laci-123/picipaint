@@ -251,6 +251,24 @@ fn zooming_not_centered_around_camera_position() {
     engine.draw(&mut painter);
 }
 
+#[test]
+fn zoom_cannot_be_negative() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
+
+    engine.camera.zoom = 1.0;
+    engine.update(UserInput::Zoom { delta: -1.5 }, STROKE, BG_COLOR, view_width, view_height);
+    assert!(engine.camera.zoom >= 0.0);
+
+    engine.camera.zoom = 10.0;
+    engine.update(UserInput::Zoom { delta: -6.0 }, STROKE, BG_COLOR, view_width, view_height);
+    engine.update(UserInput::Zoom { delta: -6.0 }, STROKE, BG_COLOR, view_width, view_height);
+    assert!(engine.camera.zoom >= 0.0);
+}
+
 
 #[test]
 fn user_input_zoom() {

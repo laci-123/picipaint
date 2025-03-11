@@ -299,6 +299,9 @@ impl<P: ScreenPainter> Engine<P> {
             },
             UserInput::Zoom { delta } => {
                 self.camera.zoom += delta;
+                if self.camera.zoom < 0.0 {
+                    self.camera.zoom = 0.0;
+                }
             },
             _ => {
                 self.update_tools_and_objects(input, stroke);
