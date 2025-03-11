@@ -688,6 +688,40 @@ fn single_selection_after_multiple_selection() {
 }
 
 #[test]
+fn selection_disappears_after_selecting_a_tool() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
+
+    let mut tool = MockTool::new();
+    tool.expect_update().return_const(());
+    tool.expect_draw().return_const(());
+    engine.tools.push(Box::new(tool));
+
+    let object1 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2 = FakePaintObject {
+        bounding_rect: Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } },
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR, view_width, view_height);
+    assert_eq!(engine.objects[0].is_selected(), true);
+    assert_eq!(engine.objects[1].is_selected(), true);
+
+    engine.select_tool(Some(0));
+    assert_eq!(engine.objects[0].is_selected(), false);
+    assert_eq!(engine.objects[1].is_selected(), false);
+}
+
+#[test]
 fn clicking_elsewhere_deselects_all() {
     let tools = Vec::new();
     let view_width = 1000.0;

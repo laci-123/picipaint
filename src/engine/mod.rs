@@ -388,6 +388,9 @@ impl<P: ScreenPainter> Engine<P> {
         self.selected_tool_index = index;
         if let Some(i) = index {
             let current_tool = &mut self.tools[i];
+            for object in self.objects.iter_mut() {
+                object.set_selected(false);
+            }
         }
     }
 
