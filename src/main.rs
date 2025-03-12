@@ -8,7 +8,9 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
 
-    eframe::run_native(app::NAME, options, Box::new(|context| Ok(Box::new(app::App::new(context)))))
+    eframe::run_native(app::NAME, options, Box::new(|context| {
+        Ok(Box::new(app::App::new(context)))
+    }))
 }
 
 
