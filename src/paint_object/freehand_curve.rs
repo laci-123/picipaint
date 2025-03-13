@@ -69,12 +69,6 @@ pub struct FreehandCurveTool {
 }
 
 impl FreehandCurveTool {
-    pub fn new() -> Self {
-        Self {
-            curve: Self::new_curve(),
-        }
-    }
-
     fn new_curve() -> FreehandCurve {
         FreehandCurve {
             stroke: None, 
@@ -85,6 +79,14 @@ impl FreehandCurveTool {
             max_y: f32::NEG_INFINITY,
             selected: false,
             mouse_pos: Vector2::zero(),
+        }
+    }
+}
+
+impl Default for FreehandCurveTool {
+    fn default() -> Self {
+        Self {
+            curve: Self::new_curve(),
         }
     }
 }

@@ -54,8 +54,8 @@ pub struct StraghtLineTool {
     mouse_pos: Vector2,
 }
 
-impl StraghtLineTool {
-    pub fn new() -> Self{
+impl Default for StraghtLineTool {
+    fn default() -> Self{
         Self {
             start: None,
             stroke: None,

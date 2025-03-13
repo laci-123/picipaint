@@ -96,7 +96,7 @@ pub struct Rectangle {
 }
 
 impl Rectangle {
-    fn from_point_and_size(p: Vector2, width: f32, height: f32) -> Self {
+    pub fn from_point_and_size(p: Vector2, width: f32, height: f32) -> Self {
         Self {
             p1: p,
             p2: p + Vector2{ x: width, y: height },
@@ -193,11 +193,11 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
         self.screen_painter.draw_rectangle_filled(rect, color, stroke);
     }
 
-    fn load_image(&mut self, name: &str, image: &image::DynamicImage) -> P::Texture {
+    pub fn load_image(&mut self, name: &str, image: &image::DynamicImage) -> P::Texture {
         self.screen_painter.load_image(name, image)
     }
     
-    fn draw_image(&mut self, frame: Rectangle, texture: &P::Texture, camera: &Camera) {
+    pub fn draw_image(&mut self, frame: Rectangle, texture: &P::Texture, camera: &Camera) {
         let rect = Rectangle {
             p1: camera.convert_to_screen_coordinates(frame.p1),
             p2: camera.convert_to_screen_coordinates(frame.p2),

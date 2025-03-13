@@ -1,7 +1,7 @@
 use eframe::egui::{self, Vec2};
 use crate::color_selector::ColorSelector;
 use crate::engine::*;
-use crate::paint_object::{freehand_curve::*, straight_line::*};
+use crate::paint_object::{freehand_curve::*, straight_line::*, picture::*};
 use crate::egui_painter::EguiPainter;
 
 
@@ -10,16 +10,6 @@ pub const WINDOW_MIN_SIZE:  Vec2 = Vec2::new(300.0, 200.0);
 pub const UI_SCALE: f32          = 1.5;
 pub const NAME: &'static str     = "PiciPaint";
 
-// fn load_image_from_path(path: &std::path::Path) -> Result<egui::ColorImage, image::ImageError> {
-//     let image = image::ImageReader::open(path)?.decode()?;
-//     let size = [image.width() as usize, image.height() as usize];
-//     let image_buffer = image.to_rgba8();
-//     let pixels = image_buffer.as_flat_samples();
-//     Ok(egui::ColorImage::from_rgba_unmultiplied(
-//         size,
-//         pixels.as_slice(),
-//     ))
-// }
 
 pub struct App {
     engine: Engine<EguiPainter>,
@@ -33,8 +23,9 @@ impl App {
     pub fn new(_context: &eframe::CreationContext) -> Self {
         Self {
             engine: Engine::new(vec![
-                Box::new(FreehandCurveTool::new()),
-                Box::new(StraghtLineTool::new()),
+                Box::new(FreehandCurveTool::default()),
+                Box::new(StraghtLineTool::default()),
+                Box::new(PictureTool::default()),
             ]),
             stroke: Stroke { color: Color::from_rgb(0, 0, 200), thickness: 2.0 },
             bg_color: Color::from_rgb(0, 0, 0),
