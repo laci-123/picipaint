@@ -1,6 +1,7 @@
 use std::cell::OnceCell;
 use image;
 use eframe::egui;
+use rfd::FileDialog;
 use crate::egui_painter::EguiPainter;
 use crate::engine::*;
 
@@ -61,15 +62,17 @@ pub struct PictureTool {
 impl Tool<EguiPainter> for PictureTool {
     fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, _stroke: Stroke, camera: &Camera) {
         if let UserInput::MouseClick { position, .. } = input {
-            let image = image::ImageReader::open(&std::path::Path::new("../cat.png")).unwrap().decode().unwrap();
-            let pos   = camera.convert_to_world_coordinates(*position);
-            objects.push(Box::new(Picture {
-                top_left: pos,
-                image,
-                texture: OnceCell::new(),
-                mouse_pos: pos,
-                selected: false,
-            }));
+            if let Some(file_path) = FileDialog::new().add_filter("png images", &["png"]).pick_file() {
+                let image = image::ImageReader::open(file_path).unwrap().decode().unwrap();
+                let pos   = camera.convert_to_world_coordinates(*position);
+                objects.push(Box::new(Picture {
+                    top_left: pos,
+                    image,
+                    texture: OnceCell::new(),
+                    mouse_pos: pos,
+                    selected: false,
+                }));
+            }
         }
     }
     
