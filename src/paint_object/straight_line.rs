@@ -1,4 +1,4 @@
-use eframe::egui;
+use crate::egui_painter::EguiPainter;
 use crate::engine::*;
 
 
@@ -10,7 +10,7 @@ pub struct StraightLine {
     mouse_pos: Vector2,
 }
 
-impl PaintObject<egui::Painter> for StraightLine {
+impl PaintObject<EguiPainter> for StraightLine {
     fn update(&mut self, input: &UserInput, camera: &Camera) {
         match input {
             UserInput::MouseMove { position, .. } => {
@@ -25,7 +25,7 @@ impl PaintObject<egui::Painter> for StraightLine {
         }
     }
     
-    fn draw<'a>(&self, painter: &mut WorldPainter<'a, egui::Painter>, camera: &Camera) {
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
         painter.draw_line(self.start, self.end, self.stroke, camera);
     }
     
@@ -64,8 +64,8 @@ impl StraghtLineTool {
     }
 }
 
-impl Tool<egui::Painter> for StraghtLineTool {
-    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<egui::Painter>>>, stroke: Stroke, camera: &Camera) {
+impl Tool<EguiPainter> for StraghtLineTool {
+    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, stroke: Stroke, camera: &Camera) {
         self.stroke = Some(stroke);
         
         match input {
@@ -96,7 +96,7 @@ impl Tool<egui::Painter> for StraghtLineTool {
         }
     }
     
-    fn draw<'a>(&self, painter: &mut WorldPainter<'a, egui::Painter>, camera: &Camera) {
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
         if let Some(stroke) = self.stroke {
             if let Some(start) = self.start {
                 painter.draw_line(start, self.mouse_pos, stroke, camera);

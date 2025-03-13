@@ -1,5 +1,6 @@
 #![allow(unused)]
 use std::ops::{Add, Mul, Sub};
+use image;
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -147,12 +148,15 @@ pub struct Stroke {
 }
 
 
-#[cfg_attr(test, mockall::automock)]
+#[cfg_attr(test, mockall::automock(type Texture = usize;))]
 pub trait ScreenPainter {
+    type Texture;
     fn draw_line(&mut self, start: Vector2, end: Vector2, stroke: Stroke);
     fn draw_circle(&mut self, center: Vector2, radius: f32, stroke: Stroke);
     fn draw_rectangle(&mut self, rectangle: Rectangle, stroke: Stroke);
     fn draw_rectangle_filled(&mut self, rectangle: Rectangle, color: Color, stroke: Option<Stroke>);
+    fn load_image(&mut self, name: &str, image: &image::DynamicImage) -> Self::Texture;
+    fn draw_image(&mut self, frame: Rectangle, texture: &Self::Texture);
 }
 
 
@@ -187,6 +191,18 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
             p2: camera.convert_to_screen_coordinates(rectangle.p2),
         };
         self.screen_painter.draw_rectangle_filled(rect, color, stroke);
+    }
+
+    fn load_image(&mut self, name: &str, image: &image::DynamicImage) -> P::Texture {
+        self.screen_painter.load_image(name, image)
+    }
+    
+    fn draw_image(&mut self, frame: Rectangle, texture: &P::Texture, camera: &Camera) {
+        let rect = Rectangle {
+            p1: camera.convert_to_screen_coordinates(frame.p1),
+            p2: camera.convert_to_screen_coordinates(frame.p2),
+        };
+        self.screen_painter.draw_image(rect, texture);
     }
 }
 

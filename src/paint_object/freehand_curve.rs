@@ -1,5 +1,5 @@
 use crate::engine::*;
-use eframe::egui;
+use crate::egui_painter::EguiPainter;
 
 
 pub struct FreehandCurve {
@@ -13,7 +13,7 @@ pub struct FreehandCurve {
     mouse_pos: Vector2,
 }
 
-impl PaintObject<egui::Painter> for FreehandCurve {
+impl PaintObject<EguiPainter> for FreehandCurve {
     fn update(&mut self, input: &UserInput, camera: &Camera) {
         match input {
             UserInput::MouseMove { position, .. } => {
@@ -28,7 +28,7 @@ impl PaintObject<egui::Painter> for FreehandCurve {
         }
     }
     
-    fn draw<'a>(&self, painter: &mut WorldPainter<'a, egui::Painter>, camera: &Camera) {
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
         if let Some(stroke) = self.stroke {
             for p1p2 in self.points.windows(2) {
                 painter.draw_line(p1p2[0], p1p2[1], stroke, camera);
@@ -89,8 +89,8 @@ impl FreehandCurveTool {
     }
 }
 
-impl Tool<egui::Painter> for FreehandCurveTool {
-    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<egui::Painter>>>, stroke: Stroke, camera: &Camera) {
+impl Tool<EguiPainter> for FreehandCurveTool {
+    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, stroke: Stroke, camera: &Camera) {
         self.curve.stroke = Some(stroke);
         if let UserInput::MouseMove { position, button: MouseButton::Left, is_shift_down: false } = input {
             let p = camera.convert_to_world_coordinates(*position);
@@ -117,7 +117,7 @@ impl Tool<egui::Painter> for FreehandCurveTool {
         }
     }
 
-    fn draw<'a>(&self, painter: &mut WorldPainter<'a, egui::Painter>, camera: &Camera) {
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
         self.curve.draw(painter, camera);
     }
 

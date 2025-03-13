@@ -1,8 +1,8 @@
 use eframe::egui::{self, Vec2};
-use image;
 use crate::color_selector::ColorSelector;
 use crate::engine::*;
 use crate::paint_object::{freehand_curve::*, straight_line::*};
+use crate::egui_painter::EguiPainter;
 
 
 pub const WINDOW_INIT_SIZE: Vec2 = Vec2::new(1000.0, 600.0);
@@ -10,30 +10,27 @@ pub const WINDOW_MIN_SIZE:  Vec2 = Vec2::new(300.0, 200.0);
 pub const UI_SCALE: f32          = 1.5;
 pub const NAME: &'static str     = "PiciPaint";
 
-fn load_image_from_path(path: &std::path::Path) -> Result<egui::ColorImage, image::ImageError> {
-    let image = image::ImageReader::open(path)?.decode()?;
-    let size = [image.width() as usize, image.height() as usize];
-    let image_buffer = image.to_rgba8();
-    let pixels = image_buffer.as_flat_samples();
-    Ok(egui::ColorImage::from_rgba_unmultiplied(
-        size,
-        pixels.as_slice(),
-    ))
-}
+// fn load_image_from_path(path: &std::path::Path) -> Result<egui::ColorImage, image::ImageError> {
+//     let image = image::ImageReader::open(path)?.decode()?;
+//     let size = [image.width() as usize, image.height() as usize];
+//     let image_buffer = image.to_rgba8();
+//     let pixels = image_buffer.as_flat_samples();
+//     Ok(egui::ColorImage::from_rgba_unmultiplied(
+//         size,
+//         pixels.as_slice(),
+//     ))
+// }
 
 pub struct App {
-    engine: Engine<egui::Painter>,
+    engine: Engine<EguiPainter>,
     stroke: Stroke,
     bg_color: Color,
     fg_color_selector: ColorSelector,
     bg_color_selector: ColorSelector,
-    texture: Option<egui::TextureHandle>,
 }
 
 impl App {
-    pub fn new(context: &eframe::CreationContext) -> Self {
-        let color_image = load_image_from_path(&std::path::Path::new("cat.png")).unwrap();
-        let texture = context.egui_ctx.load_texture("procedural_image", color_image, Default::default());
+    pub fn new(_context: &eframe::CreationContext) -> Self {
         Self {
             engine: Engine::new(vec![
                 Box::new(FreehandCurveTool::new()),
@@ -43,7 +40,6 @@ impl App {
             bg_color: Color::from_rgb(0, 0, 0),
             fg_color_selector: ColorSelector::new("Foreground color"),
             bg_color_selector: ColorSelector::new("Background color"),
-            texture: Some(texture),
         }
     }
 }
@@ -82,21 +78,15 @@ impl eframe::App for App {
 
             egui::Frame::canvas(ui.style()).show(ui, |ui| {
                 let size = ui.available_size();
-                let (response, mut painter) = ui.allocate_painter(size, egui::Sense::click_and_drag());
+                let (response, painter) = ui.allocate_painter(size, egui::Sense::click_and_drag());
+
+                let mut p = EguiPainter::new(painter, ctx.clone());
 
                 let user_input = map_user_input(&response, ui);
 
                 let screen_rect = ui.ctx().input(|input| input.screen_rect);
                 self.engine.update(user_input, self.stroke, self.bg_color, screen_rect.width(), screen_rect.height());
-                self.engine.draw(&mut painter);
-
-                if let Some(texture) = &self.texture {
-                    painter.image(texture.id(),
-                                  egui::Rect { min: egui::Pos2 { x: 300.0, y: 300.0 }, max: egui::Pos2 { x: 500.0, y: 500.0 } },
-                                  egui::Rect { min: egui::Pos2 { x: 0.0, y: 0.0 }, max: egui::Pos2 { x: 1.0, y: 1.0 } },
-                                  egui::Color32::WHITE);
-                }
-
+                self.engine.draw(&mut p);
             });
 
             self.fg_color_selector.update(ctx, &mut self.stroke.color);
