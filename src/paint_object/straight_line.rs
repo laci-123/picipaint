@@ -65,7 +65,7 @@ impl Default for StraghtLineTool {
 }
 
 impl Tool<EguiPainter> for StraghtLineTool {
-    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, stroke: Stroke, camera: &Camera) {
+    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, stroke: Stroke, camera: &Camera) -> Result<(), String> {
         self.stroke = Some(stroke);
         
         match input {
@@ -94,6 +94,8 @@ impl Tool<EguiPainter> for StraghtLineTool {
                 // do nothing
             },
         }
+
+        Ok(())
     }
     
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {

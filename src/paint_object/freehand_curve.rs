@@ -92,7 +92,7 @@ impl Default for FreehandCurveTool {
 }
 
 impl Tool<EguiPainter> for FreehandCurveTool {
-    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, stroke: Stroke, camera: &Camera) {
+    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, stroke: Stroke, camera: &Camera) -> Result<(), String> {
         self.curve.stroke = Some(stroke);
         if let UserInput::MouseMove { position, button: MouseButton::Left, is_shift_down: false } = input {
             let p = camera.convert_to_world_coordinates(*position);
@@ -117,6 +117,8 @@ impl Tool<EguiPainter> for FreehandCurveTool {
             let new_object = std::mem::replace(&mut self.curve, Self::new_curve());
             objects.push(Box::new(new_object));
         }
+
+        Ok(())
     }
 
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {

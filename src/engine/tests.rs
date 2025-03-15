@@ -144,12 +144,12 @@ fn nothing_is_drawn_if_no_tool_is_selected() {
     painter.expect_draw_rectangle_filled().return_const(()); // draw background color
 
     let mut tool1 = MockTool::new();
-    tool1.expect_update().never().return_const(());
+    tool1.expect_update().never().return_const(Ok(()));
     tool1.expect_draw().never().return_const(());
     engine.tools.push(Box::new(tool1));
 
     let mut tool2 = MockTool::new();
-    tool2.expect_update().never().return_const(());
+    tool2.expect_update().never().return_const(Ok(()));
     tool2.expect_draw().never().return_const(());
     engine.tools.push(Box::new(tool2));
 
@@ -176,12 +176,12 @@ fn only_the_selected_tool_is_used() {
     let mut seq = Sequence::new();
 
     let mut tool1 = MockTool::new();
-    tool1.expect_update().once().in_sequence(&mut seq).return_const(());
+    tool1.expect_update().once().in_sequence(&mut seq).return_const(Ok(()));
     tool1.expect_draw().once().in_sequence(&mut seq).return_const(());
     engine.tools.push(Box::new(tool1));
 
     let mut tool2 = MockTool::new();
-    tool2.expect_update().once().in_sequence(&mut seq).return_const(());
+    tool2.expect_update().once().in_sequence(&mut seq).return_const(Ok(()));
     tool2.expect_draw().once().in_sequence(&mut seq).return_const(());
     engine.tools.push(Box::new(tool2));
 
@@ -408,7 +408,7 @@ fn no_selection_without_user_input() {
 #[test]
 fn no_selection_if_a_tool_is_selected() {
     let mut tool1 = MockTool::new();
-    tool1.expect_update().return_const(());
+    tool1.expect_update().return_const(Ok(()));
     tool1.expect_draw().return_const(());
     let view_width = 1000.0;
     let view_height = 1000.0;
@@ -696,7 +696,7 @@ fn selection_disappears_after_selecting_a_tool() {
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let mut tool = MockTool::new();
-    tool.expect_update().return_const(());
+    tool.expect_update().return_const(Ok(()));
     tool.expect_draw().return_const(());
     engine.tools.push(Box::new(tool));
 

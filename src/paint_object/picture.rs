@@ -60,10 +60,13 @@ pub struct PictureTool {
 }
 
 impl Tool<EguiPainter> for PictureTool {
-    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, _stroke: Stroke, camera: &Camera) {
+    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, _stroke: Stroke, camera: &Camera) -> Result<(), String> {
         if let UserInput::MouseClick { position, .. } = input {
             if let Some(file_path) = FileDialog::new().add_filter("png images", &["png"]).pick_file() {
-                let image = image::ImageReader::open(file_path).unwrap().decode().unwrap();
+                let image = image::ImageReader::open(file_path)
+                                 .map_err(|err| err.to_string())?
+                                 .decode()
+                                 .map_err(|err| err.to_string())?;
                 let pos   = camera.convert_to_world_coordinates(*position);
                 objects.push(Box::new(Picture {
                     top_left: pos,
@@ -74,6 +77,8 @@ impl Tool<EguiPainter> for PictureTool {
                 }));
             }
         }
+
+        Ok(())
     }
     
     fn draw<'a>(&self, _painter: &mut WorldPainter<'a, EguiPainter>, _camera: &Camera) {

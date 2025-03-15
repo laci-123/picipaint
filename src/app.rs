@@ -1,6 +1,7 @@
 use eframe::egui::{self, Vec2};
 use crate::color_selector::ColorSelector;
 use crate::engine::*;
+use crate::floating_window::FloatingWindow;
 use crate::paint_object::{freehand_curve::*, straight_line::*, picture::*};
 use crate::egui_painter::EguiPainter;
 
@@ -17,6 +18,8 @@ pub struct App {
     bg_color: Color,
     fg_color_selector: ColorSelector,
     bg_color_selector: ColorSelector,
+    error_window: FloatingWindow,
+    error_msg: String,
 }
 
 impl App {
@@ -31,6 +34,8 @@ impl App {
             bg_color: Color::from_rgb(0, 0, 0),
             fg_color_selector: ColorSelector::new("Foreground color"),
             bg_color_selector: ColorSelector::new("Background color"),
+            error_window: FloatingWindow::new("error"),
+            error_msg: String::new(),
         }
     }
 }
@@ -40,6 +45,11 @@ impl eframe::App for App {
         ctx.set_pixels_per_point(UI_SCALE);
 
         egui::CentralPanel::default().show(ctx, |ui| {
+            let modal_dialog_is_open = self.error_window.is_open || self.bg_color_selector.window.is_open || self.fg_color_selector.window.is_open;
+            if modal_dialog_is_open {
+                ui.disable();
+            }
+
             ui.horizontal(|ui| {
                 let mut selected = self.engine.get_selected_tool_index().is_none();
                 if ui.toggle_value(&mut selected, "selection").clicked() {
@@ -73,16 +83,29 @@ impl eframe::App for App {
 
                 let mut p = EguiPainter::new(painter, ctx.clone());
 
-                let user_input = map_user_input(&response, ui);
-
+                let user_input = if modal_dialog_is_open {
+                    UserInput::Nothing
+                }
+                else {
+                    map_user_input(&response, ui)
+                };
                 let screen_rect = ui.ctx().input(|input| input.screen_rect);
-                self.engine.update(user_input, self.stroke, self.bg_color, screen_rect.width(), screen_rect.height());
+
+                if let Err(err) = self.engine.update(user_input, self.stroke, self.bg_color, screen_rect.width(), screen_rect.height()) {
+                    self.error_window.is_open = true;
+                    self.error_msg = err;
+                }
+
                 self.engine.draw(&mut p);
             });
 
             self.fg_color_selector.update(ctx, &mut self.stroke.color);
             self.bg_color_selector.update(ctx, &mut self.bg_color);
-        });
+            self.error_window.show(ctx, |ui| {
+                ui.heading("Error");
+                ui.label(&self.error_msg);
+            });
+});
     }
 }
 

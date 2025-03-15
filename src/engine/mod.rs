@@ -253,7 +253,7 @@ pub trait PaintObject<P: ScreenPainter> {
 
 #[cfg_attr(test, mockall::automock)]
 pub trait Tool<P: ScreenPainter> {
-    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<P>>>, stroke: Stroke, camera: &Camera);
+    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<P>>>, stroke: Stroke, camera: &Camera) -> Result<(), String>;
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, camera: &Camera);
     fn display_name(&self) -> &str;
 }
@@ -303,7 +303,7 @@ impl<P: ScreenPainter> Engine<P> {
         }
     }
     
-    pub fn update(&mut self, input: UserInput, stroke: Stroke, background_color: Color, view_width: f32, view_height: f32) {
+    pub fn update(&mut self, input: UserInput, stroke: Stroke, background_color: Color, view_width: f32, view_height: f32) -> Result<(), String> {
         self.background_color = background_color;
         self.view_width = view_width;
         self.view_height = view_height;
@@ -320,15 +320,17 @@ impl<P: ScreenPainter> Engine<P> {
                 }
             },
             _ => {
-                self.update_tools_and_objects(input, stroke);
+                self.update_tools_and_objects(input, stroke)?;
             },
         }
+
+        Ok(())
     }
 
-    fn update_tools_and_objects(&mut self, input: UserInput, stroke: Stroke) {
+    fn update_tools_and_objects(&mut self, input: UserInput, stroke: Stroke) -> Result<(), String> {
         if let Some(tool_index) = self.selected_tool_index {
             if let Some(tool) = self.tools.get_mut(tool_index) {
-                tool.update(&input, &mut self.objects, stroke, &self.camera);
+                tool.update(&input, &mut self.objects, stroke, &self.camera)?;
             }
         }
 
@@ -375,6 +377,8 @@ impl<P: ScreenPainter> Engine<P> {
             // going in reverse order to avoid shifting indeces
             self.objects.swap_remove(*i);
         }
+
+        Ok(())
     }
 
     pub fn draw(&self, screen_painter: &mut P) {
