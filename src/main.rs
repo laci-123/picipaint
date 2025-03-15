@@ -19,3 +19,4 @@ mod engine;
 mod paint_object;
 mod color_selector;
 mod egui_painter;
+mod floating_window;

@@ -58,8 +58,8 @@ impl eframe::App for App {
 
                 ui.separator();
 
-                ui.toggle_value(&mut self.fg_color_selector.is_open, "fg color");
-                ui.toggle_value(&mut self.bg_color_selector.is_open, "bg color");
+                ui.toggle_value(&mut self.fg_color_selector.window.is_open, "fg color");
+                ui.toggle_value(&mut self.bg_color_selector.window.is_open, "bg color");
                 ui.add(egui::Slider::new(&mut self.stroke.thickness, 0.5..=10.0)).on_hover_ui_at_pointer(|ui| {
                     ui.label("line thickness");
                 });
