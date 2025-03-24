@@ -54,12 +54,19 @@ impl PaintObject<EguiPainter> for Picture {
 }
 
 
-#[derive(Default)]
-pub struct PictureTool {
-    // nothing
+pub struct PictureTool<'a> {
+    icon: egui::ImageSource<'a>,
 }
 
-impl Tool<EguiPainter> for PictureTool {
+impl<'a> Default for PictureTool<'a> {
+    fn default() -> Self {
+        Self {
+            icon: egui::include_image!("../../img/picture_tool.png"),
+        }
+    }
+}
+
+impl<'a> Tool<EguiPainter, egui::ImageSource<'a>> for PictureTool<'a> {
     fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, _stroke: Stroke, camera: &Camera) -> Result<(), String> {
         if let UserInput::MouseClick { position, .. } = input {
             if let Some(file_path) = FileDialog::new().add_filter("png images", &["png"]).pick_file() {
@@ -81,11 +88,15 @@ impl Tool<EguiPainter> for PictureTool {
         Ok(())
     }
     
-    fn draw<'a>(&self, _painter: &mut WorldPainter<'a, EguiPainter>, _camera: &Camera) {
+    fn draw<'b>(&self, _painter: &mut WorldPainter<'b, EguiPainter>, _camera: &Camera) {
         // nothing
     }
     
     fn display_name(&self) -> &str {
         "insert picture"
+    }
+
+    fn icon(&self) -> egui::ImageSource<'a> {
+        self.icon.clone()
     }
 }

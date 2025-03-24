@@ -1,5 +1,6 @@
 use crate::engine::*;
 use crate::egui_painter::EguiPainter;
+use eframe::egui;
 
 
 pub struct FreehandCurve {
@@ -64,11 +65,12 @@ impl PaintObject<EguiPainter> for FreehandCurve {
 }
 
 
-pub struct FreehandCurveTool {
+pub struct FreehandCurveTool<'a> {
     curve: FreehandCurve,
+    icon: egui::ImageSource<'a>,
 }
 
-impl FreehandCurveTool {
+impl<'a> FreehandCurveTool<'a> {
     fn new_curve() -> FreehandCurve {
         FreehandCurve {
             stroke: None, 
@@ -83,15 +85,16 @@ impl FreehandCurveTool {
     }
 }
 
-impl Default for FreehandCurveTool {
+impl<'a> Default for FreehandCurveTool<'a> {
     fn default() -> Self {
         Self {
             curve: Self::new_curve(),
+            icon: egui::include_image!("../../img/freehand_tool.png"),
         }
     }
 }
 
-impl Tool<EguiPainter> for FreehandCurveTool {
+impl<'a> Tool<EguiPainter, egui::ImageSource<'a>> for FreehandCurveTool<'a> {
     fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, stroke: Stroke, camera: &Camera) -> Result<(), String> {
         self.curve.stroke = Some(stroke);
         if let UserInput::MouseMove { position, button: MouseButton::Left, is_shift_down: false } = input {
@@ -121,11 +124,15 @@ impl Tool<EguiPainter> for FreehandCurveTool {
         Ok(())
     }
 
-    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
+    fn draw<'b>(&self, painter: &mut WorldPainter<'b, EguiPainter>, camera: &Camera) {
         self.curve.draw(painter, camera);
     }
 
     fn display_name(&self) -> &str {
         "free-hand curve"
+    }
+
+    fn icon(&self) -> egui::ImageSource<'a> {
+        self.icon.clone()
     }
 }

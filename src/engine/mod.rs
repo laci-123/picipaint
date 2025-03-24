@@ -1,5 +1,6 @@
 #![allow(unused)]
 use std::ops::{Add, Mul, Sub};
+use std::sync::Arc;
 use image;
 
 
@@ -252,26 +253,26 @@ pub trait PaintObject<P: ScreenPainter> {
 
 
 #[cfg_attr(test, mockall::automock)]
-pub trait Tool<P: ScreenPainter> {
+pub trait Tool<P: ScreenPainter, IconType> {
     fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<P>>>, stroke: Stroke, camera: &Camera) -> Result<(), String>;
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, camera: &Camera);
     fn display_name(&self) -> &str;
+    fn icon(&self) -> IconType;
 }
 
 
-pub struct ToolIterator<'a, P: ScreenPainter> {
-    tools: &'a Vec<Box<dyn Tool<P>>>,
+pub struct ToolIterator<'a, P: ScreenPainter, IconType> {
+    tools: &'a Vec<Box<dyn Tool<P, IconType>>>,
     index: usize,
 }
 
-impl<'a, P: ScreenPainter> Iterator for ToolIterator<'a, P> {
-    type Item = String;
+impl<'a, P: ScreenPainter, IconType> Iterator for ToolIterator<'a, P, IconType> {
+    type Item = &'a dyn Tool<P, IconType>;
 
-    fn next(&mut self) -> Option<String> {
+    fn next(&mut self) -> Option<&'a dyn Tool<P, IconType>> {
         if let Some(tool) = self.tools.get(self.index) {
-            let name = String::from(tool.display_name());
             self.index += 1;
-            Some(name)
+            Some(tool.as_ref())
         }
         else {
             None
@@ -280,9 +281,9 @@ impl<'a, P: ScreenPainter> Iterator for ToolIterator<'a, P> {
 }
 
 
-pub struct Engine<P: ScreenPainter> {
+pub struct Engine<P: ScreenPainter, IconType> {
     objects: Vec<Box<dyn PaintObject<P>>>,
-    tools: Vec<Box<dyn Tool<P>>>,
+    tools: Vec<Box<dyn Tool<P, IconType>>>,
     selected_tool_index: Option<usize>,
     view_width: f32,
     view_height: f32,
@@ -290,8 +291,8 @@ pub struct Engine<P: ScreenPainter> {
     background_color: Color,
 }
 
-impl<P: ScreenPainter> Engine<P> {
-    pub fn new(tools: Vec<Box<dyn Tool<P>>>) -> Self {
+impl<P: ScreenPainter, IconType> Engine<P, IconType> {
+    pub fn new(tools: Vec<Box<dyn Tool<P, IconType>>>) -> Self {
         Self {
             objects: Vec::new(),
             tools,
@@ -400,7 +401,7 @@ impl<P: ScreenPainter> Engine<P> {
         }
     }
 
-    pub fn tools_iter(&self) -> ToolIterator<P> {
+    pub fn tools_iter(&self) -> ToolIterator<P, IconType> {
         ToolIterator { tools: &self.tools, index: 0 }
     }
 

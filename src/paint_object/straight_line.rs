@@ -1,5 +1,6 @@
 use crate::egui_painter::EguiPainter;
 use crate::engine::*;
+use eframe::egui;
 
 
 pub struct StraightLine {
@@ -48,23 +49,25 @@ impl PaintObject<EguiPainter> for StraightLine {
 }
 
 
-pub struct StraghtLineTool {
+pub struct StraghtLineTool<'a> {
     start: Option<Vector2>,
     stroke: Option<Stroke>, // Only optional because Stroke doesn't have a default value, so we have to wait until the first call to `update` to set it.
     mouse_pos: Vector2,
+    icon: egui::ImageSource<'a>,
 }
 
-impl Default for StraghtLineTool {
+impl<'a> Default for StraghtLineTool<'a> {
     fn default() -> Self{
         Self {
             start: None,
             stroke: None,
             mouse_pos: Vector2::zero(),
+            icon: egui::include_image!("../../img/straightline_tool.png"),
         }
     }
 }
 
-impl Tool<EguiPainter> for StraghtLineTool {
+impl<'a> Tool<EguiPainter, egui::ImageSource<'a>> for StraghtLineTool<'a> {
     fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, stroke: Stroke, camera: &Camera) -> Result<(), String> {
         self.stroke = Some(stroke);
         
@@ -98,7 +101,7 @@ impl Tool<EguiPainter> for StraghtLineTool {
         Ok(())
     }
     
-    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
+    fn draw<'b>(&self, painter: &mut WorldPainter<'b, EguiPainter>, camera: &Camera) {
         if let Some(stroke) = self.stroke {
             if let Some(start) = self.start {
                 painter.draw_line(start, self.mouse_pos, stroke, camera);
@@ -108,6 +111,10 @@ impl Tool<EguiPainter> for StraghtLineTool {
     
     fn display_name(&self) -> &str {
         "straight line"
+    }
+
+    fn icon(&self) -> egui::ImageSource<'a> {
+        self.icon.clone()
     }
 }
 

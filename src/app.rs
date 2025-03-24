@@ -12,8 +12,8 @@ pub const UI_SCALE: f32          = 1.5;
 pub const NAME: &'static str     = "PiciPaint";
 
 
-pub struct App {
-    engine: Engine<EguiPainter>,
+pub struct App<'a> {
+    engine: Engine<EguiPainter, egui::ImageSource<'a>>,
     stroke: Stroke,
     bg_color: Color,
     fg_color_selector: ColorSelector,
@@ -22,7 +22,7 @@ pub struct App {
     error_msg: String,
 }
 
-impl App {
+impl App<'static> {
     pub fn new(_context: &eframe::CreationContext) -> Self {
         Self {
             engine: Engine::new(vec![
@@ -40,7 +40,7 @@ impl App {
     }
 }
 
-impl eframe::App for App {
+impl<'a> eframe::App for App<'a> {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_pixels_per_point(UI_SCALE);
 
@@ -57,9 +57,9 @@ impl eframe::App for App {
                     self.engine.select_tool(None);
                 }
                 let mut new_selected = None;
-                for (i, tool_name) in self.engine.tools_iter().enumerate() {
+                for (i, tool) in self.engine.tools_iter().enumerate() {
                     let selected = self.engine.get_selected_tool_index().is_some_and(|si| si == i);
-                    if ui.add(egui::Button::new(tool_name).frame(selected)).clicked() {
+                    if ui.add(egui::Button::image(tool.icon()).frame(selected)).clicked() {
                         new_selected = Some(i);
                     }
                 }

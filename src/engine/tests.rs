@@ -8,6 +8,9 @@ const STROKE: Stroke = Stroke { color: Color{ red: 255, green: 255, blue: 255, a
 const BG_COLOR: Color = Color{ red: 0, green: 0, blue: 0, alpha: 255 };
 
 
+type FakeIconType = String;
+
+
 struct FakePaintObject {
     under_mouse: bool,
     selected: bool,
@@ -78,7 +81,7 @@ fn object_draw_order() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let mut seq = Sequence::new();
@@ -103,11 +106,11 @@ fn tools_iterator_empty() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let mut tools_iter = engine.tools_iter();
-    assert_eq!(tools_iter.next(), None);
+    assert!(tools_iter.next().is_none());
 }
 
 #[test]
@@ -115,21 +118,30 @@ fn tools_iterator() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let mut tool1 = MockTool::new();
-    tool1.expect_display_name().once().return_const(String::from("tool1"));
+    tool1.expect_display_name().once().return_const(String::from("tool1_name"));
+    tool1.expect_icon().once().return_const(String::from("tool1_icon"));
     engine.tools.push(Box::new(tool1));
 
     let mut tool2 = MockTool::new();
-    tool2.expect_display_name().once().return_const(String::from("tool2"));
+    tool2.expect_display_name().once().return_const(String::from("tool2_name"));
+    tool2.expect_icon().once().return_const(String::from("tool2_icon"));
     engine.tools.push(Box::new(tool2));
 
     let mut tools_iter = engine.tools_iter();
-    assert_eq!(tools_iter.next(), Some(String::from("tool1")));
-    assert_eq!(tools_iter.next(), Some(String::from("tool2")));
-    assert_eq!(tools_iter.next(), None);
+    let t1 = tools_iter.next();
+    assert!(t1.is_some());
+    assert_eq!(t1.unwrap().display_name(), "tool1_name");
+    assert_eq!(t1.unwrap().icon(), "tool1_icon");
+    let t2 = tools_iter.next();
+    assert!(t2.is_some());
+    assert_eq!(t2.unwrap().display_name(), "tool2_name");
+    assert_eq!(t2.unwrap().icon(), "tool2_icon");
+    let t3 = tools_iter.next();
+    assert!(t3.is_none());
 }
 
 #[test]
@@ -137,7 +149,7 @@ fn nothing_is_drawn_if_no_tool_is_selected() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let mut painter = MockScreenPainter::new();
@@ -167,7 +179,7 @@ fn only_the_selected_tool_is_used() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let mut painter = MockScreenPainter::new();
@@ -201,7 +213,7 @@ fn zooming_not_centered_around_camera_position() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     // Place some circles equally spaced along a circle around some arbitrary point (`middle`).
@@ -256,7 +268,7 @@ fn zoom_cannot_be_negative() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     engine.camera.zoom = 1.0;
@@ -275,7 +287,7 @@ fn user_input_zoom() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let old_zoom = engine.camera.zoom;
@@ -311,7 +323,7 @@ fn user_input_pan() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     engine.camera.zoom = 1.0;
@@ -371,7 +383,7 @@ fn no_selection_without_user_input() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
@@ -412,7 +424,7 @@ fn no_selection_if_a_tool_is_selected() {
     tool1.expect_draw().return_const(());
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(vec![Box::new(tool1)]);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(vec![Box::new(tool1)]);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
@@ -451,7 +463,7 @@ fn single_selection() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
@@ -487,7 +499,7 @@ fn selection_with_shift() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     // While shift is being held down, all objects are selected that the user clicks,
@@ -552,7 +564,7 @@ fn selection_remains_if_no_input() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
@@ -593,7 +605,7 @@ fn selection_with_shift_except_first() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     // This is exactly the same as the `selection_with_shift` test,
@@ -658,7 +670,7 @@ fn single_selection_after_multiple_selection() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     // When an object is clicked without shift, that object is selected
@@ -692,7 +704,7 @@ fn selection_disappears_after_selecting_a_tool() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let mut tool = MockTool::new();
@@ -726,7 +738,7 @@ fn clicking_elsewhere_deselects_all() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     // When the user clicks someshere where there are no objects without shift,
@@ -770,7 +782,7 @@ fn select_all_input_selects_all() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
@@ -807,7 +819,7 @@ fn deselect_all_input_deselects_all() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
@@ -855,7 +867,7 @@ fn no_selection_marker_when_no_objects_selected() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
@@ -901,7 +913,7 @@ fn selection_marker_around_selected_object() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
@@ -937,7 +949,7 @@ fn selection_markers_with_multiple_selected_objects() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
@@ -976,7 +988,7 @@ fn delete_input_does_nothing_with_nothing_selected() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
@@ -1012,7 +1024,7 @@ fn delete_input_deletes_all_selected_objects() {
     let tools = Vec::new();
     let view_width = 1000.0;
     let view_height = 1000.0;
-    let mut engine = Engine::<MockScreenPainter>::new(tools);
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
     engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
 
     let object1 = FakePaintObject {
