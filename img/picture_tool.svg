@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4 (e7c3feb100, 2024-10-09)"
+   sodipodi:docname="picture_tool.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.71179153"
+     inkscape:cx="488.9072"
+     inkscape:cy="503.65871"
+     inkscape:window-width="1920"
+     inkscape:window-height="1008"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1">
+    <inkscape:path-effect
+       effect="line_segment"
+       id="path-effect4"
+       is_visible="true"
+       lpeversion="1"
+       end_type="open_both" />
+    <inkscape:path-effect
+       effect="line_segment"
+       id="path-effect3"
+       is_visible="true"
+       lpeversion="1"
+       end_type="open_both" />
+    <inkscape:path-effect
+       effect="line_segment"
+       id="path-effect2"
+       is_visible="true"
+       lpeversion="1"
+       end_type="open_both" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       id="rect1"
+       style="fill:none;stroke:#00ffff;stroke-width:7.99999"
+       d="M 29.737203 111.97869 L 29.737203 187.34412 L 189.20292 187.34412 L 189.20292 78.059835 L 65.050293 78.059835 A 34.01189 34.01189 0 0 1 31.038416 112.07171 A 34.01189 34.01189 0 0 1 29.737203 111.97869 z " />
+    <path
+       id="path1"
+       style="fill:none;stroke:#00ffff;stroke-width:7.99999"
+       d="M 29.737203 111.97869 A 34.01189 34.01189 0 0 0 31.038416 112.07171 A 34.01189 34.01189 0 0 0 65.050293 78.059835 L 29.737203 78.059835 L 29.737203 111.97869 z " />
+    <path
+       style="fill:none;stroke:#00ffff;stroke-width:7.99999"
+       d="m 51.426154,117.69015 13.966185,31.56589"
+       id="path4" />
+    <path
+       style="fill:none;stroke:#00ffff;stroke-width:7.99999"
+       d="m 63.563236,109.28387 25.814258,23.5779"
+       id="path5" />
+    <path
+       style="fill:none;stroke:#00ffff;stroke-width:7.99999"
+       d="M 71.410471,97.614479 104.3178,110.17876"
+       id="path6" />
+    <path
+       style="fill:none;stroke:#00ffff;stroke-width:7.99999"
+       d="m 39.593776,121.29733 7.522826,33.43799"
+       id="path7" />
+    <path
+       style="fill:none;stroke:#00ffff;stroke-width:7.99999"
+       d="m 74.814597,86.339356 34.723173,6.307142"
+       id="path8" />
+    <path
+       style="fill:none;stroke:#00ffff;stroke-width:7.99999"
+       d="M 66.536953,187.34412 C 128.98498,150.54443 156.49203,144.96865 189.20292,168.75839"
+       id="path9"
+       sodipodi:nodetypes="cc" />
+    <path
+       style="fill:none;stroke:#00ffff;stroke-width:7.99999"
+       d="m 147.93686,154.45568 v -20.2667"
+       id="path10" />
+    <circle
+       style="fill:#00ffff;stroke:none;stroke-width:17.332"
+       id="path11"
+       cx="147.93686"
+       cy="128.85075"
+       r="10.871852" />
+  </g>
+</svg>

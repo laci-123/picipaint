@@ -51,19 +51,20 @@ impl eframe::App for App {
             }
 
             ui.horizontal(|ui| {
-                let mut selected = self.engine.get_selected_tool_index().is_none();
-                if ui.toggle_value(&mut selected, "selection").clicked() {
+                let selected = self.engine.get_selected_tool_index().is_none();
+                let image = egui::include_image!("../img/selection_tool.png");
+                if ui.add(egui::Button::image(image).frame(selected)).clicked() {
                     self.engine.select_tool(None);
                 }
-                let mut selected_index = None;
+                let mut new_selected = None;
                 for (i, tool_name) in self.engine.tools_iter().enumerate() {
-                    let mut selected = self.engine.get_selected_tool_index().is_some_and(|index| index == i);
-                    if ui.toggle_value(&mut selected, tool_name).clicked() {
-                        selected_index = Some(i);
+                    let selected = self.engine.get_selected_tool_index().is_some_and(|si| si == i);
+                    if ui.add(egui::Button::new(tool_name).frame(selected)).clicked() {
+                        new_selected = Some(i);
                     }
                 }
-                if selected_index.is_some() {
-                    self.engine.select_tool(selected_index);
+                if new_selected.is_some() {
+                    self.engine.select_tool(new_selected);
                 }
 
                 ui.separator();
