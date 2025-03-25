@@ -49,14 +49,14 @@ impl PaintObject<EguiPainter> for StraightLine {
 }
 
 
-pub struct StraghtLineTool<'a> {
+pub struct StraghtLineTool {
     start: Option<Vector2>,
     stroke: Option<Stroke>, // Only optional because Stroke doesn't have a default value, so we have to wait until the first call to `update` to set it.
     mouse_pos: Vector2,
-    icon: egui::ImageSource<'a>,
+    icon: egui::ImageSource<'static>,
 }
 
-impl<'a> Default for StraghtLineTool<'a> {
+impl Default for StraghtLineTool {
     fn default() -> Self{
         Self {
             start: None,
@@ -67,7 +67,7 @@ impl<'a> Default for StraghtLineTool<'a> {
     }
 }
 
-impl<'a> Tool<EguiPainter, egui::ImageSource<'a>> for StraghtLineTool<'a> {
+impl Tool<EguiPainter, egui::ImageSource<'static>> for StraghtLineTool {
     fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, stroke: Stroke, camera: &Camera) -> Result<(), String> {
         self.stroke = Some(stroke);
         
@@ -101,7 +101,7 @@ impl<'a> Tool<EguiPainter, egui::ImageSource<'a>> for StraghtLineTool<'a> {
         Ok(())
     }
     
-    fn draw<'b>(&self, painter: &mut WorldPainter<'b, EguiPainter>, camera: &Camera) {
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
         if let Some(stroke) = self.stroke {
             if let Some(start) = self.start {
                 painter.draw_line(start, self.mouse_pos, stroke, camera);
@@ -113,7 +113,7 @@ impl<'a> Tool<EguiPainter, egui::ImageSource<'a>> for StraghtLineTool<'a> {
         "straight line"
     }
 
-    fn icon(&self) -> egui::ImageSource<'a> {
+    fn icon(&self) -> egui::ImageSource<'static> {
         self.icon.clone()
     }
 }

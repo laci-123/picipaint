@@ -65,12 +65,12 @@ impl PaintObject<EguiPainter> for FreehandCurve {
 }
 
 
-pub struct FreehandCurveTool<'a> {
+pub struct FreehandCurveTool {
     curve: FreehandCurve,
-    icon: egui::ImageSource<'a>,
+    icon: egui::ImageSource<'static>,
 }
 
-impl<'a> FreehandCurveTool<'a> {
+impl FreehandCurveTool {
     fn new_curve() -> FreehandCurve {
         FreehandCurve {
             stroke: None, 
@@ -85,7 +85,7 @@ impl<'a> FreehandCurveTool<'a> {
     }
 }
 
-impl<'a> Default for FreehandCurveTool<'a> {
+impl Default for FreehandCurveTool {
     fn default() -> Self {
         Self {
             curve: Self::new_curve(),
@@ -94,7 +94,7 @@ impl<'a> Default for FreehandCurveTool<'a> {
     }
 }
 
-impl<'a> Tool<EguiPainter, egui::ImageSource<'a>> for FreehandCurveTool<'a> {
+impl Tool<EguiPainter, egui::ImageSource<'static>> for FreehandCurveTool {
     fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, stroke: Stroke, camera: &Camera) -> Result<(), String> {
         self.curve.stroke = Some(stroke);
         if let UserInput::MouseMove { position, button: MouseButton::Left, is_shift_down: false } = input {
@@ -124,7 +124,7 @@ impl<'a> Tool<EguiPainter, egui::ImageSource<'a>> for FreehandCurveTool<'a> {
         Ok(())
     }
 
-    fn draw<'b>(&self, painter: &mut WorldPainter<'b, EguiPainter>, camera: &Camera) {
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
         self.curve.draw(painter, camera);
     }
 
@@ -132,7 +132,7 @@ impl<'a> Tool<EguiPainter, egui::ImageSource<'a>> for FreehandCurveTool<'a> {
         "free-hand curve"
     }
 
-    fn icon(&self) -> egui::ImageSource<'a> {
+    fn icon(&self) -> egui::ImageSource<'static> {
         self.icon.clone()
     }
 }

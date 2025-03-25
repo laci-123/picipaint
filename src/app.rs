@@ -12,8 +12,8 @@ pub const UI_SCALE: f32          = 1.5;
 pub const NAME: &'static str     = "PiciPaint";
 
 
-pub struct App<'a> {
-    engine: Engine<EguiPainter, egui::ImageSource<'a>>,
+pub struct App {
+    engine: Engine<EguiPainter, egui::ImageSource<'static>>,
     stroke: Stroke,
     bg_color: Color,
     fg_color_selector: ColorSelector,
@@ -22,7 +22,7 @@ pub struct App<'a> {
     error_msg: String,
 }
 
-impl App<'static> {
+impl App {
     pub fn new(_context: &eframe::CreationContext) -> Self {
         Self {
             engine: Engine::new(vec![
@@ -40,7 +40,7 @@ impl App<'static> {
     }
 }
 
-impl<'a> eframe::App for App<'a> {
+impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_pixels_per_point(UI_SCALE);
 
