@@ -284,6 +284,7 @@ impl<'a, P: ScreenPainter, IconType> Iterator for ToolIterator<'a, P, IconType> 
 pub struct Engine<P: ScreenPainter, IconType> {
     objects: Vec<Box<dyn PaintObject<P>>>,
     tools: Vec<Box<dyn Tool<P, IconType>>>,
+    to_be_deleted: Vec<usize>,
     selected_tool_index: Option<usize>,
     view_width: f32,
     view_height: f32,
@@ -296,6 +297,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         Self {
             objects: Vec::new(),
             tools,
+            to_be_deleted: Vec::new(),
             selected_tool_index: None,
             view_width: 0.0,
             view_height: 0.0,
@@ -335,8 +337,6 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
             }
         }
 
-        let mut to_be_deleted = Vec::with_capacity(self.objects.len());
-
         for (i, object) in self.objects.iter_mut().enumerate() {
             object.update(&input, &self.camera);
 
@@ -350,7 +350,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
                     continue;
                 }
                 if input == UserInput::Delete && object.is_selected() {
-                    to_be_deleted.push(i);
+                    self.to_be_deleted.push(i);
                     continue;
                 }
 
@@ -374,10 +374,11 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
             }
         }
 
-        for i in to_be_deleted.iter().rev() {
+        for i in self.to_be_deleted.iter().rev() {
             // going in reverse order to avoid shifting indeces
             self.objects.swap_remove(*i);
         }
+        self.to_be_deleted.clear();
 
         Ok(())
     }
