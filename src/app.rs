@@ -53,13 +53,13 @@ impl eframe::App for App {
             ui.horizontal(|ui| {
                 let selected = self.engine.get_selected_tool_index().is_none();
                 let image = egui::include_image!("../img/selection_tool.png");
-                if ui.add(egui::Button::image(image).frame(selected)).clicked() {
+                if ui.add(egui::Button::image(image).frame(selected)).on_hover_ui(|ui| {ui.label("selection");}).clicked() {
                     self.engine.select_tool(None);
                 }
                 let mut new_selected = None;
                 for (i, tool) in self.engine.tools_iter().enumerate() {
                     let selected = self.engine.get_selected_tool_index().is_some_and(|si| si == i);
-                    if ui.add(egui::Button::image(tool.icon()).frame(selected)).clicked() {
+                    if ui.add(egui::Button::image(tool.icon()).frame(selected)).on_hover_ui(|ui| {ui.label(tool.display_name());}).clicked() {
                         new_selected = Some(i);
                     }
                 }
