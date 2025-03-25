@@ -9,6 +9,7 @@ use crate::engine::*;
 pub struct Picture {
     top_left: Vector2,
     image: image::DynamicImage,
+    image_name: String,
     texture: OnceCell<egui::TextureHandle>,
     mouse_pos: Vector2,
     selected: bool,
@@ -31,7 +32,7 @@ impl PaintObject<EguiPainter> for Picture {
     
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
         let texture = self.texture.get_or_init(|| {
-            painter.load_image("cica", &self.image)
+            painter.load_image(&self.image_name, &self.image)
         });
         painter.draw_image(self.get_bounding_rect(), texture, camera);
     }
@@ -70,7 +71,7 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
     fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, _stroke: Stroke, camera: &Camera) -> Result<(), String> {
         if let UserInput::MouseClick { position, .. } = input {
             if let Some(file_path) = FileDialog::new().add_filter("png images", &["png"]).pick_file() {
-                let image = image::ImageReader::open(file_path)
+                let image = image::ImageReader::open(&file_path)
                                  .map_err(|err| err.to_string())?
                                  .decode()
                                  .map_err(|err| err.to_string())?;
@@ -78,6 +79,7 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
                 objects.push(Box::new(Picture {
                     top_left: pos,
                     image,
+                    image_name: file_path.to_string_lossy().into_owned(),
                     texture: OnceCell::new(),
                     mouse_pos: pos,
                     selected: false,
