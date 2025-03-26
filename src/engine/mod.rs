@@ -254,7 +254,7 @@ pub trait PaintObject<P: ScreenPainter> {
 
 #[cfg_attr(test, mockall::automock)]
 pub trait Tool<P: ScreenPainter, IconType> {
-    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<P>>>, stroke: Stroke, camera: &Camera) -> Result<(), String>;
+    fn update(&mut self, input: &UserInput, stroke: Stroke, camera: &Camera) -> Result<Option<Box<dyn PaintObject<P>>>, String>;
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, camera: &Camera);
     fn display_name(&self) -> &str;
     fn icon(&self) -> IconType;
@@ -333,7 +333,9 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
     fn update_tools_and_objects(&mut self, input: UserInput, stroke: Stroke) -> Result<(), String> {
         if let Some(tool_index) = self.selected_tool_index {
             if let Some(tool) = self.tools.get_mut(tool_index) {
-                tool.update(&input, &mut self.objects, stroke, &self.camera)?;
+                if let Some(new_object) = tool.update(&input, stroke, &self.camera)? {
+                    self.objects.push(new_object);
+                }
             }
         }
 

@@ -68,7 +68,7 @@ impl Default for StraghtLineTool {
 }
 
 impl Tool<EguiPainter, egui::ImageSource<'static>> for StraghtLineTool {
-    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, stroke: Stroke, camera: &Camera) -> Result<(), String> {
+    fn update(&mut self, input: &UserInput, stroke: Stroke, camera: &Camera) -> Result<Option<Box<dyn PaintObject<EguiPainter>>>, String> {
         self.stroke = Some(stroke);
         
         match input {
@@ -85,8 +85,8 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for StraghtLineTool {
                         selected: false,
                         mouse_pos: p,
                     };
-                    objects.push(Box::new(line));
                     self.start = None;
+                    return Ok(Some(Box::new(line)));
                 }
                 else {
                     self.start = Some(p);
@@ -98,7 +98,7 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for StraghtLineTool {
             },
         }
 
-        Ok(())
+        return Ok(None);
     }
     
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {

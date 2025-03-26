@@ -68,7 +68,7 @@ impl Default for PictureTool {
 }
 
 impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
-    fn update(&mut self, input: &UserInput, objects: &mut Vec<Box<dyn PaintObject<EguiPainter>>>, _stroke: Stroke, camera: &Camera) -> Result<(), String> {
+    fn update(&mut self, input: &UserInput, _stroke: Stroke, camera: &Camera) -> Result<Option<Box<dyn PaintObject<EguiPainter>>>, String> {
         if let UserInput::MouseClick { position, .. } = input {
             if let Some(file_path) = FileDialog::new().add_filter("png images", &["png"]).pick_file() {
                 let image = image::ImageReader::open(&file_path)
@@ -76,18 +76,18 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
                                  .decode()
                                  .map_err(|err| err.to_string())?;
                 let pos   = camera.convert_to_world_coordinates(*position);
-                objects.push(Box::new(Picture {
+                return Ok(Some(Box::new(Picture {
                     top_left: pos,
                     image,
                     image_name: file_path.to_string_lossy().into_owned(),
                     texture: OnceCell::new(),
                     mouse_pos: pos,
                     selected: false,
-                }));
+                })));
             }
         }
 
-        Ok(())
+        return Ok(None);
     }
     
     fn draw<'a>(&self, _painter: &mut WorldPainter<'a, EguiPainter>, _camera: &Camera) {
