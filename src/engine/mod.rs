@@ -405,16 +405,23 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
     pub fn draw(&self, screen_painter: &mut P) {
         screen_painter.draw_rectangle_filled(Rectangle::from_point_and_size(Vector2::zero(), self.view_width, self.view_height), self.background_color, None);
 
-        let mut world_painter = WorldPainter { screen_painter };
-        
         for object in self.objects.iter() {
+            let mut world_painter = WorldPainter { screen_painter };
             object.draw(&mut world_painter, &self.camera);
             if object.is_selected() {
-                world_painter.draw_rectangle(object.get_bounding_rect(), Stroke { color: Color::from_rgb(255, 255, 255), thickness: 1.0 }, &self.camera);
+                // Not using world painter so that the thickness of the selection marker
+                // won't change with zoom level.
+                let world_rect = object.get_bounding_rect();
+                let screen_rect = Rectangle {
+                    p1: self.camera.convert_to_screen_coordinates(world_rect.p1),
+                    p2: self.camera.convert_to_screen_coordinates(world_rect.p2),
+                };
+                screen_painter.draw_rectangle(screen_rect, Stroke { color: Color::from_rgb(255, 255, 255), thickness: 1.0 });
             }
         }
 
         if let Some(tool_index) = self.selected_tool_index {
+            let mut world_painter = WorldPainter { screen_painter };
             if let Some(tool) = self.tools.get(tool_index) {
                 tool.draw(&mut world_painter, &self.camera);
             }
