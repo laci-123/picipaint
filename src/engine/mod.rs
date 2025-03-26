@@ -148,6 +148,14 @@ pub struct Stroke {
     pub thickness: f32,
 }
 
+impl Stroke {
+    fn with_scaled_thickness(self, scale: f32) -> Self {
+        Self {
+            color: self.color,
+            thickness: self.thickness * scale,
+        }
+    }
+}
 
 #[cfg_attr(test, mockall::automock(type Texture = usize;))]
 pub trait ScreenPainter {
@@ -169,13 +177,13 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
     pub fn draw_line(&mut self, start: Vector2, end: Vector2, stroke: Stroke, camera: &Camera) {
         let s = camera.convert_to_screen_coordinates(start);
         let e = camera.convert_to_screen_coordinates(end);
-        self.screen_painter.draw_line(s, e, stroke);
+        self.screen_painter.draw_line(s, e, stroke.with_scaled_thickness(camera.zoom));
     }
     
     pub fn draw_circle(&mut self, center: Vector2, radius: f32, stroke: Stroke, camera: &Camera) {
         let c = camera.convert_to_screen_coordinates(center);
         let r = camera.zoom * radius;
-        self.screen_painter.draw_circle(c, r, stroke);
+        self.screen_painter.draw_circle(c, r, stroke.with_scaled_thickness(camera.zoom));
     }
     
     pub fn draw_rectangle(&mut self, rectangle: Rectangle, stroke: Stroke, camera: &Camera) {
@@ -183,7 +191,7 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
             p1: camera.convert_to_screen_coordinates(rectangle.p1),
             p2: camera.convert_to_screen_coordinates(rectangle.p2),
         };
-        self.screen_painter.draw_rectangle(rect, stroke);
+        self.screen_painter.draw_rectangle(rect, stroke.with_scaled_thickness(camera.zoom));
     }
     
     pub fn draw_rectangle_filled(&mut self, rectangle: Rectangle, color: Color, stroke: Option<Stroke>, camera: &Camera) {
@@ -191,7 +199,7 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
             p1: camera.convert_to_screen_coordinates(rectangle.p1),
             p2: camera.convert_to_screen_coordinates(rectangle.p2),
         };
-        self.screen_painter.draw_rectangle_filled(rect, color, stroke);
+        self.screen_painter.draw_rectangle_filled(rect, color, stroke.map(|s| s.with_scaled_thickness(camera.zoom)));
     }
 
     pub fn load_image(&mut self, name: &str, image: &image::DynamicImage) -> P::Texture {
