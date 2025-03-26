@@ -241,6 +241,15 @@ pub enum UserInput {
     Delete,
 }
 
+impl UserInput {
+    pub fn mouse_position(&self) -> Option<Vector2> {
+        match self {
+            Self::MouseClick { position, .. } => Some(*position),
+            Self::MouseMove { position, .. }  => Some(*position),
+            _                                 => None,
+        }
+    }
+}
 
 pub trait PaintObject<P: ScreenPainter> {
     fn update(&mut self, input: &UserInput, camera: &Camera);

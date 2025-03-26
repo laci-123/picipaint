@@ -16,16 +16,8 @@ pub struct FreehandCurve {
 
 impl PaintObject<EguiPainter> for FreehandCurve {
     fn update(&mut self, input: &UserInput, camera: &Camera) {
-        match input {
-            UserInput::MouseMove { position, .. } => {
-                self.mouse_pos = camera.convert_to_world_coordinates(*position);
-            },
-            UserInput::MouseClick { position, .. } => {
-                self.mouse_pos = camera.convert_to_world_coordinates(*position);
-            },
-            _ => {
-                // do nothing
-            },
+        if let Some(position) = input.mouse_position() {
+            self.mouse_pos = camera.convert_to_world_coordinates(position);
         }
     }
     
