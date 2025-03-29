@@ -54,6 +54,16 @@ impl PaintObject<EguiPainter> for FreehandCurve {
             p2: Vector2 { x: self.max_x, y: self.max_y }
         }
     }
+
+    fn shift_with(&mut self, p: Vector2) {
+        for point in self.points.iter_mut() {
+            *point = *point + p;
+        }
+        self.min_x += p.x;
+        self.min_y += p.y;
+        self.max_x += p.x;
+        self.max_y += p.y;
+    }
 }
 
 

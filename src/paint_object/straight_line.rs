@@ -38,6 +38,11 @@ impl PaintObject<EguiPainter> for StraightLine {
     fn get_bounding_rect(&self) -> Rectangle {
         Rectangle::from_points_well_ordered(self.start, self.end)
     }
+
+    fn shift_with(&mut self, p: Vector2) {
+        self.start = self.start + p;
+        self.end   = self.end + p;
+    }
 }
 
 

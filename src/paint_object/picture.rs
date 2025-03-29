@@ -44,6 +44,10 @@ impl PaintObject<EguiPainter> for Picture {
     fn get_bounding_rect(&self) -> Rectangle {
         Rectangle::from_point_and_size(self.top_left, self.image.width() as f32, self.image.height() as f32)
     }
+
+    fn shift_with(&mut self, p: Vector2) {
+        self.top_left = self.top_left + p;
+    }
 }
 
 

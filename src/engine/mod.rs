@@ -119,6 +119,13 @@ impl Rectangle {
         self.p1.x <= p.x && p.x <= self.p2.x &&
         self.p1.y <= p.y && p.y <= self.p2.y
     }
+
+    pub fn shifted_with(self, p: Vector2) -> Self {
+        Self {
+            p1: self.p1 + p,
+            p2: self.p2 + p,
+        }
+    }
 }
 
 
@@ -267,6 +274,7 @@ pub trait PaintObject<P: ScreenPainter> {
     fn set_selected(&mut self, value: bool);
     fn is_under_mouse(&self) -> bool;
     fn get_bounding_rect(&self) -> Rectangle;
+    fn shift_with(&mut self, p: Vector2);
 }
 
 
@@ -357,6 +365,8 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
             }
         }
 
+        let mut mouse_delta = None;
+
         for (i, object) in self.objects.iter_mut().enumerate() {
             object.update(&input, &self.camera);
 
@@ -376,6 +386,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
 
                 let left_click    = matches!(input, UserInput::MouseClick { button: MouseButton::Left, .. });
                 let shift_is_down = matches!(input, UserInput::MouseClick { is_shift_down: true, .. });
+
                 if left_click {
                     if object.is_under_mouse() {
                         if shift_is_down {
@@ -390,6 +401,21 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
                             object.set_selected(false);
                         }
                     }
+                }
+                else if mouse_delta.is_none() {
+                    if let UserInput::MouseMove { button: MouseButton::Left, delta, ..} = input {
+                        if object.is_under_mouse() && object.is_selected() {
+                            mouse_delta = Some(delta);
+                        }
+                    }
+                }
+            }
+        }
+
+        for object in self.objects.iter_mut() {
+            if let Some(delta) = mouse_delta {
+                if object.is_selected() {
+                    object.shift_with(delta);
                 }
             }
         }

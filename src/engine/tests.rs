@@ -70,6 +70,12 @@ impl PaintObject<MockScreenPainter> for FakePaintObject {
     fn get_bounding_rect(&self) -> Rectangle {
         self.bounding_rect
     }
+
+    fn shift_with(&mut self, p: Vector2) {
+        self.bounding_rect = self.bounding_rect.shifted_with(p);
+        self.p1 = self.p1.map(|p1| p1 + p);
+        self.p2 = self.p1.map(|p2| p2 + p);
+    }
 }
 
 
@@ -1054,4 +1060,99 @@ fn delete_input_deletes_all_selected_objects() {
 
     engine.update(UserInput::Delete, STROKE, BG_COLOR, view_width, view_height);
     engine.draw(&mut painter);
+}
+
+#[test]
+fn moving_single_selected_object() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
+
+    let object1_rectangle = Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } };
+    let object1 = FakePaintObject {
+        bounding_rect: object1_rectangle,
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2_rectangle = Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } };
+    let object2 = FakePaintObject {
+        bounding_rect: object2_rectangle,
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    let select_object1 = UserInput::MouseClick {
+        position: Vector2 { x: 5.0, y: 5.0 },
+        button: MouseButton::Left,
+        is_shift_down: false
+    };
+    engine.update(select_object1, STROKE, BG_COLOR, view_width, view_height);
+
+    // control check: both objects are still where we put them
+    assert_eq!(engine.objects[0].get_bounding_rect(), object1_rectangle);
+    assert_eq!(engine.objects[1].get_bounding_rect(), object2_rectangle);
+
+    let move_object1 = UserInput::MouseMove {
+        position: Vector2 { x: 7.0, y: 7.0 },
+        delta: Vector2 { x: 2.0, y: 2.0 },
+        button: MouseButton::Left,
+        is_shift_down: false
+    };
+    engine.update(move_object1, STROKE, BG_COLOR, view_width, view_height);
+
+    // object1 moved (but object2 didn't)
+    assert_eq!(engine.objects[0].get_bounding_rect(), object1_rectangle.shifted_with(Vector2 { x: 2.0, y: 2.0 }));
+    assert_eq!(engine.objects[1].get_bounding_rect(), object2_rectangle);
+
+    // object1 is still selected after being moved
+    assert!(engine.objects[0].is_selected());
+}
+
+#[test]
+fn moving_multiple_selected_objects() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
+
+    let object1_rectangle = Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } };
+    let object1 = FakePaintObject {
+        bounding_rect: object1_rectangle,
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object1));
+
+    let object2_rectangle = Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } };
+    let object2 = FakePaintObject {
+        bounding_rect: object2_rectangle,
+        ..Default::default()
+    };
+    engine.objects.push(Box::new(object2));
+
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR, view_width, view_height);
+
+    // control check: both objects are still where we put them
+    assert_eq!(engine.objects[0].get_bounding_rect(), object1_rectangle);
+    assert_eq!(engine.objects[1].get_bounding_rect(), object2_rectangle);
+
+    // We are moving object1 with the mouse, but because both objects are selected, both of them should move.
+    let move_object1 = UserInput::MouseMove {
+        position: Vector2 { x: 7.0, y: 7.0 },
+        delta: Vector2 { x: 2.0, y: 2.0 },
+        button: MouseButton::Left,
+        is_shift_down: false
+    };
+    engine.update(move_object1, STROKE, BG_COLOR, view_width, view_height);
+
+    // object1 and object2 moved
+    assert_eq!(engine.objects[0].get_bounding_rect(), object1_rectangle.shifted_with(Vector2 { x: 2.0, y: 2.0 }));
+    assert_eq!(engine.objects[1].get_bounding_rect(), object2_rectangle.shifted_with(Vector2 { x: 2.0, y: 2.0 }));
+
+    // both objects are still selected after being moved
+    assert!(engine.objects[0].is_selected());
+    assert!(engine.objects[1].is_selected());
 }
