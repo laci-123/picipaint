@@ -71,6 +71,26 @@ impl From<engine::Vector2> for egui::Pos2 {
 }
 
 
+impl From<egui::Pos2> for engine::Vector2 {
+    fn from(other: egui::Pos2) -> engine::Vector2 {
+        engine::Vector2 {
+            x: other.x,
+            y: other.y,
+        }
+    }
+}
+
+
+impl From<egui::Vec2> for engine::Vector2 {
+    fn from(other: egui::Vec2) -> engine::Vector2 {
+        engine::Vector2 {
+            x: other.x,
+            y: other.y,
+        }
+    }
+}
+
+
 impl From<engine::Color> for egui::Color32 {
     fn from(other: engine::Color) -> egui::Color32 {
         egui::Color32::from_rgba_premultiplied(other.red, other.green, other.blue, other.alpha)

@@ -89,7 +89,7 @@ impl Default for FreehandCurveTool {
 impl Tool<EguiPainter, egui::ImageSource<'static>> for FreehandCurveTool {
     fn update(&mut self, input: &UserInput, stroke: Stroke, camera: &Camera) -> Result<Option<Box<dyn PaintObject<EguiPainter>>>, String> {
         self.curve.stroke = Some(stroke);
-        if let UserInput::MouseMove { position, button: MouseButton::Left, is_shift_down: false } = input {
+        if let UserInput::MouseMove { position, button: MouseButton::Left, is_shift_down: false, .. } = input {
             let p = camera.convert_to_world_coordinates(*position);
             let last_point = self.curve.points.last();
             if last_point.is_none() || last_point.is_some_and(|lp| *lp != p) {

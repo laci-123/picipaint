@@ -235,6 +235,7 @@ pub enum UserInput {
     },
     MouseMove {
         position: Vector2,
+        delta: Vector2,
         button: MouseButton,
         is_shift_down: bool,
     },

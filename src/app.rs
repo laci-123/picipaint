@@ -3,7 +3,7 @@ use crate::color_selector::ColorSelector;
 use crate::engine::*;
 use crate::floating_window::FloatingWindow;
 use crate::paint_object::{freehand_curve::*, straight_line::*, picture::*};
-use crate::egui_painter::EguiPainter;
+use crate::egui_painter::*;
 
 
 pub const WINDOW_INIT_SIZE: Vec2 = Vec2::new(1000.0, 600.0);
@@ -128,31 +128,56 @@ fn map_user_input(response: &egui::Response, ui: &egui::Ui) -> UserInput {
     }
     if response.clicked_by(egui::PointerButton::Primary) {
         if let Some(position) = response.interact_pointer_pos() {
-            return UserInput::MouseClick { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Left, is_shift_down };
+            return UserInput::MouseClick {
+                position: Vector2::from(position),
+                button: MouseButton::Left,
+                is_shift_down
+            };
         }
     }
     if response.clicked_by(egui::PointerButton::Secondary) {
         if let Some(position) = response.interact_pointer_pos() {
-            return UserInput::MouseClick { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Right, is_shift_down };
+            return UserInput::MouseClick {
+                position: Vector2::from(position),
+                button: MouseButton::Right,
+                is_shift_down
+            };
         }
     }
     if response.dragged_by(egui::PointerButton::Primary) {
         if let Some(position) = response.interact_pointer_pos() {
-            return UserInput::MouseMove { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Left, is_shift_down };
+            return UserInput::MouseMove {
+                position: Vector2::from(position),
+                delta: Vector2::from(response.drag_delta()),
+                button: MouseButton::Left,
+                is_shift_down
+            };
         }
     }
     if response.dragged_by(egui::PointerButton::Secondary) {
         if let Some(position) = response.interact_pointer_pos() {
-            return UserInput::MouseMove { position: Vector2{x: position.x, y: position.y}, button: MouseButton::Right, is_shift_down };
+            return UserInput::MouseMove {
+                position: Vector2::from(position),
+                delta: Vector2::from(response.drag_delta()),
+                button: MouseButton::Right,
+                is_shift_down
+            };
         }
     }
     if response.dragged_by(egui::PointerButton::Middle) {
         let delta = response.drag_delta();
-        return UserInput::Pan { delta: Vector2 {x: -1.0 * delta.x, y: -1.0 * delta.y } };
+        return UserInput::Pan {
+            delta: Vector2 {x: -1.0 * delta.x, y: -1.0 * delta.y }
+        };
     }
     if response.hovered() {
         if let Some(position) = response.hover_pos() {
-            return UserInput::MouseMove { position: Vector2{x: position.x, y: position.y}, button: MouseButton::None, is_shift_down };
+            return UserInput::MouseMove {
+                position: Vector2::from(position),
+                delta: Vector2::from(response.drag_delta()),
+                button: MouseButton::None,
+                is_shift_down
+            };
         }
     }
     return UserInput::Nothing;
