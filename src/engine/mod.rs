@@ -331,6 +331,10 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
             background_color: Color::from_rgb(0, 0, 0),
         }
     }
+
+    pub fn add_object(&mut self, object: impl PaintObject<P> + 'static) {
+        self.objects.push(Box::new(object));
+    }
     
     pub fn update(&mut self, input: UserInput, stroke: Stroke, background_color: Color, view_width: f32, view_height: f32) -> Result<(), String> {
         self.background_color = background_color;

@@ -15,6 +15,52 @@ pub struct Picture {
     selected: bool,
 }
 
+impl Picture {
+    // OK(Some(picture)): the dropped file is a supported picture and we could read it sucessfully
+    // OK(None):          the dropped file is not a picture in a supported format
+    // Err(...):          the dropeed file is a supported picture but we could not read it because of some other reason
+    pub fn from_dropped_file(dropped_file: &egui::DroppedFile) -> Result<Option<Self>, String> {
+        let Some(file_path) = &dropped_file.path else {
+            // This should never happen, `path` should only be `None` on the Wasm backend.
+            return Err(format!("Error accessing dropped file. "));
+        };
+
+        let Some(file_extension) = file_path.extension() else {
+            // We don't try to guess the format if the file doesn't have an extension,
+            // just assume it isn't a supported image format.
+            return Ok(None);
+        };
+
+        let mut format_is_supported = false;
+        for format in image::ImageFormat::all() {
+            if format.can_read() {
+                for ext in format.extensions_str() {
+                    if *ext == file_extension.to_string_lossy() {
+                        format_is_supported = true;
+                    }
+                }
+            }
+        }
+        if !format_is_supported {
+            return Ok(None);
+        }
+
+        let image = image::ImageReader::open(&file_path)
+                            .map_err(|err| err.to_string())?
+                            .decode()
+                            .map_err(|err| err.to_string())?;
+
+        Ok(Some(Picture {
+            top_left: Vector2::zero(),
+            image,
+            image_name: file_path.to_string_lossy().into_owned(),
+            texture: OnceCell::new(),
+            mouse_pos: Vector2::zero(),
+            selected: false,
+        }))
+    }
+}
+
 impl PaintObject<EguiPainter> for Picture {
     fn update(&mut self, input: &UserInput, camera: &Camera) {
         if let Some(position) = input.mouse_position() {

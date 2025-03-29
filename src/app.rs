@@ -44,6 +44,30 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         ctx.set_pixels_per_point(UI_SCALE);
 
+        let dropped_pictures = ctx.input(|input| {
+            let mut pictures = Vec::new();
+            for dropped_file in input.raw.dropped_files.iter() {
+                match Picture::from_dropped_file(dropped_file) {
+                    Ok(Some(picture)) => pictures.push(picture),
+                    Ok(None)          => {/*skip*/},
+                    Err(error_msg)    => return Err(error_msg),
+                }
+            }
+            return Ok(pictures);
+        });
+
+        match dropped_pictures {
+            Ok(pictures) => {
+                for picture in pictures {
+                    self.engine.add_object(picture);
+                }
+            },
+            Err(error_msg) => {
+                self.error_msg = error_msg;
+                self.error_window.is_open = true;
+            },
+        }
+
         egui::CentralPanel::default().show(ctx, |ui| {
             let modal_dialog_is_open = self.error_window.is_open || self.bg_color_selector.window.is_open || self.fg_color_selector.window.is_open;
             if modal_dialog_is_open {
