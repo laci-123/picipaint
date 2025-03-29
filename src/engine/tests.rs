@@ -212,6 +212,25 @@ fn only_the_selected_tool_is_used() {
     engine.draw(&mut painter);
 }
 
+#[test]
+fn select_all_input_deactivates_all_tools() {
+    let tools = Vec::new();
+    let view_width = 1000.0;
+    let view_height = 1000.0;
+    let mut engine = Engine::<MockScreenPainter, FakeIconType>::new(tools);
+    engine.camera.position = Vector2{ x: view_width / 2.0, y: view_height / 2.0 };
+
+    let mut tool0 = MockTool::new();
+    tool0.expect_update().returning(|_, _, _| Ok(None));
+    tool0.expect_draw().return_const(());
+    engine.tools.push(Box::new(tool0));
+
+    engine.select_tool(Some(0));
+
+    assert_eq!(engine.selected_tool_index, Some(0));
+    engine.update(UserInput::SelectAll, STROKE, BG_COLOR, view_width, view_height);
+    assert_eq!(engine.selected_tool_index, None);
+}
 
 
 #[test]

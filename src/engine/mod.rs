@@ -365,6 +365,10 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
             }
         }
 
+        if input == UserInput::SelectAll {
+            self.select_tool(None);
+        }
+
         let mut mouse_delta = None;
 
         for (i, object) in self.objects.iter_mut().enumerate() {
