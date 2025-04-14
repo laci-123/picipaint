@@ -169,7 +169,7 @@ impl Rectangle {
             new_p1 = Vector2 { x: self.p1.x + drag_delta.x, y: self.p1.y};
             new_p2 = Vector2 { x: self.p2.x,                y: self.p2.y + drag_delta.y};
         }
-        else if is_dragged(Vector2 { x: self.p1.x, y: self.p2.y }, drag_start, vertex_radius) {
+        else if is_dragged(Vector2 { x: self.p2.x, y: self.p1.y }, drag_start, vertex_radius) {
             // o------X
             // |      |
             // o------o
