@@ -45,11 +45,12 @@ impl eframe::App for App {
         ctx.set_pixels_per_point(UI_SCALE);
 
         let dropped_pictures = ctx.input(|input| {
+            let offset = Vector2 { x: 10.0, y: 10.0 };
             let mut pictures = Vec::new();
-            for dropped_file in input.raw.dropped_files.iter() {
-                match Picture::from_dropped_file(dropped_file) {
+            for (i, dropped_file) in input.raw.dropped_files.iter().enumerate() {
+                match Picture::from_dropped_file(dropped_file, offset * (i as f32)) {
                     Ok(Some(picture)) => pictures.push(picture),
-                    Ok(None)          => {/*skip*/},
+                    Ok(None)          => {/*This isn't a picture, just skip it*/},
                     Err(error_msg)    => return Err(error_msg),
                 }
             }

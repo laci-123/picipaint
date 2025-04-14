@@ -19,7 +19,7 @@ impl Picture {
     // OK(Some(picture)): the dropped file is a supported picture and we could read it sucessfully
     // OK(None):          the dropped file is not a picture in a supported format
     // Err(...):          the dropeed file is a supported picture but we could not read it because of some other reason
-    pub fn from_dropped_file(dropped_file: &egui::DroppedFile) -> Result<Option<Self>, String> {
+    pub fn from_dropped_file(dropped_file: &egui::DroppedFile, top_left: Vector2) -> Result<Option<Self>, String> {
         let Some(file_path) = &dropped_file.path else {
             // This should never happen, `path` should only be `None` on the Wasm backend.
             return Err(format!("Error accessing dropped file. "));
@@ -51,7 +51,7 @@ impl Picture {
                             .map_err(|err| err.to_string())?;
 
         Ok(Some(Picture {
-            bounding_rect: Rectangle::from_point_and_size(Vector2::zero(), image.width() as f32, image.height() as f32),
+            bounding_rect: Rectangle::from_point_and_size(top_left, image.width() as f32, image.height() as f32),
             image,
             image_name: file_path.to_string_lossy().into_owned(),
             texture: OnceCell::new(),
