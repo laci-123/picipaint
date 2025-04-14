@@ -126,6 +126,13 @@ impl Rectangle {
             p2: self.p2 + p,
         }
     }
+
+    pub fn vertices(&self) -> [Vector2; 4] {
+        [self.p1,
+         Vector2 { x: self.p2.x, y: self.p1.y },
+         self.p2,
+         Vector2 { x: self.p1.x, y: self.p2.y }]
+    }
 }
 
 
@@ -444,14 +451,18 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
             let mut world_painter = WorldPainter { screen_painter };
             object.draw(&mut world_painter, &self.camera);
             if object.is_selected() {
-                // Not using world painter so that the thickness of the selection marker
+                // Not using world painter so that the thickness of the selection markers
                 // won't change with zoom level.
                 let world_rect = object.get_bounding_rect();
                 let screen_rect = Rectangle {
                     p1: self.camera.convert_to_screen_coordinates(world_rect.p1),
                     p2: self.camera.convert_to_screen_coordinates(world_rect.p2),
                 };
-                screen_painter.draw_rectangle(screen_rect, Stroke { color: Color::from_rgb(255, 255, 255), thickness: 1.0 });
+                let selection_marker_color = Color::from_rgb(255, 255, 255);
+                screen_painter.draw_rectangle(screen_rect, Stroke { color: selection_marker_color, thickness: 1.0 });
+                for vertex in screen_rect.vertices() {
+                    screen_painter.draw_circle(vertex, 5.0, Stroke { color: selection_marker_color, thickness: 1.0 });
+                }
             }
         }
 

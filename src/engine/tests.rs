@@ -955,10 +955,30 @@ fn selection_marker_around_selected_object() {
 
     let mut painter = MockScreenPainter::new();
     painter.expect_draw_rectangle_filled().return_const(()); // background color
-    // There should be a rectangle drawn around the selected object.
+    // There should be a rectangle with circles on each of its vertices drawn around the selected object:
+    // o--------o
+    // |        |
+    // |        |
+    // o--------o
     painter.expect_draw_rectangle()
            .once()
            .with(predicate::eq(Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } }), predicate::always())
+           .return_const(());
+    painter.expect_draw_circle()
+           .once()
+           .with(predicate::eq(Vector2 { x: 0.0, y: 0.0 }), predicate::always(), predicate::always())
+           .return_const(());
+    painter.expect_draw_circle()
+           .once()
+           .with(predicate::eq(Vector2 { x: 10.0, y: 0.0 }), predicate::always(), predicate::always())
+           .return_const(());
+    painter.expect_draw_circle()
+           .once()
+           .with(predicate::eq(Vector2 { x: 10.0, y: 10.0 }), predicate::always(), predicate::always())
+           .return_const(());
+    painter.expect_draw_circle()
+           .once()
+           .with(predicate::eq(Vector2 { x: 0.0, y: 10.0 }), predicate::always(), predicate::always())
            .return_const(());
 
     // select object #1
@@ -991,14 +1011,51 @@ fn selection_markers_with_multiple_selected_objects() {
 
     let mut painter = MockScreenPainter::new();
     painter.expect_draw_rectangle_filled().return_const(()); // background color
-    // There should be a rectangle drawn around each selected object.
+    // There should be a rectangle with circles on each of its vertices drawn around each selected object:
+    // o--------o
+    // |        |
+    // |        |
+    // o--------o
     painter.expect_draw_rectangle()
            .once()
            .with(predicate::eq(Rectangle { p1: Vector2 { x: 0.0, y: 0.0 }, p2: Vector2 { x: 10.0, y: 10.0 } }), predicate::always())
            .return_const(());
+    painter.expect_draw_circle()
+           .once()
+           .with(predicate::eq(Vector2 { x: 0.0, y: 0.0 }), predicate::always(), predicate::always())
+           .return_const(());
+    painter.expect_draw_circle()
+           .once()
+           .with(predicate::eq(Vector2 { x: 10.0, y: 0.0 }), predicate::always(), predicate::always())
+           .return_const(());
+    painter.expect_draw_circle()
+           .once()
+           .with(predicate::eq(Vector2 { x: 10.0, y: 10.0 }), predicate::always(), predicate::always())
+           .return_const(());
+    painter.expect_draw_circle()
+           .once()
+           .with(predicate::eq(Vector2 { x: 0.0, y: 10.0 }), predicate::always(), predicate::always())
+           .return_const(());
+
     painter.expect_draw_rectangle()
            .once()
            .with(predicate::eq(Rectangle { p1: Vector2 { x: 10.0, y: 10.0 }, p2: Vector2 { x: 20.0, y: 20.0 } }), predicate::always())
+           .return_const(());
+    painter.expect_draw_circle()
+           .once()
+           .with(predicate::eq(Vector2 { x: 10.0, y: 10.0 }), predicate::always(), predicate::always())
+           .return_const(());
+    painter.expect_draw_circle()
+           .once()
+           .with(predicate::eq(Vector2 { x: 20.0, y: 10.0 }), predicate::always(), predicate::always())
+           .return_const(());
+    painter.expect_draw_circle()
+           .once()
+           .with(predicate::eq(Vector2 { x: 20.0, y: 20.0 }), predicate::always(), predicate::always())
+           .return_const(());
+    painter.expect_draw_circle()
+           .once()
+           .with(predicate::eq(Vector2 { x: 10.0, y: 20.0 }), predicate::always(), predicate::always())
            .return_const(());
 
     engine.update(UserInput::SelectAll, STROKE, BG_COLOR, view_width, view_height);
@@ -1066,19 +1123,11 @@ fn delete_input_deletes_all_selected_objects() {
     };
     engine.objects.push(Box::new(object2));
 
-    let mut painter = MockScreenPainter::new();
-    painter.expect_draw_rectangle_filled().return_const(()); // background color
-    painter.expect_draw_rectangle().return_const(()); // selection markers
-    // draw a circle for each object before the delete input but not after it
-    painter.expect_draw_circle()
-           .times(2)
-           .return_const(());
-
     engine.update(UserInput::SelectAll, STROKE, BG_COLOR, view_width, view_height);
-    engine.draw(&mut painter);
+    assert_eq!(engine.objects.len(), 2);
 
     engine.update(UserInput::Delete, STROKE, BG_COLOR, view_width, view_height);
-    engine.draw(&mut painter);
+    assert_eq!(engine.objects.len(), 0);
 }
 
 #[test]
