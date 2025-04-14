@@ -104,41 +104,70 @@ impl PaintObject<EguiPainter> for Picture {
 
 pub struct PictureTool {
     icon: egui::ImageSource<'static>,
+    p1: Option<Vector2>,
+    p2: Option<Vector2>,
 }
 
 impl Default for PictureTool {
     fn default() -> Self {
         Self {
             icon: egui::include_image!("../../img/picture_tool.png"),
+            p1: None,
+            p2: None,
         }
     }
 }
 
 impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
     fn update(&mut self, input: &UserInput, _stroke: Stroke, camera: &Camera) -> Result<Option<Box<dyn PaintObject<EguiPainter>>>, String> {
-        if let UserInput::MouseClick { position, .. } = input {
-            if let Some(file_path) = FileDialog::new().add_filter("png images", &["png"]).pick_file() {
-                let image = image::ImageReader::open(&file_path)
-                                 .map_err(|err| err.to_string())?
-                                 .decode()
-                                 .map_err(|err| err.to_string())?;
-                let pos   = camera.convert_to_world_coordinates(*position);
-                return Ok(Some(Box::new(Picture {
-                    bounding_rect: Rectangle::from_point_and_size(pos, image.width() as f32, image.height() as f32),
-                    image,
-                    image_name: file_path.to_string_lossy().into_owned(),
-                    texture: OnceCell::new(),
-                    mouse_pos: pos,
-                    selected: false,
-                })));
-            }
+        match input {
+            UserInput::MouseClick { position, .. } => {
+                if let Some((image, image_name)) = image_from_open_file_dialog()? {
+                    let pos = camera.convert_to_world_coordinates(*position);
+                    return Ok(Some(Box::new(Picture {
+                        bounding_rect: Rectangle::from_point_and_size(pos, image.width() as f32, image.height() as f32),
+                        image,
+                        image_name,
+                        texture: OnceCell::new(),
+                        mouse_pos: pos,
+                        selected: false,
+                    })));
+                }
+            },
+            UserInput::MouseMove { button: MouseButton::Left, position, .. } => {
+                if self.p1.is_none() {
+                    self.p1 = Some(camera.convert_to_world_coordinates(*position));
+                }
+                else {
+                    self.p2 = Some(camera.convert_to_world_coordinates(*position));
+                }
+            },
+            UserInput::MouseMove { button: MouseButton::None, .. } => {
+                if let (Some(p1), Some(p2)) = (self.p1, self.p2) {
+                    if let Some((image, image_name)) = image_from_open_file_dialog()? {
+                        self.p1 = None;
+                        self.p2 = None;
+                        return Ok(Some(Box::new(Picture {
+                            bounding_rect: Rectangle { p1, p2 },
+                            image,
+                            image_name,
+                            texture: OnceCell::new(),
+                            mouse_pos: p2,
+                            selected: false,
+                        })));
+                    }
+                }
+            },
+            _ => {},
         }
 
         return Ok(None);
     }
     
-    fn draw<'a>(&self, _painter: &mut WorldPainter<'a, EguiPainter>, _camera: &Camera) {
-        // nothing
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
+        if let (Some(p1), Some(p2)) = (self.p1, self.p2) {
+            painter.draw_rectangle(Rectangle { p1, p2 }, Stroke { color: Color::from_rgb(255, 255, 255), thickness: 1.0 }, camera);
+        }
     }
     
     fn display_name(&self) -> &str {
@@ -147,5 +176,18 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
 
     fn icon(&self) -> egui::ImageSource<'static> {
         self.icon.clone()
+    }
+}
+
+fn image_from_open_file_dialog() -> Result<Option<(image::DynamicImage, String)>, String> {
+    if let Some(file_path) = FileDialog::new().add_filter("png images", &["png"]).pick_file() {
+        let image = image::ImageReader::open(&file_path)
+                        .map_err(|err| err.to_string())?
+                        .decode()
+                        .map_err(|err| err.to_string())?;
+        Ok(Some((image, file_path.to_string_lossy().into_owned())))
+    }
+    else {
+        Ok(None)
     }
 }
