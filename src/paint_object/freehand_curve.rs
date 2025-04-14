@@ -68,11 +68,8 @@ impl PaintObject<EguiPainter> for FreehandCurve {
     fn resize_to(&mut self, new_size: Rectangle) {
         let old_size = self.get_bounding_rect();
         for point in self.points.iter_mut() {
-            //from [(a,b)-(c,d)] to [(e,f)-(g,h)]
-            //x' = e + (x - a) * (g - e) / (c - a);
-            //y' = f + (y - b) * (h - f) / (d - b);
-            point.x = new_size.p2.x + (point.x - old_size.p1.x) * (new_size.p2.x - new_size.p1.x) / (old_size.p2.x - old_size.p1.x);
-            point.y = new_size.p2.y + (point.y - old_size.p1.y) * (new_size.p2.y - new_size.p1.y) / (old_size.p2.y - old_size.p1.y);
+            point.x = new_size.p1.x + (point.x - old_size.p1.x) * (new_size.p2.x - new_size.p1.x) / (old_size.p2.x - old_size.p1.x);
+            point.y = new_size.p1.y + (point.y - old_size.p1.y) * (new_size.p2.y - new_size.p1.y) / (old_size.p2.y - old_size.p1.y);
         }
 
         self.min_x = new_size.p1.x;

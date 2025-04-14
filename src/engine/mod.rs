@@ -495,7 +495,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         for object in self.objects.iter_mut() {
             if let (Some(delta), Some(position)) = (input.mouse_delta(), input.mouse_position()) {
                 if object.is_selected() {
-                    if let Some(new_size) = object.get_bounding_rect().resize_by_dragging_vertex(self.camera.convert_to_world_coordinates(position), delta, 10.0) {
+                    if let Some(new_size) = object.get_bounding_rect().resize_by_dragging_vertex(self.camera.convert_to_world_coordinates(position), delta, 40.0) {
                         object.resize_to(new_size);
                     }
                     else if self.objects_are_dragged {
