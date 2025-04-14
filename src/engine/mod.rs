@@ -484,7 +484,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
                         object.resize_to(new_size);
                     }
                     else {
-                        object.shift_with(delta);
+                        object.shift_with(delta * (1.0 / self.camera.zoom));
                     }
                 }
             }
