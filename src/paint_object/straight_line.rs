@@ -43,6 +43,11 @@ impl PaintObject<EguiPainter> for StraightLine {
         self.start = self.start + p;
         self.end   = self.end + p;
     }
+
+    fn resize_to(&mut self, new_size: Rectangle) {
+        self.start = new_size.p1;
+        self.end = new_size.p2;
+    }
 }
 
 

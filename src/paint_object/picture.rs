@@ -7,7 +7,7 @@ use crate::engine::*;
 
 
 pub struct Picture {
-    top_left: Vector2,
+    bounding_rect: Rectangle,
     image: image::DynamicImage,
     image_name: String,
     texture: OnceCell<egui::TextureHandle>,
@@ -51,7 +51,7 @@ impl Picture {
                             .map_err(|err| err.to_string())?;
 
         Ok(Some(Picture {
-            top_left: Vector2::zero(),
+            bounding_rect: Rectangle::from_point_and_size(Vector2::zero(), image.width() as f32, image.height() as f32),
             image,
             image_name: file_path.to_string_lossy().into_owned(),
             texture: OnceCell::new(),
@@ -72,7 +72,7 @@ impl PaintObject<EguiPainter> for Picture {
         let texture = self.texture.get_or_init(|| {
             painter.load_image(&self.image_name, &self.image)
         });
-        painter.draw_image(self.get_bounding_rect(), texture, camera);
+        painter.draw_image(self.bounding_rect, texture, camera);
     }
     
     fn is_selected(&self) -> bool {
@@ -88,11 +88,16 @@ impl PaintObject<EguiPainter> for Picture {
     }
     
     fn get_bounding_rect(&self) -> Rectangle {
-        Rectangle::from_point_and_size(self.top_left, self.image.width() as f32, self.image.height() as f32)
+        self.bounding_rect
     }
 
     fn shift_with(&mut self, p: Vector2) {
-        self.top_left = self.top_left + p;
+        self.bounding_rect.p1 += p;
+        self.bounding_rect.p2 += p;
+    }
+
+    fn resize_to(&mut self, new_size: Rectangle) {
+        self.bounding_rect = new_size;
     }
 }
 
@@ -119,7 +124,7 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
                                  .map_err(|err| err.to_string())?;
                 let pos   = camera.convert_to_world_coordinates(*position);
                 return Ok(Some(Box::new(Picture {
-                    top_left: pos,
+                    bounding_rect: Rectangle::from_point_and_size(pos, image.width() as f32, image.height() as f32),
                     image,
                     image_name: file_path.to_string_lossy().into_owned(),
                     texture: OnceCell::new(),

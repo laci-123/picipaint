@@ -140,6 +140,48 @@ impl Rectangle {
          self.p2,
          Vector2 { x: self.p1.x, y: self.p2.y }]
     }
+
+    fn resize_by_dragging_vertex(&self, drag_start: Vector2, drag_delta: Vector2, vertex_radius: f32) -> Option<Self> {
+        fn is_dragged(vertex: Vector2, drag_start: Vector2, vertex_radius: f32) -> bool {
+            (vertex - drag_start).length_squared() < vertex_radius * vertex_radius
+        }
+
+        let new_p1;
+        let new_p2;
+        if is_dragged(self.p1, drag_start, vertex_radius) {
+            // X------o
+            // |      |
+            // o------o
+            new_p1 = self.p1 + drag_delta;
+            new_p2 = self.p2;
+        }
+        else if is_dragged(self.p2, drag_start, vertex_radius) {
+            // o------o
+            // |      |
+            // o------X
+            new_p1 = self.p1;
+            new_p2 = self.p2 + drag_delta;
+        }
+        else if is_dragged(Vector2 { x: self.p1.x, y: self.p2.y }, drag_start, vertex_radius) {
+            // o------o
+            // |      |
+            // X------o
+            new_p1 = Vector2 { x: self.p1.x + drag_delta.x, y: self.p1.y};
+            new_p2 = Vector2 { x: self.p2.x,                y: self.p2.y + drag_delta.y};
+        }
+        else if is_dragged(Vector2 { x: self.p1.x, y: self.p2.y }, drag_start, vertex_radius) {
+            // o------X
+            // |      |
+            // o------o
+            new_p1 = Vector2 { x: self.p1.x,                y: self.p1.y + drag_delta.y};
+            new_p2 = Vector2 { x: self.p2.x + drag_delta.x, y: self.p2.y};
+        }
+        else {
+            return None;
+        }
+        
+        Some(Self { p1: new_p1, p2: new_p2 })
+    }
 }
 
 
@@ -289,6 +331,7 @@ pub trait PaintObject<P: ScreenPainter> {
     fn is_under_mouse(&self) -> bool;
     fn get_bounding_rect(&self) -> Rectangle;
     fn shift_with(&mut self, p: Vector2);
+    fn resize_to(&mut self, new_size: Rectangle);
 }
 
 
@@ -435,9 +478,14 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         }
 
         for object in self.objects.iter_mut() {
-            if let Some(delta) = mouse_delta {
+            if let (Some(delta), Some(position)) = (mouse_delta, input.mouse_position()) {
                 if object.is_selected() {
-                    object.shift_with(delta);
+                    if let Some(new_size) = object.get_bounding_rect().resize_by_dragging_vertex(self.camera.convert_to_world_coordinates(position), delta, 10.0) {
+                        object.resize_to(new_size);
+                    }
+                    else {
+                        object.shift_with(delta);
+                    }
                 }
             }
         }
