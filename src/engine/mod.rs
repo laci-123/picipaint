@@ -97,6 +97,14 @@ impl Camera {
 }
 
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum RectangleVertex {
+    TopLeft,
+    TopRight,
+    BottomLeft,
+    BottomRight,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Rectangle {
     pub p1: Vector2,
@@ -141,46 +149,71 @@ impl Rectangle {
          Vector2 { x: self.p1.x, y: self.p2.y }]
     }
 
-    fn resize_by_dragging_vertex(&self, drag_start: Vector2, drag_delta: Vector2, vertex_radius: f32) -> Option<Self> {
-        fn is_dragged(vertex: Vector2, drag_start: Vector2, vertex_radius: f32) -> bool {
-            (vertex - drag_start).length_squared() < vertex_radius * vertex_radius
+    fn vertex_under_point(&self, point: Vector2, radius: f32) -> Option<RectangleVertex> {
+        fn is_under_point(vertex: Vector2, point: Vector2, radius: f32) -> bool {
+            (vertex - point).length_squared() < radius * radius
         }
 
-        let new_p1;
-        let new_p2;
-        if is_dragged(self.p1, drag_start, vertex_radius) {
-            // X------o
-            // |      |
-            // o------o
-            new_p1 = self.p1 + drag_delta;
-            new_p2 = self.p2;
+        use RectangleVertex::*;
+        
+        if is_under_point(self.p1, point, radius) {
+            Some(TopLeft)
         }
-        else if is_dragged(self.p2, drag_start, vertex_radius) {
-            // o------o
-            // |      |
-            // o------X
-            new_p1 = self.p1;
-            new_p2 = self.p2 + drag_delta;
+        else if is_under_point(self.p2, point, radius) {
+            Some(BottomRight)
         }
-        else if is_dragged(Vector2 { x: self.p1.x, y: self.p2.y }, drag_start, vertex_radius) {
-            // o------o
-            // |      |
-            // X------o
-            new_p1 = Vector2 { x: self.p1.x + drag_delta.x, y: self.p1.y};
-            new_p2 = Vector2 { x: self.p2.x,                y: self.p2.y + drag_delta.y};
+        else if is_under_point(Vector2 { x: self.p2.x, y: self.p1.y }, point, radius) {
+            Some(TopRight)
         }
-        else if is_dragged(Vector2 { x: self.p2.x, y: self.p1.y }, drag_start, vertex_radius) {
-            // o------X
-            // |      |
-            // o------o
-            new_p1 = Vector2 { x: self.p1.x,                y: self.p1.y + drag_delta.y};
-            new_p2 = Vector2 { x: self.p2.x + drag_delta.x, y: self.p2.y};
+        else if is_under_point(Vector2 { x: self.p1.x, y: self.p2.y }, point, radius) {
+            Some(BottomLeft)
         }
         else {
-            return None;
+            None
         }
-        
-        Some(Self { p1: new_p1, p2: new_p2 })
+    }
+
+    fn resize_by_dragging_vertex(&self, vertex: RectangleVertex, drag_delta: Vector2) -> Self {
+        use RectangleVertex::*;
+
+        match vertex {
+            TopLeft => {
+                Self {
+                    p1: self.p1 + drag_delta,
+                    p2: self.p2,
+                }
+            },
+            TopRight => {
+                Self {
+                    p1: Vector2 {
+                        x: self.p1.x,
+                        y: self.p1.y + drag_delta.y,
+                    },
+                    p2: Vector2 {
+                        x: self.p2.x + drag_delta.x,
+                        y: self.p2.y,
+                    },
+                }
+            },
+            BottomLeft => {
+                Self {
+                    p1: Vector2 {
+                        x: self.p1.x + drag_delta.x,
+                        y: self.p1.y,
+                    },
+                    p2: Vector2 {
+                        x: self.p2.x,
+                        y: self.p2.y + drag_delta.y,
+                    },
+                }
+            },
+            BottomRight => {
+                Self {
+                    p1: self.p1,
+                    p2: self.p2 + drag_delta,
+                }
+            },
+        }
     }
 }
 
@@ -390,6 +423,7 @@ pub struct Engine<P: ScreenPainter, IconType> {
     camera: Camera,
     background_color: Color,
     objects_are_dragged: bool,
+    object_is_resized_by_vertex: Option<RectangleVertex>,
 }
 
 impl<P: ScreenPainter, IconType> Engine<P, IconType> {
@@ -404,6 +438,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
             camera: Camera::default(),
             background_color: Color::from_rgb(0, 0, 0),
             objects_are_dragged: false,
+            object_is_resized_by_vertex: None,
         }
     }
 
@@ -449,6 +484,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         }
         if input.mouse_is_up() {
             self.objects_are_dragged = false;
+            self.object_is_resized_by_vertex = None;
         }
 
         for (i, object) in self.objects.iter_mut().enumerate() {
@@ -493,14 +529,18 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         }
 
         for object in self.objects.iter_mut() {
-            if let (Some(delta), Some(position)) = (input.mouse_delta(), input.mouse_position()) {
-                if object.is_selected() {
-                    if let Some(new_size) = object.get_bounding_rect().resize_by_dragging_vertex(self.camera.convert_to_world_coordinates(position), delta, 40.0) {
-                        object.resize_to(new_size);
-                    }
-                    else if self.objects_are_dragged {
-                        object.shift_with(delta * (1.0 / self.camera.zoom));
-                    }
+            let Some(mouse_delta)    = input.mouse_delta().map(|d| d * (1.0 / self.camera.zoom)) else {break};
+            let Some(mouse_position) = input.mouse_position().map(|p| self.camera.convert_to_world_coordinates(p)) else {break};
+
+            if object.is_selected() {
+                if let Some(vertex) = object.get_bounding_rect().vertex_under_point(mouse_position, 10.0) {
+                    self.object_is_resized_by_vertex = Some(vertex);
+                }
+                if let Some(vertex) = self.object_is_resized_by_vertex {
+                    object.resize_to(object.get_bounding_rect().resize_by_dragging_vertex(vertex, mouse_delta));
+                }
+                else if self.objects_are_dragged {
+                    object.shift_with(mouse_delta);
                 }
             }
         }
