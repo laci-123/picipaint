@@ -321,6 +321,22 @@ impl UserInput {
             _                                 => None,
         }
     }
+
+    pub fn mouse_delta(&self) -> Option<Vector2> {
+        match self {
+            Self::MouseMove { delta, .. } => Some(*delta),
+            _                             => None,
+        }
+    }
+
+    pub fn mouse_is_up(&self) -> bool {
+        match self {
+            Self::MouseMove { button: MouseButton::None, .. } => true,
+            Self::MouseMove { .. }                            => false,
+            Self::MouseClick { .. }                           => false,
+            _                                                 => true,
+        }
+    }
 }
 
 pub trait PaintObject<P: ScreenPainter> {
@@ -373,6 +389,7 @@ pub struct Engine<P: ScreenPainter, IconType> {
     view_height: f32,
     camera: Camera,
     background_color: Color,
+    objects_are_dragged: bool,
 }
 
 impl<P: ScreenPainter, IconType> Engine<P, IconType> {
@@ -386,6 +403,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
             view_height: 0.0,
             camera: Camera::default(),
             background_color: Color::from_rgb(0, 0, 0),
+            objects_are_dragged: false,
         }
     }
 
@@ -429,8 +447,9 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         if input == UserInput::SelectAll {
             self.select_tool(None);
         }
-
-        let mut mouse_delta = None;
+        if input.mouse_is_up() {
+            self.objects_are_dragged = false;
+        }
 
         for (i, object) in self.objects.iter_mut().enumerate() {
             object.update(&input, &self.camera);
@@ -467,23 +486,19 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
                         }
                     }
                 }
-                else if mouse_delta.is_none() {
-                    if let UserInput::MouseMove { button: MouseButton::Left, delta, ..} = input {
-                        if object.is_under_mouse() && object.is_selected() {
-                            mouse_delta = Some(delta);
-                        }
-                    }
+                if object.is_selected() && object.is_under_mouse() {
+                    self.objects_are_dragged = true;
                 }
             }
         }
 
         for object in self.objects.iter_mut() {
-            if let (Some(delta), Some(position)) = (mouse_delta, input.mouse_position()) {
+            if let (Some(delta), Some(position)) = (input.mouse_delta(), input.mouse_position()) {
                 if object.is_selected() {
                     if let Some(new_size) = object.get_bounding_rect().resize_by_dragging_vertex(self.camera.convert_to_world_coordinates(position), delta, 10.0) {
                         object.resize_to(new_size);
                     }
-                    else {
+                    else if self.objects_are_dragged {
                         object.shift_with(delta * (1.0 / self.camera.zoom));
                     }
                 }
