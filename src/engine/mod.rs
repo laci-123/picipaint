@@ -1,5 +1,5 @@
 #![allow(unused)]
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, AddAssign, Mul, Sub};
 use std::sync::Arc;
 use image;
 
@@ -36,6 +36,13 @@ impl Add for Vector2 {
             x: self.x + other.x,
             y: self.y + other.y,
         }
+    }
+}
+
+impl AddAssign for Vector2 {
+    fn add_assign(&mut self, other: Self) {
+        self.x += other.x;
+        self.y += other.y;
     }
 }
 
