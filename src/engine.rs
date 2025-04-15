@@ -1,7 +1,4 @@
-#![allow(unused)]
 use std::ops::{Add, AddAssign, Mul, Sub};
-use std::sync::Arc;
-use image;
 
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -275,11 +272,11 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
         self.screen_painter.draw_line(s, e, stroke.with_scaled_thickness(camera.zoom));
     }
     
-    pub fn draw_circle(&mut self, center: Vector2, radius: f32, stroke: Stroke, camera: &Camera) {
-        let c = camera.convert_to_screen_coordinates(center);
-        let r = camera.zoom * radius;
-        self.screen_painter.draw_circle(c, r, stroke.with_scaled_thickness(camera.zoom));
-    }
+    // pub fn draw_circle(&mut self, center: Vector2, radius: f32, stroke: Stroke, camera: &Camera) {
+    //     let c = camera.convert_to_screen_coordinates(center);
+    //     let r = camera.zoom * radius;
+    //     self.screen_painter.draw_circle(c, r, stroke.with_scaled_thickness(camera.zoom));
+    // }
     
     pub fn draw_rectangle(&mut self, rectangle: Rectangle, stroke: Stroke, camera: &Camera) {
         let rect = Rectangle {
@@ -289,13 +286,13 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
         self.screen_painter.draw_rectangle(rect, stroke.with_scaled_thickness(camera.zoom));
     }
     
-    pub fn draw_rectangle_filled(&mut self, rectangle: Rectangle, color: Color, stroke: Option<Stroke>, camera: &Camera) {
-        let rect = Rectangle {
-            p1: camera.convert_to_screen_coordinates(rectangle.p1),
-            p2: camera.convert_to_screen_coordinates(rectangle.p2),
-        };
-        self.screen_painter.draw_rectangle_filled(rect, color, stroke.map(|s| s.with_scaled_thickness(camera.zoom)));
-    }
+    // pub fn draw_rectangle_filled(&mut self, rectangle: Rectangle, color: Color, stroke: Option<Stroke>, camera: &Camera) {
+    //     let rect = Rectangle {
+    //         p1: camera.convert_to_screen_coordinates(rectangle.p1),
+    //         p2: camera.convert_to_screen_coordinates(rectangle.p2),
+    //     };
+    //     self.screen_painter.draw_rectangle_filled(rect, color, stroke.map(|s| s.with_scaled_thickness(camera.zoom)));
+    // }
 
     pub fn load_image(&mut self, name: &str, image: &image::DynamicImage) -> P::Texture {
         self.screen_painter.load_image(name, image)
@@ -315,7 +312,6 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
 pub enum MouseButton {
     None,
     Left,
-    Middle,
     Right,
 }
 
@@ -588,8 +584,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
 
     pub fn select_tool(&mut self, index: Option<usize>) {
         self.selected_tool_index = index;
-        if let Some(i) = index {
-            let current_tool = &mut self.tools[i];
+        if index.is_some() {
             for object in self.objects.iter_mut() {
                 object.set_selected(false);
             }
