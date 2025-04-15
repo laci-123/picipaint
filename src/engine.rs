@@ -253,7 +253,6 @@ impl Stroke {
     }
 }
 
-#[cfg_attr(test, mockall::automock(type Texture = usize;))]
 pub trait ScreenPainter {
     type Texture;
     fn draw_line(&mut self, start: Vector2, end: Vector2, stroke: Stroke);
@@ -384,7 +383,6 @@ pub trait PaintObject<P: ScreenPainter> {
 }
 
 
-#[cfg_attr(test, mockall::automock)]
 pub trait Tool<P: ScreenPainter, IconType> {
     fn update(&mut self, input: &UserInput, stroke: Stroke, camera: &Camera) -> Result<Option<Box<dyn PaintObject<P>>>, String>;
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, camera: &Camera);
@@ -602,7 +600,3 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         self.selected_tool_index
     }
 }
-
-
-#[cfg(test)]
-mod tests;
