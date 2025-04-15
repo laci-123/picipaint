@@ -1,4 +1,5 @@
 use crate::egui_painter::EguiPainter;
+use crate::primitives::*;
 use crate::engine::*;
 use eframe::egui;
 

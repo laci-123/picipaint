@@ -1,5 +1,6 @@
 use eframe::egui::{self, Vec2};
 use crate::color_selector::ColorSelector;
+use crate::primitives::*;
 use crate::engine::*;
 use crate::floating_window::FloatingWindow;
 use crate::paint_object::{freehand_curve::*, straight_line::*, picture::*};

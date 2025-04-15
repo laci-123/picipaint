@@ -3,6 +3,7 @@ use image;
 use eframe::egui;
 use rfd::FileDialog;
 use crate::egui_painter::EguiPainter;
+use crate::primitives::*;
 use crate::engine::*;
 
 

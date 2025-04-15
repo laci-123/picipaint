@@ -17,6 +17,7 @@ fn main() -> eframe::Result {
 
 
 mod app;
+mod primitives;
 mod engine;
 mod paint_object;
 mod color_selector;
