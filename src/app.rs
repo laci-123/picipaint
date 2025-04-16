@@ -31,7 +31,7 @@ impl App {
                 Box::new(StraghtLineTool::default()),
                 Box::new(PictureTool::default()),
             ]),
-            stroke: Stroke { color: Color::from_rgb(0, 0, 200), thickness: 2.0 },
+            stroke: Stroke::new(Color::from_rgb(0, 0, 200), 2.0),
             bg_color: Color::from_rgb(0, 0, 0),
             fg_color_selector: ColorSelector::new("Foreground color"),
             bg_color_selector: ColorSelector::new("Background color"),
@@ -46,7 +46,7 @@ impl eframe::App for App {
         ctx.set_pixels_per_point(UI_SCALE);
 
         let dropped_pictures = ctx.input(|input| {
-            let offset = Vector2 { x: 10.0, y: 10.0 };
+            let offset = Vector2::new(10.0, 10.0);
             let mut pictures = Vec::new();
             for (i, dropped_file) in input.raw.dropped_files.iter().enumerate() {
                 match Picture::from_dropped_file(dropped_file, offset * (i as f32)) {
@@ -97,7 +97,7 @@ impl eframe::App for App {
 
                 ui.toggle_value(&mut self.fg_color_selector.window.is_open, "fg color");
                 ui.toggle_value(&mut self.bg_color_selector.window.is_open, "bg color");
-                ui.add(egui::Slider::new(&mut self.stroke.thickness, 0.5..=10.0)).on_hover_ui_at_pointer(|ui| {
+                ui.add(egui::Slider::new(&mut self.stroke.thickness.value, 0.5..=10.0)).on_hover_ui_at_pointer(|ui| {
                     ui.label("line thickness");
                 });
             });
@@ -193,7 +193,7 @@ fn map_user_input(response: &egui::Response, ui: &egui::Ui) -> UserInput {
     if response.dragged_by(egui::PointerButton::Middle) {
         let delta = response.drag_delta();
         return UserInput::Pan {
-            delta: Vector2 {x: -1.0 * delta.x, y: -1.0 * delta.y }
+            delta: Vector2::new(-1.0 * delta.x, -1.0 * delta.y)
         };
     }
     if response.hovered() {

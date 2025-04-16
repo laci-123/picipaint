@@ -3,12 +3,12 @@ use crate::primitives::*;
 
 pub trait ScreenPainter {
     type Texture;
-    fn draw_line(&mut self, start: Vector2, end: Vector2, stroke: Stroke);
-    fn draw_circle(&mut self, center: Vector2, radius: f32, stroke: Stroke);
-    fn draw_rectangle(&mut self, rectangle: Rectangle, stroke: Stroke);
-    fn draw_rectangle_filled(&mut self, rectangle: Rectangle, color: Color, stroke: Option<Stroke>);
+    fn draw_line(&mut self, start: Vector2<ScreenSpace>, end: Vector2<ScreenSpace>, stroke: Stroke);
+    fn draw_circle(&mut self, center: Vector2<ScreenSpace>, radius: f32, stroke: Stroke);
+    fn draw_rectangle(&mut self, rectangle: Rectangle<ScreenSpace>, stroke: Stroke);
+    fn draw_rectangle_filled(&mut self, rectangle: Rectangle<ScreenSpace>, color: Color, stroke: Option<Stroke>);
     fn load_image(&mut self, name: &str, image: &image::DynamicImage) -> Self::Texture;
-    fn draw_image(&mut self, frame: Rectangle, texture: &Self::Texture);
+    fn draw_image(&mut self, frame: Rectangle<ScreenSpace>, texture: &Self::Texture);
 }
 
 
@@ -17,7 +17,7 @@ pub struct WorldPainter<'a, P: ScreenPainter> {
 }
 
 impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
-    pub fn draw_line(&mut self, start: Vector2, end: Vector2, stroke: Stroke, camera: &Camera) {
+    pub fn draw_line(&mut self, start: Vector2<WorldSpace>, end: Vector2<WorldSpace>, stroke: Stroke, camera: &Camera) {
         let s = camera.convert_to_screen_coordinates(start);
         let e = camera.convert_to_screen_coordinates(end);
         self.screen_painter.draw_line(s, e, stroke.with_scaled_thickness(camera.zoom));
@@ -29,7 +29,7 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
     //     self.screen_painter.draw_circle(c, r, stroke.with_scaled_thickness(camera.zoom));
     // }
     
-    pub fn draw_rectangle(&mut self, rectangle: Rectangle, stroke: Stroke, camera: &Camera) {
+    pub fn draw_rectangle(&mut self, rectangle: Rectangle<WorldSpace>, stroke: Stroke, camera: &Camera) {
         let rect = Rectangle {
             p1: camera.convert_to_screen_coordinates(rectangle.p1),
             p2: camera.convert_to_screen_coordinates(rectangle.p2),
@@ -49,7 +49,7 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
         self.screen_painter.load_image(name, image)
     }
     
-    pub fn draw_image(&mut self, frame: Rectangle, texture: &P::Texture, camera: &Camera) {
+    pub fn draw_image(&mut self, frame: Rectangle<WorldSpace>, texture: &P::Texture, camera: &Camera) {
         let rect = Rectangle {
             p1: camera.convert_to_screen_coordinates(frame.p1),
             p2: camera.convert_to_screen_coordinates(frame.p2),
@@ -71,13 +71,13 @@ pub enum MouseButton {
 pub enum UserInput {
     Nothing,
     MouseClick {
-        position: Vector2,
+        position: Vector2<ScreenSpace>,
         button: MouseButton,
         is_shift_down: bool,
     },
     MouseMove {
-        position: Vector2,
-        delta: Vector2,
+        position: Vector2<ScreenSpace>,
+        delta: Vector2<ScreenSpace>,
         button: MouseButton,
         is_shift_down: bool,
     },
@@ -87,13 +87,13 @@ pub enum UserInput {
         delta: f32,
     },
     Pan {
-        delta: Vector2,
+        delta: Vector2<ScreenSpace>,
     },
     Delete,
 }
 
 impl UserInput {
-    pub fn mouse_position(&self) -> Option<Vector2> {
+    pub fn mouse_position(&self) -> Option<Vector2<ScreenSpace>> {
         match self {
             Self::MouseClick { position, .. } => Some(*position),
             Self::MouseMove { position, .. }  => Some(*position),
@@ -101,7 +101,7 @@ impl UserInput {
         }
     }
 
-    pub fn mouse_delta(&self) -> Option<Vector2> {
+    pub fn mouse_delta(&self) -> Option<Vector2<ScreenSpace>> {
         match self {
             Self::MouseMove { delta, .. } => Some(*delta),
             _                             => None,
@@ -124,9 +124,9 @@ pub trait PaintObject<P: ScreenPainter> {
     fn is_selected(&self) -> bool;
     fn set_selected(&mut self, value: bool);
     fn is_under_mouse(&self) -> bool;
-    fn get_bounding_rect(&self) -> Rectangle;
-    fn shift_with(&mut self, p: Vector2);
-    fn resize_to(&mut self, new_size: Rectangle);
+    fn get_bounding_rect(&self) -> Rectangle<WorldSpace>;
+    fn shift_with(&mut self, p: Vector2<WorldSpace>);
+    fn resize_to(&mut self, new_size: Rectangle<WorldSpace>);
 }
 
 
@@ -195,11 +195,11 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         self.background_color = background_color;
         self.view_width = view_width;
         self.view_height = view_height;
-        self.camera.offset = Vector2 { x: view_width / 2.0, y: view_height / 2.0 };
+        self.camera.offset = Vector2::new(view_width / 2.0, view_height / 2.0);
 
         match input {
             UserInput::Pan { delta } => {
-                self.camera.position = self.camera.position + delta * (1.0 / self.camera.zoom);
+                self.camera.position += self.camera.distance_to_world_coordinates(delta);
             },
             UserInput::Zoom { delta } => {
                 self.camera.zoom += delta;
@@ -274,11 +274,11 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         }
 
         for object in self.objects.iter_mut() {
-            let Some(mouse_delta)    = input.mouse_delta().map(|d| d * (1.0 / self.camera.zoom)) else {break};
-            let Some(mouse_position) = input.mouse_position().map(|p| self.camera.convert_to_world_coordinates(p)) else {break};
+            let Some(mouse_delta)    = input.mouse_delta()   .map(|d| self.camera.distance_to_world_coordinates(d)) else {break};
+            let Some(mouse_position) = input.mouse_position().map(|p| self.camera.convert_to_world_coordinates(p))  else {break};
 
             if object.is_selected() {
-                if let Some(vertex) = object.get_bounding_rect().vertex_under_point(mouse_position, 10.0) {
+                if let Some(vertex) = object.get_bounding_rect().vertex_under_point(mouse_position, Number::<WorldSpace>::new(10.0)) {
                     self.object_is_resized_by_vertex = Some(vertex);
                 }
                 if let Some(vertex) = self.object_is_resized_by_vertex {
@@ -300,7 +300,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
     }
 
     pub fn draw(&self, screen_painter: &mut P) {
-        screen_painter.draw_rectangle_filled(Rectangle::from_point_and_size(Vector2::zero(), self.view_width, self.view_height), self.background_color, None);
+        screen_painter.draw_rectangle_filled(Rectangle::from_point_and_size(Vector2::zero(), Number::new(self.view_width), Number::new(self.view_height)), self.background_color, None);
 
         for object in self.objects.iter() {
             let mut world_painter = WorldPainter { screen_painter };
@@ -314,9 +314,9 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
                     p2: self.camera.convert_to_screen_coordinates(world_rect.p2),
                 };
                 let selection_marker_color = Color::from_rgb(255, 255, 255);
-                screen_painter.draw_rectangle(screen_rect, Stroke { color: selection_marker_color, thickness: 1.0 });
+                screen_painter.draw_rectangle(screen_rect, Stroke::new(selection_marker_color, 1.0));
                 for vertex in screen_rect.vertices() {
-                    screen_painter.draw_circle(vertex, 5.0, Stroke { color: selection_marker_color, thickness: 1.0 });
+                    screen_painter.draw_circle(vertex, 5.0, Stroke::new(selection_marker_color, 1.0));
                 }
             }
         }

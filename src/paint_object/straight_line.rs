@@ -5,11 +5,11 @@ use eframe::egui;
 
 
 pub struct StraightLine {
-    start: Vector2,
-    end: Vector2,
+    start: Vector2<WorldSpace>,
+    end: Vector2<WorldSpace>,
     stroke: Stroke,
     selected: bool,
-    mouse_pos: Vector2,
+    mouse_pos: Vector2<WorldSpace>,
 }
 
 impl PaintObject<EguiPainter> for StraightLine {
@@ -36,16 +36,16 @@ impl PaintObject<EguiPainter> for StraightLine {
         (self.start - self.mouse_pos).length() + (self.end - self.mouse_pos).length() < (self.end - self.start).length() + epsilon
     }
     
-    fn get_bounding_rect(&self) -> Rectangle {
+    fn get_bounding_rect(&self) -> Rectangle<WorldSpace> {
         Rectangle::from_points_well_ordered(self.start, self.end)
     }
 
-    fn shift_with(&mut self, p: Vector2) {
+    fn shift_with(&mut self, p: Vector2<WorldSpace>) {
         self.start = self.start + p;
         self.end   = self.end + p;
     }
 
-    fn resize_to(&mut self, new_size: Rectangle) {
+    fn resize_to(&mut self, new_size: Rectangle<WorldSpace>) {
         self.start = new_size.p1;
         self.end = new_size.p2;
     }
@@ -53,9 +53,9 @@ impl PaintObject<EguiPainter> for StraightLine {
 
 
 pub struct StraghtLineTool {
-    start: Option<Vector2>,
+    start: Option<Vector2<WorldSpace>>,
     stroke: Option<Stroke>, // Only optional because Stroke doesn't have a default value, so we have to wait until the first call to `update` to set it.
-    mouse_pos: Vector2,
+    mouse_pos: Vector2<WorldSpace>,
     icon: egui::ImageSource<'static>,
 }
 

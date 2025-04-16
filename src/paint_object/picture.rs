@@ -8,11 +8,11 @@ use crate::engine::*;
 
 
 pub struct Picture {
-    bounding_rect: Rectangle,
+    bounding_rect: Rectangle<WorldSpace>,
     image: image::DynamicImage,
     image_name: String,
     texture: OnceCell<egui::TextureHandle>,
-    mouse_pos: Vector2,
+    mouse_pos: Vector2<WorldSpace>,
     selected: bool,
 }
 
@@ -20,7 +20,7 @@ impl Picture {
     // OK(Some(picture)): the dropped file is a supported picture and we could read it sucessfully
     // OK(None):          the dropped file is not a picture in a supported format
     // Err(...):          the dropeed file is a supported picture but we could not read it because of some other reason
-    pub fn from_dropped_file(dropped_file: &egui::DroppedFile, top_left: Vector2) -> Result<Option<Self>, String> {
+    pub fn from_dropped_file(dropped_file: &egui::DroppedFile, top_left: Vector2<WorldSpace>) -> Result<Option<Self>, String> {
         let Some(file_path) = &dropped_file.path else {
             // This should never happen, `path` should only be `None` on the Wasm backend.
             return Err(format!("Error accessing dropped file. "));
@@ -52,7 +52,7 @@ impl Picture {
                             .map_err(|err| err.to_string())?;
 
         Ok(Some(Picture {
-            bounding_rect: Rectangle::from_point_and_size(top_left, image.width() as f32, image.height() as f32),
+            bounding_rect: Rectangle::from_point_and_size(top_left, Number::new(image.width() as f32), Number::new(image.height() as f32)),
             image,
             image_name: file_path.to_string_lossy().into_owned(),
             texture: OnceCell::new(),
@@ -88,16 +88,16 @@ impl PaintObject<EguiPainter> for Picture {
         self.get_bounding_rect().contains_point(self.mouse_pos)
     }
     
-    fn get_bounding_rect(&self) -> Rectangle {
+    fn get_bounding_rect(&self) -> Rectangle<WorldSpace> {
         self.bounding_rect
     }
 
-    fn shift_with(&mut self, p: Vector2) {
+    fn shift_with(&mut self, p: Vector2<WorldSpace>) {
         self.bounding_rect.p1 += p;
         self.bounding_rect.p2 += p;
     }
 
-    fn resize_to(&mut self, new_size: Rectangle) {
+    fn resize_to(&mut self, new_size: Rectangle<WorldSpace>) {
         self.bounding_rect = new_size;
     }
 }
@@ -105,8 +105,8 @@ impl PaintObject<EguiPainter> for Picture {
 
 pub struct PictureTool {
     icon: egui::ImageSource<'static>,
-    p1: Option<Vector2>,
-    p2: Option<Vector2>,
+    p1: Option<Vector2<WorldSpace>>,
+    p2: Option<Vector2<WorldSpace>>,
 }
 
 impl Default for PictureTool {
@@ -126,7 +126,7 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
                 if let Some((image, image_name)) = image_from_open_file_dialog()? {
                     let pos = camera.convert_to_world_coordinates(*position);
                     return Ok(Some(Box::new(Picture {
-                        bounding_rect: Rectangle::from_point_and_size(pos, image.width() as f32, image.height() as f32),
+                        bounding_rect: Rectangle::from_point_and_size(pos, Number::new(image.width() as f32), Number::new(image.height() as f32)),
                         image,
                         image_name,
                         texture: OnceCell::new(),
@@ -167,7 +167,7 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
     
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
         if let (Some(p1), Some(p2)) = (self.p1, self.p2) {
-            painter.draw_rectangle(Rectangle { p1, p2 }, Stroke { color: Color::from_rgb(255, 255, 255), thickness: 1.0 }, camera);
+            painter.draw_rectangle(Rectangle { p1, p2 }, Stroke::new(Color::from_rgb(255, 255, 255), 1.0), camera);
         }
     }
     

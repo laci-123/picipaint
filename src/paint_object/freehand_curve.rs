@@ -5,14 +5,14 @@ use eframe::egui;
 
 
 pub struct FreehandCurve {
-    points: Vec<Vector2>,
+    points: Vec<Vector2<WorldSpace>>,
     stroke: Option<Stroke>, // Only optional because Stroke doesn't have a default value, so we have to wait until the first call to `update` to set it.
     min_x: f32,
     max_x: f32,
     min_y: f32,
     max_y: f32,
     selected: bool,
-    mouse_pos: Vector2,
+    mouse_pos: Vector2<WorldSpace>,
 }
 
 impl PaintObject<EguiPainter> for FreehandCurve {
@@ -49,14 +49,14 @@ impl PaintObject<EguiPainter> for FreehandCurve {
         return false;
     }
 
-    fn get_bounding_rect(&self) -> Rectangle {
+    fn get_bounding_rect(&self) -> Rectangle<WorldSpace> {
         Rectangle {
-            p1: Vector2 { x: self.min_x, y: self.min_y },
-            p2: Vector2 { x: self.max_x, y: self.max_y }
+            p1: Vector2::new(self.min_x, self.min_y),
+            p2: Vector2::new(self.max_x, self.max_y)
         }
     }
 
-    fn shift_with(&mut self, p: Vector2) {
+    fn shift_with(&mut self, p: Vector2<WorldSpace>) {
         for point in self.points.iter_mut() {
             *point = *point + p;
         }
@@ -66,7 +66,7 @@ impl PaintObject<EguiPainter> for FreehandCurve {
         self.max_y += p.y;
     }
 
-    fn resize_to(&mut self, new_size: Rectangle) {
+    fn resize_to(&mut self, new_size: Rectangle<WorldSpace>) {
         let old_size = self.get_bounding_rect();
         for point in self.points.iter_mut() {
             point.x = new_size.p1.x + (point.x - old_size.p1.x) * (new_size.p2.x - new_size.p1.x) / (old_size.p2.x - old_size.p1.x);

@@ -1,66 +1,145 @@
 use std::ops::{Add, AddAssign, Mul, Sub};
+use std::marker::PhantomData;
 
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Vector2 {
-    pub x: f32,
-    pub y: f32,
+pub trait Tag: Clone + Copy {}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct WorldSpace;
+impl Tag for WorldSpace {}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ScreenSpace;
+impl Tag for ScreenSpace {}
+
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
+pub struct Number<T: Tag> {
+    pub value: f32,
+    tag: PhantomData<T>,
 }
 
-impl Vector2 {
-    pub fn zero() -> Self {
+impl<T: Tag> Number<T> {
+    pub fn new(value: f32) -> Self {
         Self {
-            x: 0.0,
-            y: 0.0,
+            value,
+            tag: PhantomData,
         }
     }
 }
 
-impl Vector2 {
-    pub fn length_squared(&self) -> f32 {
-        self.x * self.x + self.y * self.y
-    }
-    pub fn length(&self) -> f32 {
-        (self.x * self.x + self.y * self.y).sqrt()
+impl<T: Tag> Add for Number<T> {
+    type Output = Self;
+    
+    fn add(self, other: Self) -> Self {
+        Self::new(self.value + other.value)
     }
 }
 
-impl Add for Vector2 {
+impl<T: Tag> AddAssign for Number<T> {
+    fn add_assign(&mut self, other: Self) {
+        self.value += other.value;
+    }
+}
+
+impl<T: Tag> Sub for Number<T> {
+    type Output = Self;
+    
+    fn sub(self, other: Self) -> Self {
+        Self::new(self.value - other.value)
+    }
+}
+
+impl<T: Tag> Mul<f32> for Number<T> {
+    type Output = Self;
+
+    fn mul(self, other: f32) -> Self {
+        Self::new(self.value * other)
+    }
+}
+
+impl<T: Tag> Mul<Number<T>> for Number<T> {
+    type Output = Self;
+
+    fn mul(self, other: Number<T>) -> Self {
+        Self::new(self.value * other.value)
+    }
+}
+
+
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Vector2<T: Tag> {
+    pub x: f32,
+    pub y: f32,
+    tag: PhantomData<T>,
+}
+
+impl<T: Tag> Vector2<T> {
+    pub fn new(x: f32, y: f32) -> Self {
+        Self { x, y, tag: PhantomData }
+    }
+    
+    pub fn zero() -> Self {
+        Self::new(0.0, 0.0)
+    }
+
+    pub fn length_squared(&self) -> f32 {
+        self.x * self.x + self.y * self.y
+    }
+
+    pub fn length(&self) -> f32 {
+        (self.x * self.x + self.y * self.y).sqrt()
+    }
+
+    fn cast_to<U: Tag>(self) -> Vector2<U> {
+        Vector2::<U> {
+            x: self.x,
+            y: self.y,
+            tag: PhantomData,
+        }
+    }
+}
+
+impl<T: Tag> Add for Vector2<T> {
     type Output = Self;
     
     fn add(self, other: Self) -> Self {
         Self {
             x: self.x + other.x,
             y: self.y + other.y,
+            tag: PhantomData,
         }
     }
 }
 
-impl AddAssign for Vector2 {
+impl<T: Tag> AddAssign for Vector2<T> {
     fn add_assign(&mut self, other: Self) {
         self.x += other.x;
         self.y += other.y;
     }
 }
 
-impl Sub for Vector2 {
+impl<T: Tag> Sub for Vector2<T> {
     type Output = Self;
     
     fn sub(self, other: Self) -> Self {
         Self {
             x: self.x - other.x,
             y: self.y - other.y,
+            tag: PhantomData,
         }
     }
 }
 
-impl Mul<f32> for Vector2 {
+impl<T: Tag> Mul<f32> for Vector2<T> {
     type Output = Self;
 
     fn mul(self, other: f32) -> Self {
         Self {
             x: self.x * other,
             y: self.y * other,
+            tag: PhantomData,
         }
     }
 }
@@ -68,8 +147,8 @@ impl Mul<f32> for Vector2 {
 
 #[derive(Debug)]
 pub struct Camera {
-    pub position: Vector2,
-    pub offset: Vector2,
+    pub position: Vector2<WorldSpace>,
+    pub offset: Vector2<WorldSpace>,
     pub zoom: f32,
 }
 
@@ -84,12 +163,16 @@ impl Default for Camera {
 }
 
 impl Camera {
-    pub fn convert_to_screen_coordinates(&self, point: Vector2) -> Vector2 {
-        (point - self.position) * self.zoom + self.offset
+    pub fn convert_to_screen_coordinates(&self, point: Vector2<WorldSpace>) -> Vector2<ScreenSpace> {
+        ((point - self.position) * self.zoom + self.offset).cast_to::<ScreenSpace>()
     }
 
-    pub fn convert_to_world_coordinates(&self, point: Vector2) -> Vector2 {
-        (point - self.offset) * (1.0 / self.zoom) + self.position
+    pub fn convert_to_world_coordinates(&self, point: Vector2<ScreenSpace>) -> Vector2<WorldSpace> {
+        (point.cast_to::<WorldSpace>() - self.offset) * (1.0 / self.zoom) + self.position
+    }
+
+    pub fn distance_to_world_coordinates(&self, distance: Vector2<ScreenSpace>) -> Vector2<WorldSpace> {
+        (distance * (1.0 / self.zoom)).cast_to::<WorldSpace>()
     }
 }
 
@@ -103,52 +186,52 @@ pub enum RectangleVertex {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Rectangle {
-    pub p1: Vector2,
-    pub p2: Vector2,
+pub struct Rectangle<T: Tag> {
+    pub p1: Vector2<T>,
+    pub p2: Vector2<T>,
 }
 
-impl Rectangle {
-    pub fn from_point_and_size(p: Vector2, width: f32, height: f32) -> Self {
+impl<T: Tag> Rectangle<T> {
+    pub fn from_point_and_size(p: Vector2<T>, width: Number<T>, height: Number<T>) -> Self {
         Self {
             p1: p,
-            p2: p + Vector2{ x: width, y: height },
+            p2: p + Vector2::new(width.value, height.value),
         }
     }
 
-    pub fn from_points_well_ordered(p1: Vector2, p2: Vector2) -> Self {
+    pub fn from_points_well_ordered(p1: Vector2<T>, p2: Vector2<T>) -> Self {
         let x1 = p1.x.min(p2.x);
         let x2 = p1.x.max(p2.x);
         let y1 = p1.y.min(p2.y);
         let y2 = p1.y.max(p2.y);
         Self {
-            p1: Vector2{ x: x1, y: y1 },
-            p2: Vector2{ x: x2, y: y2 },
+            p1: Vector2::new(x1, y1),
+            p2: Vector2::new(x2, y2),
         }
     }
 
-    pub fn contains_point(&self, p: Vector2) -> bool {
+    pub fn contains_point(&self, p: Vector2<T>) -> bool {
         self.p1.x <= p.x && p.x <= self.p2.x &&
         self.p1.y <= p.y && p.y <= self.p2.y
     }
 
-    pub fn shifted_with(self, p: Vector2) -> Self {
+    pub fn shifted_with(self, v: Vector2<T>) -> Self {
         Self {
-            p1: self.p1 + p,
-            p2: self.p2 + p,
+            p1: self.p1 + v,
+            p2: self.p2 + v,
         }
     }
 
-    pub fn vertices(&self) -> [Vector2; 4] {
+    pub fn vertices(&self) -> [Vector2<T>; 4] {
         [self.p1,
-         Vector2 { x: self.p2.x, y: self.p1.y },
+         Vector2::new(self.p2.x, self.p1.y),
          self.p2,
-         Vector2 { x: self.p1.x, y: self.p2.y }]
+         Vector2::new(self.p1.x, self.p2.y)]
     }
 
-    pub fn vertex_under_point(&self, point: Vector2, radius: f32) -> Option<RectangleVertex> {
-        fn is_under_point(vertex: Vector2, point: Vector2, radius: f32) -> bool {
-            (vertex - point).length_squared() < radius * radius
+    pub fn vertex_under_point(&self, point: Vector2<T>, radius: Number<T>) -> Option<RectangleVertex> {
+        fn is_under_point<U: Tag>(vertex: Vector2<U>, point: Vector2<U>, radius: Number<U>) -> bool {
+            (vertex - point).length_squared() < radius.value * radius.value
         }
 
         use RectangleVertex::*;
@@ -159,10 +242,10 @@ impl Rectangle {
         else if is_under_point(self.p2, point, radius) {
             Some(BottomRight)
         }
-        else if is_under_point(Vector2 { x: self.p2.x, y: self.p1.y }, point, radius) {
+        else if is_under_point(Vector2::new(self.p2.x, self.p1.y), point, radius) {
             Some(TopRight)
         }
-        else if is_under_point(Vector2 { x: self.p1.x, y: self.p2.y }, point, radius) {
+        else if is_under_point(Vector2::new(self.p1.x, self.p2.y), point, radius) {
             Some(BottomLeft)
         }
         else {
@@ -170,7 +253,7 @@ impl Rectangle {
         }
     }
 
-    pub fn resize_by_dragging_vertex(&self, vertex: RectangleVertex, drag_delta: Vector2) -> Self {
+    pub fn resize_by_dragging_vertex(&self, vertex: RectangleVertex, drag_delta: Vector2<T>) -> Self {
         use RectangleVertex::*;
 
         match vertex {
@@ -182,26 +265,14 @@ impl Rectangle {
             },
             TopRight => {
                 Self {
-                    p1: Vector2 {
-                        x: self.p1.x,
-                        y: self.p1.y + drag_delta.y,
-                    },
-                    p2: Vector2 {
-                        x: self.p2.x + drag_delta.x,
-                        y: self.p2.y,
-                    },
+                    p1: Vector2::new(self.p1.x, self.p1.y + drag_delta.y),
+                    p2: Vector2::new(self.p2.x + drag_delta.x, self.p2.y),
                 }
             },
             BottomLeft => {
                 Self {
-                    p1: Vector2 {
-                        x: self.p1.x + drag_delta.x,
-                        y: self.p1.y,
-                    },
-                    p2: Vector2 {
-                        x: self.p2.x,
-                        y: self.p2.y + drag_delta.y,
-                    },
+                    p1: Vector2::new(self.p1.x + drag_delta.x, self.p1.y),
+                    p2: Vector2::new(self.p2.x, self.p2.y + drag_delta.y),
                 }
             },
             BottomRight => {
@@ -238,10 +309,17 @@ impl Color {
 #[derive(Clone, Copy)]
 pub struct Stroke {
     pub color: Color,
-    pub thickness: f32,
+    pub thickness: Number<WorldSpace>,
 }
 
 impl Stroke {
+    pub fn new(color: Color, thickness: f32) -> Self {
+        Self {
+            color,
+            thickness: Number::<WorldSpace>::new(thickness),
+        }
+    }
+    
     pub fn with_scaled_thickness(self, scale: f32) -> Self {
         Self {
             color: self.color,
