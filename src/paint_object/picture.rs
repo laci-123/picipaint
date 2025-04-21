@@ -182,7 +182,16 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
 }
 
 fn image_from_open_file_dialog() -> Result<Option<(image::DynamicImage, String)>, String> {
-    if let Some(file_path) = FileDialog::new().add_filter("png images", &["png"]).pick_file() {
+    let mut extensions = Vec::new();
+    for image_format in image::ImageFormat::all() {
+        if image_format.can_read() {
+            extensions.extend_from_slice(image_format.extensions_str());
+        }
+    }
+    let filter_name = extensions.iter().map(|ext| format!("*.{ext}")).collect::<Vec<String>>().join(", ");
+    let dialog = FileDialog::new().add_filter(filter_name, &extensions);
+    
+    if let Some(file_path) = dialog.pick_file() {
         let image = image::ImageReader::open(&file_path)
                         .map_err(|err| err.to_string())?
                         .decode()
