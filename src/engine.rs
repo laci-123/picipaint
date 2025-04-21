@@ -4,7 +4,7 @@ use crate::primitives::*;
 pub trait ScreenPainter {
     type Texture;
     fn draw_line(&mut self, start: Vector2<ScreenSpace>, end: Vector2<ScreenSpace>, stroke: Stroke<ScreenSpace>);
-    fn draw_circle(&mut self, center: Vector2<ScreenSpace>, radius: f32, stroke: Stroke<ScreenSpace>);
+    fn draw_circle(&mut self, center: Vector2<ScreenSpace>, radius: Number<ScreenSpace>, stroke: Stroke<ScreenSpace>);
     fn draw_rectangle(&mut self, rectangle: Rectangle<ScreenSpace>, stroke: Stroke<ScreenSpace>);
     fn draw_rectangle_filled(&mut self, rectangle: Rectangle<ScreenSpace>, color: Color, stroke: Option<Stroke<ScreenSpace>>);
     fn load_image(&mut self, name: &str, image: &image::DynamicImage) -> Self::Texture;
@@ -18,8 +18,8 @@ pub struct WorldPainter<'a, P: ScreenPainter> {
 
 impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
     pub fn draw_line(&mut self, start: Vector2<WorldSpace>, end: Vector2<WorldSpace>, stroke: Stroke<WorldSpace>, camera: &Camera) {
-        let s = camera.convert_to_screen_coordinates(start);
-        let e = camera.convert_to_screen_coordinates(end);
+        let s = camera.point_to_screen_coordinates(start);
+        let e = camera.point_to_screen_coordinates(end);
         self.screen_painter.draw_line(s, e, camera.stroke_to_screen_coordinates(stroke));
     }
     
@@ -31,8 +31,8 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
     
     pub fn draw_rectangle(&mut self, rectangle: Rectangle<WorldSpace>, stroke: Stroke<WorldSpace>, camera: &Camera) {
         let rect = Rectangle {
-            p1: camera.convert_to_screen_coordinates(rectangle.p1),
-            p2: camera.convert_to_screen_coordinates(rectangle.p2),
+            p1: camera.point_to_screen_coordinates(rectangle.p1),
+            p2: camera.point_to_screen_coordinates(rectangle.p2),
         };
         self.screen_painter.draw_rectangle(rect, camera.stroke_to_screen_coordinates(stroke));
     }
@@ -51,8 +51,8 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
     
     pub fn draw_image(&mut self, frame: Rectangle<WorldSpace>, texture: &P::Texture, camera: &Camera) {
         let rect = Rectangle {
-            p1: camera.convert_to_screen_coordinates(frame.p1),
-            p2: camera.convert_to_screen_coordinates(frame.p2),
+            p1: camera.point_to_screen_coordinates(frame.p1),
+            p2: camera.point_to_screen_coordinates(frame.p2),
         };
         self.screen_painter.draw_image(rect, texture);
     }
@@ -275,7 +275,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
 
         for object in self.objects.iter_mut() {
             let Some(mouse_delta)    = input.mouse_delta()   .map(|d| self.camera.distance_to_world_coordinates(d)) else {break};
-            let Some(mouse_position) = input.mouse_position().map(|p| self.camera.convert_to_world_coordinates(p))  else {break};
+            let Some(mouse_position) = input.mouse_position().map(|p| self.camera.point_to_world_coordinates(p))  else {break};
 
             if object.is_selected() {
                 if let Some(vertex) = object.get_bounding_rect().vertex_under_point(mouse_position, Number::<WorldSpace>::new(10.0)) {
@@ -310,13 +310,13 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
                 // won't change with zoom level.
                 let world_rect = object.get_bounding_rect();
                 let screen_rect = Rectangle {
-                    p1: self.camera.convert_to_screen_coordinates(world_rect.p1),
-                    p2: self.camera.convert_to_screen_coordinates(world_rect.p2),
+                    p1: self.camera.point_to_screen_coordinates(world_rect.p1),
+                    p2: self.camera.point_to_screen_coordinates(world_rect.p2),
                 };
                 let selection_marker_stroke = Stroke::new(Color::from_rgb(255, 255, 255), Number::<ScreenSpace>::new(2.0));
                 screen_painter.draw_rectangle(screen_rect, selection_marker_stroke);
                 for vertex in screen_rect.vertices() {
-                    screen_painter.draw_circle(vertex, 5.0, selection_marker_stroke);
+                    screen_painter.draw_circle(vertex, Number::<ScreenSpace>::new(5.0), selection_marker_stroke);
                 }
             }
         }

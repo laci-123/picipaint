@@ -65,7 +65,7 @@ impl Picture {
 impl PaintObject<EguiPainter> for Picture {
     fn update(&mut self, input: &UserInput, camera: &Camera) {
         if let Some(position) = input.mouse_position() {
-            self.mouse_pos = camera.convert_to_world_coordinates(position);
+            self.mouse_pos = camera.point_to_world_coordinates(position);
         }
     }
     
@@ -124,7 +124,7 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
         match input {
             UserInput::MouseClick { position, .. } => {
                 if let Some((image, image_name)) = image_from_open_file_dialog()? {
-                    let pos = camera.convert_to_world_coordinates(*position);
+                    let pos = camera.point_to_world_coordinates(*position);
                     return Ok(Some(Box::new(Picture {
                         bounding_rect: Rectangle::from_point_and_size(pos, Number::new(image.width() as f32), Number::new(image.height() as f32)),
                         image,
@@ -137,10 +137,10 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
             },
             UserInput::MouseMove { button: MouseButton::Left, position, .. } => {
                 if self.p1.is_none() {
-                    self.p1 = Some(camera.convert_to_world_coordinates(*position));
+                    self.p1 = Some(camera.point_to_world_coordinates(*position));
                 }
                 else {
-                    self.p2 = Some(camera.convert_to_world_coordinates(*position));
+                    self.p2 = Some(camera.point_to_world_coordinates(*position));
                 }
             },
             UserInput::MouseMove { button: MouseButton::None, .. } => {

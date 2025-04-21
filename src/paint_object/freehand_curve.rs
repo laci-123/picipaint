@@ -18,7 +18,7 @@ pub struct FreehandCurve {
 impl PaintObject<EguiPainter> for FreehandCurve {
     fn update(&mut self, input: &UserInput, camera: &Camera) {
         if let Some(position) = input.mouse_position() {
-            self.mouse_pos = camera.convert_to_world_coordinates(position);
+            self.mouse_pos = camera.point_to_world_coordinates(position);
         }
     }
     
@@ -114,7 +114,7 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for FreehandCurveTool {
     fn update(&mut self, input: &UserInput, stroke: Stroke<WorldSpace>, camera: &Camera) -> Result<Option<Box<dyn PaintObject<EguiPainter>>>, String> {
         self.curve.stroke = Some(stroke);
         if let UserInput::MouseMove { position, button: MouseButton::Left, is_shift_down: false, .. } = input {
-            let p = camera.convert_to_world_coordinates(*position);
+            let p = camera.point_to_world_coordinates(*position);
             let last_point = self.curve.points.last();
             if last_point.is_none() || last_point.is_some_and(|lp| *lp != p) {
                 self.curve.points.push(p);

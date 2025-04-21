@@ -15,7 +15,7 @@ pub struct StraightLine {
 impl PaintObject<EguiPainter> for StraightLine {
     fn update(&mut self, input: &UserInput, camera: &Camera) {
         if let Some(position) = input.mouse_position() {
-            self.mouse_pos = camera.convert_to_world_coordinates(position);
+            self.mouse_pos = camera.point_to_world_coordinates(position);
         }
     }
     
@@ -76,10 +76,10 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for StraghtLineTool {
         
         match input {
             UserInput::MouseMove { position, .. } => {
-                self.mouse_pos = camera.convert_to_world_coordinates(*position);
+                self.mouse_pos = camera.point_to_world_coordinates(*position);
             },
             UserInput::MouseClick { position, button: MouseButton::Left, is_shift_down: false } => {
-                let p = camera.convert_to_world_coordinates(*position);
+                let p = camera.point_to_world_coordinates(*position);
                 if let Some(start) = self.start {
                     let line = StraightLine {
                         start,

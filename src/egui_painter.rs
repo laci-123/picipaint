@@ -16,8 +16,8 @@ impl engine::ScreenPainter for EguiPainter {
         self.painter.line_segment([egui::Pos2::from(start), egui::Pos2::from(end)], egui::Stroke::from(stroke));
     }
     
-    fn draw_circle(&mut self, center: Vector2<ScreenSpace>, radius: f32, stroke: Stroke<ScreenSpace>) {
-        self.painter.circle_filled(egui::Pos2::from(center), radius, stroke.color);
+    fn draw_circle(&mut self, center: Vector2<ScreenSpace>, radius: Number<ScreenSpace>, stroke: Stroke<ScreenSpace>) {
+        self.painter.circle_filled(egui::Pos2::from(center), radius.value, stroke.color);
     }
     
     fn draw_rectangle(&mut self, rectangle: Rectangle<ScreenSpace>, stroke: Stroke<ScreenSpace>) {

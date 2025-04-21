@@ -172,11 +172,11 @@ impl Default for Camera {
 }
 
 impl Camera {
-    pub fn convert_to_screen_coordinates(&self, point: Vector2<WorldSpace>) -> Vector2<ScreenSpace> {
+    pub fn point_to_screen_coordinates(&self, point: Vector2<WorldSpace>) -> Vector2<ScreenSpace> {
         ((point - self.position) * self.zoom + self.offset).cast_to::<ScreenSpace>()
     }
 
-    pub fn convert_to_world_coordinates(&self, point: Vector2<ScreenSpace>) -> Vector2<WorldSpace> {
+    pub fn point_to_world_coordinates(&self, point: Vector2<ScreenSpace>) -> Vector2<WorldSpace> {
         (point.cast_to::<WorldSpace>() - self.offset) * (1.0 / self.zoom) + self.position
     }
 
