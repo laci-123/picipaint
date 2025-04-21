@@ -165,10 +165,10 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
         return Ok(None);
     }
     
-    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, bg_color: Color, camera: &Camera) {
         if let (Some(p1), Some(p2)) = (self.p1, self.p2) {
             let thickness = camera.size_to_world_coordinates(Number::<ScreenSpace>::new(1.0));
-            painter.draw_rectangle(Rectangle { p1, p2 }, Stroke::new(Color::from_rgb(255, 255, 255), thickness), camera);
+            painter.draw_rectangle(Rectangle { p1, p2 }, Stroke::new(bg_color.inverse(), thickness), camera);
         }
     }
     

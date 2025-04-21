@@ -334,6 +334,15 @@ impl Color {
             alpha: 255,
         }
     }
+
+    pub fn inverse(self) -> Self {
+        Self {
+            red: 255 - self.red,
+            green: 255 - self.green,
+            blue: 255 - self.blue,
+            alpha: self.alpha,
+        }
+    }
 }
 
 

@@ -140,7 +140,7 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for FreehandCurveTool {
         return Ok(None);
     }
 
-    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, _bg_color: Color, camera: &Camera) {
         self.curve.draw(painter, camera);
     }
 

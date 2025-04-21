@@ -132,7 +132,7 @@ pub trait PaintObject<P: ScreenPainter> {
 
 pub trait Tool<P: ScreenPainter, IconType> {
     fn update(&mut self, input: &UserInput, stroke: Stroke<WorldSpace>, camera: &Camera) -> Result<Option<Box<dyn PaintObject<P>>>, String>;
-    fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, camera: &Camera);
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, background_color: Color, camera: &Camera);
     fn display_name(&self) -> &str;
     fn icon(&self) -> IconType;
 }
@@ -306,14 +306,12 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
             let mut world_painter = WorldPainter { screen_painter };
             object.draw(&mut world_painter, &self.camera);
             if object.is_selected() {
-                // Not using world painter so that the thickness of the selection markers
-                // won't change with zoom level.
                 let world_rect = object.get_bounding_rect();
                 let screen_rect = Rectangle {
                     p1: self.camera.point_to_screen_coordinates(world_rect.p1),
                     p2: self.camera.point_to_screen_coordinates(world_rect.p2),
                 };
-                let selection_marker_stroke = Stroke::new(Color::from_rgb(255, 255, 255), Number::<ScreenSpace>::new(2.0));
+                let selection_marker_stroke = Stroke::new(self.background_color.inverse(), Number::<ScreenSpace>::new(2.0));
                 screen_painter.draw_rectangle(screen_rect, selection_marker_stroke);
                 for vertex in screen_rect.vertices() {
                     screen_painter.draw_circle(vertex, Number::<ScreenSpace>::new(5.0), selection_marker_stroke);
@@ -324,7 +322,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         if let Some(tool_index) = self.selected_tool_index {
             let mut world_painter = WorldPainter { screen_painter };
             if let Some(tool) = self.tools.get(tool_index) {
-                tool.draw(&mut world_painter, &self.camera);
+                tool.draw(&mut world_painter, self.background_color, &self.camera);
             }
         }
     }

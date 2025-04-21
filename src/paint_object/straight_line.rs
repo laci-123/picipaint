@@ -104,7 +104,7 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for StraghtLineTool {
         return Ok(None);
     }
     
-    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
+    fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, _bg_color: Color, camera: &Camera) {
         if let Some(stroke) = self.stroke {
             if let Some(start) = self.start {
                 painter.draw_line(start, self.mouse_pos, stroke, camera);
