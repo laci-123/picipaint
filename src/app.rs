@@ -32,7 +32,7 @@ impl App {
                 Box::new(PictureTool::default()),
             ]),
             stroke: Stroke::new(Color::from_rgb(0, 0, 200), Number::<WorldSpace>::new(2.0)),
-            bg_color: Color::from_rgb(0, 0, 0),
+            bg_color: Color::from_rgb(255, 255, 255),
             fg_color_selector: ColorSelector::new("Foreground color"),
             bg_color_selector: ColorSelector::new("Background color"),
             error_window: FloatingWindow::new("error"),
