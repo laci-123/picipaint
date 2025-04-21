@@ -171,6 +171,9 @@ pub struct Engine<P: ScreenPainter, IconType> {
 }
 
 impl<P: ScreenPainter, IconType> Engine<P, IconType> {
+    const MINIMUM_OBJECT_SIZE: Number<WorldSpace> = Number::<WorldSpace>::new(20.0);
+    const SELECTION_MARKER_SIZE: Number<ScreenSpace> = Number::<ScreenSpace>::new(5.0);
+
     pub fn new(tools: Vec<Box<dyn Tool<P, IconType>>>) -> Self {
         Self {
             objects: Vec::new(),
@@ -275,11 +278,15 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
             let Some(mouse_position) = input.mouse_position().map(|p| self.camera.point_to_world_coordinates(p))  else {break};
 
             if object.is_selected() {
-                if let Some(vertex) = object.get_bounding_rect().vertex_under_point(mouse_position, Number::<WorldSpace>::new(10.0)) {
+                let selection_marker_size = self.camera.size_to_world_coordinates(Self::SELECTION_MARKER_SIZE);
+                if let Some(vertex) = object.get_bounding_rect().vertex_under_point(mouse_position, selection_marker_size) {
                     self.object_is_resized_by_vertex = Some(vertex);
                 }
                 if let Some(vertex) = self.object_is_resized_by_vertex {
-                    object.resize_to(object.get_bounding_rect().resize_by_dragging_vertex(vertex, mouse_delta));
+                    let new_rect = object.get_bounding_rect().resize_by_dragging_vertex(vertex, mouse_delta);
+                    if new_rect.width() > Self::MINIMUM_OBJECT_SIZE && new_rect.height() > Self::MINIMUM_OBJECT_SIZE {
+                        object.resize_to(new_rect);
+                    }
                 }
                 else if self.objects_are_dragged {
                     object.shift_with(mouse_delta);
@@ -311,7 +318,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
                 let selection_marker_stroke = Stroke::new(background_color.inverse(), Number::<ScreenSpace>::new(2.0));
                 screen_painter.draw_rectangle(screen_rect, selection_marker_stroke);
                 for vertex in screen_rect.vertices() {
-                    screen_painter.draw_circle(vertex, Number::<ScreenSpace>::new(5.0), selection_marker_stroke);
+                    screen_painter.draw_circle(vertex, Self::SELECTION_MARKER_SIZE, selection_marker_stroke);
                 }
             }
         }

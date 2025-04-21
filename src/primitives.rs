@@ -1,4 +1,5 @@
 use std::ops::{Add, AddAssign, Mul, Sub};
+use std::cmp::Ordering;
 use std::marker::PhantomData;
 
 
@@ -13,13 +14,20 @@ pub struct ScreenSpace;
 impl Tag for ScreenSpace {}
 
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Number<T: Tag> {
     pub value: f32,
     tag: PhantomData<T>,
 }
 
 impl<T: Tag> Number<T> {
+    pub const fn new(value: f32) -> Self {
+        Self {
+            value,
+            tag: PhantomData,
+        }
+    }
+
     fn cast_to<U: Tag>(self) -> Number<U> {
         Number::<U> {
             value: self.value,
@@ -28,12 +36,9 @@ impl<T: Tag> Number<T> {
     }
 }
 
-impl<T: Tag> Number<T> {
-    pub fn new(value: f32) -> Self {
-        Self {
-            value,
-            tag: PhantomData,
-        }
+impl<T: Tag + PartialEq> PartialOrd for Number<T> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.value.partial_cmp(&other.value)
     }
 }
 
@@ -239,6 +244,14 @@ impl<T: Tag> Rectangle<T> {
             p1: Vector2::new(x1, y1),
             p2: Vector2::new(x2, y2),
         }
+    }
+
+    pub fn width(&self) -> Number<T> {
+        Number::<T>::new(self.p2.x - self.p1.x)
+    }
+
+    pub fn height(&self) -> Number<T> {
+        Number::<T>::new(self.p2.y - self.p1.y)
     }
 
     pub fn contains_point(&self, p: Vector2<T>) -> bool {
