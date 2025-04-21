@@ -166,7 +166,6 @@ pub struct Engine<P: ScreenPainter, IconType> {
     view_width: f32,
     view_height: f32,
     camera: Camera,
-    background_color: Color,
     objects_are_dragged: bool,
     object_is_resized_by_vertex: Option<RectangleVertex>,
 }
@@ -181,7 +180,6 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
             view_width: 0.0,
             view_height: 0.0,
             camera: Camera::default(),
-            background_color: Color::from_rgb(0, 0, 0),
             objects_are_dragged: false,
             object_is_resized_by_vertex: None,
         }
@@ -191,8 +189,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         self.objects.push(Box::new(object));
     }
     
-    pub fn update(&mut self, input: UserInput, stroke: Stroke<WorldSpace>, background_color: Color, view_width: f32, view_height: f32) -> Result<(), String> {
-        self.background_color = background_color;
+    pub fn update(&mut self, input: UserInput, stroke: Stroke<WorldSpace>, view_width: f32, view_height: f32) -> Result<(), String> {
         self.view_width = view_width;
         self.view_height = view_height;
         self.camera.offset = Vector2::new(view_width / 2.0, view_height / 2.0);
@@ -299,8 +296,8 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         Ok(())
     }
 
-    pub fn draw(&self, screen_painter: &mut P) {
-        screen_painter.draw_rectangle_filled(Rectangle::from_point_and_size(Vector2::zero(), Number::new(self.view_width), Number::new(self.view_height)), self.background_color, None);
+    pub fn draw(&self, screen_painter: &mut P, background_color: Color) {
+        screen_painter.draw_rectangle_filled(Rectangle::from_point_and_size(Vector2::zero(), Number::new(self.view_width), Number::new(self.view_height)), background_color, None);
 
         for object in self.objects.iter() {
             let mut world_painter = WorldPainter { screen_painter };
@@ -311,7 +308,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
                     p1: self.camera.point_to_screen_coordinates(world_rect.p1),
                     p2: self.camera.point_to_screen_coordinates(world_rect.p2),
                 };
-                let selection_marker_stroke = Stroke::new(self.background_color.inverse(), Number::<ScreenSpace>::new(2.0));
+                let selection_marker_stroke = Stroke::new(background_color.inverse(), Number::<ScreenSpace>::new(2.0));
                 screen_painter.draw_rectangle(screen_rect, selection_marker_stroke);
                 for vertex in screen_rect.vertices() {
                     screen_painter.draw_circle(vertex, Number::<ScreenSpace>::new(5.0), selection_marker_stroke);
@@ -322,7 +319,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         if let Some(tool_index) = self.selected_tool_index {
             let mut world_painter = WorldPainter { screen_painter };
             if let Some(tool) = self.tools.get(tool_index) {
-                tool.draw(&mut world_painter, self.background_color, &self.camera);
+                tool.draw(&mut world_painter, background_color, &self.camera);
             }
         }
     }

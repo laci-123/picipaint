@@ -118,12 +118,12 @@ impl eframe::App for App {
                 };
                 let screen_rect = ui.ctx().input(|input| input.screen_rect);
 
-                if let Err(err) = self.engine.update(user_input, self.stroke, self.bg_color, screen_rect.width(), screen_rect.height()) {
+                if let Err(err) = self.engine.update(user_input, self.stroke, screen_rect.width(), screen_rect.height()) {
                     self.error_window.is_open = true;
                     self.error_msg = err;
                 }
 
-                self.engine.draw(&mut p);
+                self.engine.draw(&mut p, self.bg_color);
             });
 
             self.fg_color_selector.update(ctx, &mut self.stroke.color);
