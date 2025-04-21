@@ -145,9 +145,9 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
             },
             UserInput::MouseMove { button: MouseButton::None, .. } => {
                 if let (Some(p1), Some(p2)) = (self.p1, self.p2) {
+                    self.p1 = None;
+                    self.p2 = None;
                     if let Some((image, image_name)) = image_from_open_file_dialog()? {
-                        self.p1 = None;
-                        self.p2 = None;
                         return Ok(Some(Box::new(Picture {
                             bounding_rect: Rectangle { p1, p2 },
                             image,
