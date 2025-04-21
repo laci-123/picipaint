@@ -138,6 +138,7 @@ impl eframe::App for App {
 
 fn map_user_input(response: &egui::Response, ui: &egui::Ui) -> UserInput {
     let is_shift_down = ui.input(|input| input.modifiers.shift);
+    let is_space_down = ui.input(|input| input.key_down(egui::Key::Space));
     let mouse_wheel_delta = ui.input(|input| input.smooth_scroll_delta.y * 0.001);
 
     if mouse_wheel_delta != 0.0 {
@@ -151,6 +152,18 @@ fn map_user_input(response: &egui::Response, ui: &egui::Ui) -> UserInput {
     }
     if ui.input(|input| input.key_pressed(egui::Key::Delete)) {
         return UserInput::Delete;
+    }
+    if response.dragged_by(egui::PointerButton::Middle) {
+        let delta = response.drag_delta();
+        return UserInput::Pan {
+            delta: Vector2::new(-1.0 * delta.x, -1.0 * delta.y)
+        };
+    }
+    if response.dragged_by(egui::PointerButton::Primary) && is_space_down {
+        let delta = response.drag_delta();
+        return UserInput::Pan {
+            delta: Vector2::new(-1.0 * delta.x, -1.0 * delta.y)
+        };
     }
     if response.clicked_by(egui::PointerButton::Primary) {
         if let Some(position) = response.interact_pointer_pos() {
@@ -189,12 +202,6 @@ fn map_user_input(response: &egui::Response, ui: &egui::Ui) -> UserInput {
                 is_shift_down
             };
         }
-    }
-    if response.dragged_by(egui::PointerButton::Middle) {
-        let delta = response.drag_delta();
-        return UserInput::Pan {
-            delta: Vector2::new(-1.0 * delta.x, -1.0 * delta.y)
-        };
     }
     if response.hovered() {
         if let Some(position) = response.hover_pos() {
