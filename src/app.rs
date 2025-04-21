@@ -15,7 +15,7 @@ pub const NAME: &'static str     = "PiciPaint";
 
 pub struct App {
     engine: Engine<EguiPainter, egui::ImageSource<'static>>,
-    stroke: Stroke,
+    stroke: Stroke<WorldSpace>,
     bg_color: Color,
     fg_color_selector: ColorSelector,
     bg_color_selector: ColorSelector,
@@ -31,7 +31,7 @@ impl App {
                 Box::new(StraghtLineTool::default()),
                 Box::new(PictureTool::default()),
             ]),
-            stroke: Stroke::new(Color::from_rgb(0, 0, 200), 2.0),
+            stroke: Stroke::new(Color::from_rgb(0, 0, 200), Number::<WorldSpace>::new(2.0)),
             bg_color: Color::from_rgb(0, 0, 0),
             fg_color_selector: ColorSelector::new("Foreground color"),
             bg_color_selector: ColorSelector::new("Background color"),

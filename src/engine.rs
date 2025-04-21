@@ -3,10 +3,10 @@ use crate::primitives::*;
 
 pub trait ScreenPainter {
     type Texture;
-    fn draw_line(&mut self, start: Vector2<ScreenSpace>, end: Vector2<ScreenSpace>, stroke: Stroke);
-    fn draw_circle(&mut self, center: Vector2<ScreenSpace>, radius: f32, stroke: Stroke);
-    fn draw_rectangle(&mut self, rectangle: Rectangle<ScreenSpace>, stroke: Stroke);
-    fn draw_rectangle_filled(&mut self, rectangle: Rectangle<ScreenSpace>, color: Color, stroke: Option<Stroke>);
+    fn draw_line(&mut self, start: Vector2<ScreenSpace>, end: Vector2<ScreenSpace>, stroke: Stroke<ScreenSpace>);
+    fn draw_circle(&mut self, center: Vector2<ScreenSpace>, radius: f32, stroke: Stroke<ScreenSpace>);
+    fn draw_rectangle(&mut self, rectangle: Rectangle<ScreenSpace>, stroke: Stroke<ScreenSpace>);
+    fn draw_rectangle_filled(&mut self, rectangle: Rectangle<ScreenSpace>, color: Color, stroke: Option<Stroke<ScreenSpace>>);
     fn load_image(&mut self, name: &str, image: &image::DynamicImage) -> Self::Texture;
     fn draw_image(&mut self, frame: Rectangle<ScreenSpace>, texture: &Self::Texture);
 }
@@ -17,10 +17,10 @@ pub struct WorldPainter<'a, P: ScreenPainter> {
 }
 
 impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
-    pub fn draw_line(&mut self, start: Vector2<WorldSpace>, end: Vector2<WorldSpace>, stroke: Stroke, camera: &Camera) {
+    pub fn draw_line(&mut self, start: Vector2<WorldSpace>, end: Vector2<WorldSpace>, stroke: Stroke<WorldSpace>, camera: &Camera) {
         let s = camera.convert_to_screen_coordinates(start);
         let e = camera.convert_to_screen_coordinates(end);
-        self.screen_painter.draw_line(s, e, stroke.with_scaled_thickness(camera.zoom));
+        self.screen_painter.draw_line(s, e, camera.stroke_to_screen_coordinates(stroke));
     }
     
     // pub fn draw_circle(&mut self, center: Vector2, radius: f32, stroke: Stroke, camera: &Camera) {
@@ -29,12 +29,12 @@ impl<'a, P: ScreenPainter> WorldPainter<'a, P> {
     //     self.screen_painter.draw_circle(c, r, stroke.with_scaled_thickness(camera.zoom));
     // }
     
-    pub fn draw_rectangle(&mut self, rectangle: Rectangle<WorldSpace>, stroke: Stroke, camera: &Camera) {
+    pub fn draw_rectangle(&mut self, rectangle: Rectangle<WorldSpace>, stroke: Stroke<WorldSpace>, camera: &Camera) {
         let rect = Rectangle {
             p1: camera.convert_to_screen_coordinates(rectangle.p1),
             p2: camera.convert_to_screen_coordinates(rectangle.p2),
         };
-        self.screen_painter.draw_rectangle(rect, stroke.with_scaled_thickness(camera.zoom));
+        self.screen_painter.draw_rectangle(rect, camera.stroke_to_screen_coordinates(stroke));
     }
     
     // pub fn draw_rectangle_filled(&mut self, rectangle: Rectangle, color: Color, stroke: Option<Stroke>, camera: &Camera) {
@@ -131,7 +131,7 @@ pub trait PaintObject<P: ScreenPainter> {
 
 
 pub trait Tool<P: ScreenPainter, IconType> {
-    fn update(&mut self, input: &UserInput, stroke: Stroke, camera: &Camera) -> Result<Option<Box<dyn PaintObject<P>>>, String>;
+    fn update(&mut self, input: &UserInput, stroke: Stroke<WorldSpace>, camera: &Camera) -> Result<Option<Box<dyn PaintObject<P>>>, String>;
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, camera: &Camera);
     fn display_name(&self) -> &str;
     fn icon(&self) -> IconType;
@@ -191,7 +191,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         self.objects.push(Box::new(object));
     }
     
-    pub fn update(&mut self, input: UserInput, stroke: Stroke, background_color: Color, view_width: f32, view_height: f32) -> Result<(), String> {
+    pub fn update(&mut self, input: UserInput, stroke: Stroke<WorldSpace>, background_color: Color, view_width: f32, view_height: f32) -> Result<(), String> {
         self.background_color = background_color;
         self.view_width = view_width;
         self.view_height = view_height;
@@ -215,7 +215,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         Ok(())
     }
 
-    fn update_tools_and_objects(&mut self, input: UserInput, stroke: Stroke) -> Result<(), String> {
+    fn update_tools_and_objects(&mut self, input: UserInput, stroke: Stroke<WorldSpace>) -> Result<(), String> {
         if let Some(tool_index) = self.selected_tool_index {
             if let Some(tool) = self.tools.get_mut(tool_index) {
                 if let Some(new_object) = tool.update(&input, stroke, &self.camera)? {
@@ -313,10 +313,10 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
                     p1: self.camera.convert_to_screen_coordinates(world_rect.p1),
                     p2: self.camera.convert_to_screen_coordinates(world_rect.p2),
                 };
-                let selection_marker_color = Color::from_rgb(255, 255, 255);
-                screen_painter.draw_rectangle(screen_rect, Stroke::new(selection_marker_color, 1.0));
+                let selection_marker_stroke = Stroke::new(Color::from_rgb(255, 255, 255), Number::<ScreenSpace>::new(2.0));
+                screen_painter.draw_rectangle(screen_rect, selection_marker_stroke);
                 for vertex in screen_rect.vertices() {
-                    screen_painter.draw_circle(vertex, 5.0, Stroke::new(selection_marker_color, 1.0));
+                    screen_painter.draw_circle(vertex, 5.0, selection_marker_stroke);
                 }
             }
         }

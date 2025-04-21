@@ -12,20 +12,20 @@ pub struct EguiPainter {
 impl engine::ScreenPainter for EguiPainter {
     type Texture = egui::TextureHandle;
     
-    fn draw_line(&mut self, start: Vector2<ScreenSpace>, end: Vector2<ScreenSpace>, stroke: Stroke) {
+    fn draw_line(&mut self, start: Vector2<ScreenSpace>, end: Vector2<ScreenSpace>, stroke: Stroke<ScreenSpace>) {
         self.painter.line_segment([egui::Pos2::from(start), egui::Pos2::from(end)], egui::Stroke::from(stroke));
     }
     
-    fn draw_circle(&mut self, center: Vector2<ScreenSpace>, radius: f32, stroke: Stroke) {
+    fn draw_circle(&mut self, center: Vector2<ScreenSpace>, radius: f32, stroke: Stroke<ScreenSpace>) {
         self.painter.circle_filled(egui::Pos2::from(center), radius, stroke.color);
     }
     
-    fn draw_rectangle(&mut self, rectangle: Rectangle<ScreenSpace>, stroke: Stroke) {
+    fn draw_rectangle(&mut self, rectangle: Rectangle<ScreenSpace>, stroke: Stroke<ScreenSpace>) {
         let corner_rounding = 0.0;
         self.painter.rect_stroke(egui::Rect::from(rectangle), corner_rounding, stroke);
     }
     
-    fn draw_rectangle_filled(&mut self, rectangle: Rectangle<ScreenSpace>, color: Color, stroke: Option<Stroke>) {
+    fn draw_rectangle_filled(&mut self, rectangle: Rectangle<ScreenSpace>, color: Color, stroke: Option<Stroke<ScreenSpace>>) {
         let rect = egui::Rect::from(rectangle);
         let corner_rounding = 0.0;
         if let Some(s) = stroke {
@@ -93,8 +93,8 @@ impl From<Color> for egui::Color32 {
 }
 
 
-impl From<Stroke> for egui::Stroke {
-    fn from(other: Stroke) -> egui::Stroke {
+impl From<Stroke<ScreenSpace>> for egui::Stroke {
+    fn from(other: Stroke<ScreenSpace>) -> egui::Stroke {
         egui::Stroke::new(other.thickness.value, other.color)
     }
 }

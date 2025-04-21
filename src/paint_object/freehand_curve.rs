@@ -6,7 +6,7 @@ use eframe::egui;
 
 pub struct FreehandCurve {
     points: Vec<Vector2<WorldSpace>>,
-    stroke: Option<Stroke>, // Only optional because Stroke doesn't have a default value, so we have to wait until the first call to `update` to set it.
+    stroke: Option<Stroke<WorldSpace>>, // Only optional because Stroke doesn't have a default value, so we have to wait until the first call to `update` to set it.
     min_x: f32,
     max_x: f32,
     min_y: f32,
@@ -111,7 +111,7 @@ impl Default for FreehandCurveTool {
 }
 
 impl Tool<EguiPainter, egui::ImageSource<'static>> for FreehandCurveTool {
-    fn update(&mut self, input: &UserInput, stroke: Stroke, camera: &Camera) -> Result<Option<Box<dyn PaintObject<EguiPainter>>>, String> {
+    fn update(&mut self, input: &UserInput, stroke: Stroke<WorldSpace>, camera: &Camera) -> Result<Option<Box<dyn PaintObject<EguiPainter>>>, String> {
         self.curve.stroke = Some(stroke);
         if let UserInput::MouseMove { position, button: MouseButton::Left, is_shift_down: false, .. } = input {
             let p = camera.convert_to_world_coordinates(*position);

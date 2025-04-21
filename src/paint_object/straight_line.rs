@@ -7,7 +7,7 @@ use eframe::egui;
 pub struct StraightLine {
     start: Vector2<WorldSpace>,
     end: Vector2<WorldSpace>,
-    stroke: Stroke,
+    stroke: Stroke<WorldSpace>,
     selected: bool,
     mouse_pos: Vector2<WorldSpace>,
 }
@@ -54,7 +54,7 @@ impl PaintObject<EguiPainter> for StraightLine {
 
 pub struct StraghtLineTool {
     start: Option<Vector2<WorldSpace>>,
-    stroke: Option<Stroke>, // Only optional because Stroke doesn't have a default value, so we have to wait until the first call to `update` to set it.
+    stroke: Option<Stroke<WorldSpace>>, // Only optional because Stroke doesn't have a default value, so we have to wait until the first call to `update` to set it.
     mouse_pos: Vector2<WorldSpace>,
     icon: egui::ImageSource<'static>,
 }
@@ -71,7 +71,7 @@ impl Default for StraghtLineTool {
 }
 
 impl Tool<EguiPainter, egui::ImageSource<'static>> for StraghtLineTool {
-    fn update(&mut self, input: &UserInput, stroke: Stroke, camera: &Camera) -> Result<Option<Box<dyn PaintObject<EguiPainter>>>, String> {
+    fn update(&mut self, input: &UserInput, stroke: Stroke<WorldSpace>, camera: &Camera) -> Result<Option<Box<dyn PaintObject<EguiPainter>>>, String> {
         self.stroke = Some(stroke);
         
         match input {

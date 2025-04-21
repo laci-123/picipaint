@@ -120,7 +120,7 @@ impl Default for PictureTool {
 }
 
 impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
-    fn update(&mut self, input: &UserInput, _stroke: Stroke, camera: &Camera) -> Result<Option<Box<dyn PaintObject<EguiPainter>>>, String> {
+    fn update(&mut self, input: &UserInput, _stroke: Stroke<WorldSpace>, camera: &Camera) -> Result<Option<Box<dyn PaintObject<EguiPainter>>>, String> {
         match input {
             UserInput::MouseClick { position, .. } => {
                 if let Some((image, image_name)) = image_from_open_file_dialog()? {
@@ -167,7 +167,8 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
     
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
         if let (Some(p1), Some(p2)) = (self.p1, self.p2) {
-            painter.draw_rectangle(Rectangle { p1, p2 }, Stroke::new(Color::from_rgb(255, 255, 255), 1.0), camera);
+            let thickness = camera.size_to_world_coordinates(Number::<ScreenSpace>::new(1.0));
+            painter.draw_rectangle(Rectangle { p1, p2 }, Stroke::new(Color::from_rgb(255, 255, 255), thickness), camera);
         }
     }
     

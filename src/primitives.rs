@@ -20,6 +20,15 @@ pub struct Number<T: Tag> {
 }
 
 impl<T: Tag> Number<T> {
+    fn cast_to<U: Tag>(self) -> Number<U> {
+        Number::<U> {
+            value: self.value,
+            tag: PhantomData,
+        }
+    }
+}
+
+impl<T: Tag> Number<T> {
     pub fn new(value: f32) -> Self {
         Self {
             value,
@@ -174,6 +183,28 @@ impl Camera {
     pub fn distance_to_world_coordinates(&self, distance: Vector2<ScreenSpace>) -> Vector2<WorldSpace> {
         (distance * (1.0 / self.zoom)).cast_to::<WorldSpace>()
     }
+
+    pub fn size_to_world_coordinates(&self, size: Number<ScreenSpace>) -> Number<WorldSpace> {
+        (size * (1.0 / self.zoom)).cast_to::<WorldSpace>()
+    }
+
+    pub fn size_to_screen_coordinates(&self, size: Number<WorldSpace>) -> Number<ScreenSpace> {
+        (size * self.zoom).cast_to::<ScreenSpace>()
+    }
+
+    // pub fn stroke_to_world_coordinates(&self, stroke: Stroke<ScreenSpace>) -> Stroke<WorldSpace> {
+    //     Stroke {
+    //         color: stroke.color,
+    //         thickness: self.size_to_world_coordinates(stroke.thickness),
+    //     }
+    // }
+
+    pub fn stroke_to_screen_coordinates(&self, stroke: Stroke<WorldSpace>) -> Stroke<ScreenSpace> {
+        Stroke {
+            color: stroke.color,
+            thickness: self.size_to_screen_coordinates(stroke.thickness),
+        }
+    }
 }
 
 
@@ -307,23 +338,16 @@ impl Color {
 
 
 #[derive(Clone, Copy)]
-pub struct Stroke {
+pub struct Stroke<T: Tag> {
     pub color: Color,
-    pub thickness: Number<WorldSpace>,
+    pub thickness: Number<T>,
 }
 
-impl Stroke {
-    pub fn new(color: Color, thickness: f32) -> Self {
+impl<T: Tag> Stroke<T> {
+    pub fn new(color: Color, thickness: Number<T>) -> Self {
         Self {
             color,
-            thickness: Number::<WorldSpace>::new(thickness),
-        }
-    }
-    
-    pub fn with_scaled_thickness(self, scale: f32) -> Self {
-        Self {
-            color: self.color,
-            thickness: self.thickness * scale,
+            thickness,
         }
     }
 }
