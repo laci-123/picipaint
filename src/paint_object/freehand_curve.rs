@@ -5,17 +5,25 @@ use eframe::egui;
 
 
 pub struct FreehandCurve {
+    base: PaintObjectCommon,
     points: Vec<Vector2<WorldSpace>>,
     stroke: Option<Stroke<WorldSpace>>, // Only optional because Stroke doesn't have a default value, so we have to wait until the first call to `update` to set it.
     min_x: f32,
     max_x: f32,
     min_y: f32,
     max_y: f32,
-    selected: bool,
     mouse_pos: Vector2<WorldSpace>,
 }
 
 impl PaintObject<EguiPainter> for FreehandCurve {
+    fn base(&self) -> &PaintObjectCommon {
+        &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut PaintObjectCommon {
+        &mut self.base
+    }
+
     fn update(&mut self, input: &UserInput, camera: &Camera) {
         if let Some(position) = input.mouse_position() {
             self.mouse_pos = camera.point_to_world_coordinates(position);
@@ -30,14 +38,6 @@ impl PaintObject<EguiPainter> for FreehandCurve {
         }
     }
     
-    fn is_selected(&self) -> bool {
-        self.selected
-    }
-
-    fn set_selected(&mut self, value: bool) {
-        self.selected = value;
-    }
-
     fn is_under_mouse(&self) -> bool {
         if self.get_bounding_rect().contains_point(self.mouse_pos) {
             for point in self.points.iter() {
@@ -89,13 +89,13 @@ pub struct FreehandCurveTool {
 impl FreehandCurveTool {
     fn new_curve() -> FreehandCurve {
         FreehandCurve {
+            base: PaintObjectCommon { is_selected: false },
             stroke: None, 
             points: Vec::new(),
             min_x: f32::INFINITY,
             min_y: f32::INFINITY,
             max_x: f32::NEG_INFINITY,
             max_y: f32::NEG_INFINITY,
-            selected: false,
             mouse_pos: Vector2::zero(),
         }
     }

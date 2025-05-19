@@ -8,12 +8,12 @@ use crate::engine::*;
 
 
 pub struct Picture {
+    base: PaintObjectCommon,
     bounding_rect: Rectangle<WorldSpace>,
     image: image::DynamicImage,
     image_name: String,
     texture: OnceCell<egui::TextureHandle>,
     mouse_pos: Vector2<WorldSpace>,
-    selected: bool,
 }
 
 impl Picture {
@@ -52,17 +52,25 @@ impl Picture {
                             .map_err(|err| err.to_string())?;
 
         Ok(Some(Picture {
+            base: PaintObjectCommon { is_selected: false },
             bounding_rect: Rectangle::from_point_and_size(top_left, Number::new(image.width() as f32), Number::new(image.height() as f32)),
             image,
             image_name: file_path.to_string_lossy().into_owned(),
             texture: OnceCell::new(),
             mouse_pos: Vector2::zero(),
-            selected: false,
         }))
     }
 }
 
 impl PaintObject<EguiPainter> for Picture {
+    fn base(&self) -> &PaintObjectCommon {
+        &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut PaintObjectCommon {
+        &mut self.base
+    }
+
     fn update(&mut self, input: &UserInput, camera: &Camera) {
         if let Some(position) = input.mouse_position() {
             self.mouse_pos = camera.point_to_world_coordinates(position);
@@ -74,14 +82,6 @@ impl PaintObject<EguiPainter> for Picture {
             painter.load_image(&self.image_name, &self.image)
         });
         painter.draw_image(self.bounding_rect, texture, camera);
-    }
-    
-    fn is_selected(&self) -> bool {
-        self.selected
-    }
-    
-    fn set_selected(&mut self, value: bool) {
-        self.selected = value;
     }
     
     fn is_under_mouse(&self) -> bool {
@@ -126,12 +126,12 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
                 if let Some((image, image_name)) = image_from_open_file_dialog()? {
                     let pos = camera.point_to_world_coordinates(*position);
                     return Ok(Some(Box::new(Picture {
+                        base: PaintObjectCommon { is_selected: false },
                         bounding_rect: Rectangle::from_point_and_size(pos, Number::new(image.width() as f32), Number::new(image.height() as f32)),
                         image,
                         image_name,
                         texture: OnceCell::new(),
                         mouse_pos: pos,
-                        selected: false,
                     })));
                 }
             },
@@ -149,12 +149,12 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
                     self.p2 = None;
                     if let Some((image, image_name)) = image_from_open_file_dialog()? {
                         return Ok(Some(Box::new(Picture {
+                            base: PaintObjectCommon { is_selected: false },
                             bounding_rect: Rectangle { p1, p2 },
                             image,
                             image_name,
                             texture: OnceCell::new(),
                             mouse_pos: p2,
-                            selected: false,
                         })));
                     }
                 }

@@ -5,14 +5,22 @@ use eframe::egui;
 
 
 pub struct StraightLine {
+    base: PaintObjectCommon,
     start: Vector2<WorldSpace>,
     end: Vector2<WorldSpace>,
     stroke: Stroke<WorldSpace>,
-    selected: bool,
     mouse_pos: Vector2<WorldSpace>,
 }
 
 impl PaintObject<EguiPainter> for StraightLine {
+    fn base(&self) -> &PaintObjectCommon {
+        &self.base
+    }
+
+    fn base_mut(&mut self) -> &mut PaintObjectCommon {
+        &mut self.base
+    }
+    
     fn update(&mut self, input: &UserInput, camera: &Camera) {
         if let Some(position) = input.mouse_position() {
             self.mouse_pos = camera.point_to_world_coordinates(position);
@@ -21,14 +29,6 @@ impl PaintObject<EguiPainter> for StraightLine {
     
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, EguiPainter>, camera: &Camera) {
         painter.draw_line(self.start, self.end, self.stroke, camera);
-    }
-    
-    fn is_selected(&self) -> bool {
-        self.selected
-    }
-    
-    fn set_selected(&mut self, value: bool) {
-        self.selected = value;
     }
     
     fn is_under_mouse(&self) -> bool {
@@ -82,10 +82,10 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for StraghtLineTool {
                 let p = camera.point_to_world_coordinates(*position);
                 if let Some(start) = self.start {
                     let line = StraightLine {
+                        base: PaintObjectCommon { is_selected: false },
                         start,
                         end: p,
                         stroke,
-                        selected: false,
                         mouse_pos: p,
                     };
                     self.start = None;

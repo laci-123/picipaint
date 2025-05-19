@@ -118,11 +118,16 @@ impl UserInput {
     }
 }
 
+
+pub struct PaintObjectCommon {
+    pub is_selected: bool,
+}
+
 pub trait PaintObject<P: ScreenPainter> {
+    fn base(&self) -> &PaintObjectCommon;
+    fn base_mut(&mut self) -> &mut PaintObjectCommon;
     fn update(&mut self, input: &UserInput, camera: &Camera);
     fn draw<'a>(&self, painter: &mut WorldPainter<'a, P>, camera: &Camera);
-    fn is_selected(&self) -> bool;
-    fn set_selected(&mut self, value: bool);
     fn is_under_mouse(&self) -> bool;
     fn get_bounding_rect(&self) -> Rectangle<WorldSpace>;
     fn shift_with(&mut self, p: Vector2<WorldSpace>);
@@ -237,14 +242,14 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
 
             if self.selected_tool_index.is_none() {
                 if input == UserInput::SelectAll {
-                    object.set_selected(true);
+                    object.base_mut().is_selected = true;
                     continue;
                 }
                 if input == UserInput::DeselectAll {
-                    object.set_selected(false);
+                    object.base_mut().is_selected = true;
                     continue;
                 }
-                if input == UserInput::Delete && object.is_selected() {
+                if input == UserInput::Delete && object.base().is_selected {
                     self.to_be_deleted.push(i);
                     continue;
                 }
@@ -255,19 +260,19 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
                 if left_click {
                     if object.is_under_mouse() {
                         if shift_is_down {
-                            object.set_selected(!object.is_selected());
+                            object.base_mut().is_selected = !object.base().is_selected;
                         }
                         else {
-                            object.set_selected(true);
+                            object.base_mut().is_selected = true;
                         }
                     }
                     else {
                         if !shift_is_down {
-                            object.set_selected(false);
+                            object.base_mut().is_selected = false;
                         }
                     }
                 }
-                if object.is_selected() && object.is_under_mouse() {
+                if object.base().is_selected && object.is_under_mouse() {
                     self.objects_are_dragged = true;
                 }
             }
@@ -277,7 +282,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
             let Some(mouse_delta)    = input.mouse_delta()   .map(|d| self.camera.distance_to_world_coordinates(d)) else {break};
             let Some(mouse_position) = input.mouse_position().map(|p| self.camera.point_to_world_coordinates(p))  else {break};
 
-            if object.is_selected() {
+            if object.base().is_selected {
                 let selection_marker_size = self.camera.size_to_world_coordinates(Self::SELECTION_MARKER_SIZE);
                 if let Some(vertex) = object.get_bounding_rect().vertex_under_point(mouse_position, selection_marker_size) {
                     self.object_is_resized_by_vertex = Some(vertex);
@@ -309,7 +314,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         for object in self.objects.iter() {
             let mut world_painter = WorldPainter { screen_painter };
             object.draw(&mut world_painter, &self.camera);
-            if object.is_selected() {
+            if object.base().is_selected {
                 let world_rect = object.get_bounding_rect();
                 let screen_rect = Rectangle {
                     p1: self.camera.point_to_screen_coordinates(world_rect.p1),
@@ -339,7 +344,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
         self.selected_tool_index = index;
         if index.is_some() {
             for object in self.objects.iter_mut() {
-                object.set_selected(false);
+                object.base_mut().is_selected = false;
             }
         }
     }
