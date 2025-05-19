@@ -80,7 +80,20 @@ impl PaintObject<EguiPainter> for FreehandCurve {
     }
 
     fn clip_to(&mut self, new_size: Rectangle<WorldSpace>) {
-        todo!()
+        let mut to_be_deleted = Vec::new();
+        for (i, p) in self.points.iter().enumerate() {
+            if !new_size.contains_point(*p) {
+                to_be_deleted.push(i);
+            }
+        }
+        for i in to_be_deleted.iter().rev() {
+            self.points.remove(*i);
+        }
+
+        self.min_x = new_size.p1.x;
+        self.min_y = new_size.p1.y;
+        self.max_x = new_size.p2.x;
+        self.max_y = new_size.p2.y;
     }
 }
 
