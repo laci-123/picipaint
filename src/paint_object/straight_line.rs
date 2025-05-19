@@ -49,6 +49,27 @@ impl PaintObject<EguiPainter> for StraightLine {
         self.start = new_size.p1;
         self.end = new_size.p2;
     }
+
+    fn clip_to(&mut self, new_size: Rectangle<WorldSpace>) {
+        let mut new_start = None;
+        let mut new_end = None;
+        for int_point in new_size.intersection_with_line(self.start, self.end) {
+            if int_point.is_some() {
+                if new_start.is_none() {
+                    new_start = int_point;
+                }
+                else {
+                    new_end = int_point;
+                }
+            }
+        }
+        if let Some(p) = new_start {
+            self.start = p;
+        }
+        if let Some(p) = new_end {
+            self.end = p;
+        }
+    }
 }
 
 

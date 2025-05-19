@@ -100,6 +100,9 @@ impl eframe::App for App {
                 ui.add(egui::Slider::new(&mut self.stroke.thickness.value, 0.5..=10.0)).on_hover_ui_at_pointer(|ui| {
                     ui.label("line thickness");
                 });
+                if ui.button("clip").clicked() {
+                    self.engine.start_clipping();
+                }
             });
 
             ui.separator();
@@ -152,6 +155,9 @@ fn map_user_input(response: &egui::Response, ui: &egui::Ui) -> UserInput {
     }
     if ui.input(|input| input.key_pressed(egui::Key::Delete)) {
         return UserInput::Delete;
+    }
+    if ui.input(|input| input.key_pressed(egui::Key::Enter)) {
+        return UserInput::FinalizeClip;
     }
     if response.dragged_by(egui::PointerButton::Middle) {
         let delta = response.drag_delta();

@@ -100,6 +100,10 @@ impl PaintObject<EguiPainter> for Picture {
     fn resize_to(&mut self, new_size: Rectangle<WorldSpace>) {
         self.bounding_rect = new_size;
     }
+
+    fn clip_to(&mut self, new_size: Rectangle<WorldSpace>) {
+        todo!()
+    }
 }
 
 

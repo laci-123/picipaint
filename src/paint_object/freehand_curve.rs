@@ -78,6 +78,10 @@ impl PaintObject<EguiPainter> for FreehandCurve {
         self.max_x = new_size.p2.x;
         self.max_y = new_size.p2.y;
     }
+
+    fn clip_to(&mut self, new_size: Rectangle<WorldSpace>) {
+        todo!()
+    }
 }
 
 

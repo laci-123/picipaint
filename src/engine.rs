@@ -90,6 +90,7 @@ pub enum UserInput {
         delta: Vector2<ScreenSpace>,
     },
     Delete,
+    FinalizeClip,
 }
 
 impl UserInput {
@@ -122,6 +123,7 @@ impl UserInput {
 #[derive(Default)]
 pub struct PaintObjectCommon {
     pub is_selected: bool,
+    pub clip_rectangle: Option<Rectangle<WorldSpace>>,
 }
 
 pub trait PaintObject<P: ScreenPainter> {
@@ -133,6 +135,7 @@ pub trait PaintObject<P: ScreenPainter> {
     fn get_bounding_rect(&self) -> Rectangle<WorldSpace>;
     fn shift_with(&mut self, p: Vector2<WorldSpace>);
     fn resize_to(&mut self, new_size: Rectangle<WorldSpace>);
+    fn clip_to(&mut self, new_size: Rectangle<WorldSpace>);
 }
 
 
@@ -197,6 +200,14 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
     pub fn add_object(&mut self, object: impl PaintObject<P> + 'static) {
         self.objects.push(Box::new(object));
     }
+
+    pub fn start_clipping(&mut self) {
+        for object in self.objects.iter_mut() {
+            if object.base().is_selected {
+                object.base_mut().clip_rectangle = Some(object.get_bounding_rect());
+            }
+        }
+    }
     
     pub fn update(&mut self, input: UserInput, stroke: Stroke<WorldSpace>, view_width: f32, view_height: f32) -> Result<(), String> {
         self.view_width = view_width;
@@ -213,6 +224,15 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
                     self.camera.zoom = 0.0;
                 }
             },
+            UserInput::FinalizeClip => {
+                for object in self.objects.iter_mut() {
+                    if let Some(clip_rect) = object.base().clip_rectangle {
+                        object.clip_to(clip_rect);
+                    }
+                    object.base_mut().clip_rectangle = None;
+                    object.base_mut().is_selected = false;
+                }
+            }
             _ => {
                 self.update_tools_and_objects(input, stroke)?;
             },
@@ -285,17 +305,31 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
 
             if object.base().is_selected {
                 let selection_marker_size = self.camera.size_to_world_coordinates(Self::SELECTION_MARKER_SIZE);
-                if let Some(vertex) = object.get_bounding_rect().vertex_under_point(mouse_position, selection_marker_size) {
-                    self.object_is_resized_by_vertex = Some(vertex);
-                }
-                if let Some(vertex) = self.object_is_resized_by_vertex {
-                    let new_rect = object.get_bounding_rect().resize_by_dragging_vertex(vertex, mouse_delta);
-                    if new_rect.width() > Self::MINIMUM_OBJECT_SIZE && new_rect.height() > Self::MINIMUM_OBJECT_SIZE {
-                        object.resize_to(new_rect);
+
+                if let Some(clip_rect) = object.base().clip_rectangle {
+                    if let Some(vertex) = clip_rect.vertex_under_point(mouse_position, selection_marker_size) {
+                        self.object_is_resized_by_vertex = Some(vertex);
+                    }
+                    if let Some(vertex) = self.object_is_resized_by_vertex {
+                        let new_rect = clip_rect.resize_by_dragging_vertex(vertex, mouse_delta);
+                        if new_rect.width() > Self::MINIMUM_OBJECT_SIZE && new_rect.height() > Self::MINIMUM_OBJECT_SIZE {
+                            object.base_mut().clip_rectangle = Some(new_rect);
+                        }
                     }
                 }
-                else if self.objects_are_dragged {
-                    object.shift_with(mouse_delta);
+                else {
+                    if let Some(vertex) = object.get_bounding_rect().vertex_under_point(mouse_position, selection_marker_size) {
+                        self.object_is_resized_by_vertex = Some(vertex);
+                    }
+                    if let Some(vertex) = self.object_is_resized_by_vertex {
+                        let new_rect = object.get_bounding_rect().resize_by_dragging_vertex(vertex, mouse_delta);
+                        if new_rect.width() > Self::MINIMUM_OBJECT_SIZE && new_rect.height() > Self::MINIMUM_OBJECT_SIZE {
+                            object.resize_to(new_rect);
+                        }
+                    }
+                    else if self.objects_are_dragged {
+                        object.shift_with(mouse_delta);
+                    }
                 }
             }
         }
@@ -316,7 +350,7 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
             let mut world_painter = WorldPainter { screen_painter };
             object.draw(&mut world_painter, &self.camera);
             if object.base().is_selected {
-                let world_rect = object.get_bounding_rect();
+                let world_rect = object.base().clip_rectangle.unwrap_or(object.get_bounding_rect());
                 let screen_rect = Rectangle {
                     p1: self.camera.point_to_screen_coordinates(world_rect.p1),
                     p2: self.camera.point_to_screen_coordinates(world_rect.p2),
@@ -324,7 +358,14 @@ impl<P: ScreenPainter, IconType> Engine<P, IconType> {
                 let selection_marker_stroke = Stroke::new(background_color.inverse(), Number::<ScreenSpace>::new(2.0));
                 screen_painter.draw_rectangle(screen_rect, selection_marker_stroke);
                 for vertex in screen_rect.vertices() {
-                    screen_painter.draw_circle(vertex, Self::SELECTION_MARKER_SIZE, selection_marker_stroke);
+                    if object.base().clip_rectangle.is_some() {
+                        screen_painter.draw_rectangle_filled(Rectangle::from_center_and_side_length(vertex, Self::SELECTION_MARKER_SIZE * 2.0),
+                                                             selection_marker_stroke.color,
+                                                             None);
+                    }
+                    else {
+                        screen_painter.draw_circle(vertex, Self::SELECTION_MARKER_SIZE, selection_marker_stroke);
+                    }
                 }
             }
         }

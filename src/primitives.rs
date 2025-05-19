@@ -246,6 +246,13 @@ impl<T: Tag> Rectangle<T> {
         }
     }
 
+    pub fn from_center_and_side_length(c: Vector2<T>, side: Number<T>) -> Self {
+        Self {
+            p1: Vector2::new(c.x - side.value * 0.5, c.y - side.value * 0.5),
+            p2: Vector2::new(c.x + side.value * 0.5, c.y + side.value * 0.5),
+        }
+    }
+
     pub fn width(&self) -> Number<T> {
         Number::<T>::new(self.p2.x - self.p1.x)
     }
@@ -326,6 +333,88 @@ impl<T: Tag> Rectangle<T> {
                 }
             },
         }
+    }
+
+    // returns zero or one intersection point for each side
+    pub fn intersection_with_line(&self, start: Vector2<T>, end: Vector2<T>) -> [Option<Vector2<T>>; 4] {
+        // example for one of the vertical sides
+        // 
+        //         side  end
+        //           |    *
+        //           |   /|
+        //           |  / |
+        //           | /  |
+        //           |/   |
+        //    (x, y) *    |    x is known (it defines the rectangle side), we want to find y
+        //          /|    |
+        //         / |    |
+        //        /  |    |
+        //       /   |    |
+        //      /    |    |
+        //     *-----*----*
+        //   start   |
+        //           |
+        //
+        // if end.y = start.y:
+        //     y = end.y = start.y
+        // if end.x = start.x:
+        //     The line is exactly on the rectangle side so there is technically infinitely many intersection points.
+        //     But we can't handle that so we say that there is none.
+        // otherwise:
+        //     (y - start.y) / (end.y - start.y) = (x - start.x) / (end.x - start.x) 
+        //                           y - start.y = (x - start.x) * (end.y - start.y) / (end.x - start.x)
+        //                                     y = (x - start.x) * (end.y - start.y) / (end.x - start.x) + start.y
+        //
+        //
+        let int_with_left_side = 
+        if end.y == start.y {
+            Some(Vector2::new(self.p1.x, end.y))
+        }
+        else if end.x == start.x {
+            None
+        }
+        else {
+            let y = (self.p1.x - start.x) * (end.y - start.y) / (end.x - start.x) + start.y;
+            Some(Vector2::new(self.p1.x, y))
+        };
+
+        let int_with_right_side = 
+        if end.y == start.y {
+            Some(Vector2::new(self.p2.x, end.y))
+        }
+        else if end.x == start.x {
+            None
+        }
+        else {
+            let y = (self.p2.x - start.x) * (end.y - start.y) / (end.x - start.x) + start.y;
+            Some(Vector2::new(self.p2.x, y))
+        };
+
+        let int_with_top_side = 
+        if end.x == start.x {
+            Some(Vector2::new(end.x, self.p1.y))
+        }
+        else if end.y == start.y {
+            None
+        }
+        else {
+            let x = (self.p1.y - start.y) * (end.x - start.x) / (end.y - start.y) + start.x;
+            Some(Vector2::new(x, self.p1.y))
+        };
+
+        let int_with_bottom_side = 
+        if end.x == start.x {
+            Some(Vector2::new(end.x, self.p2.y))
+        }
+        else if end.y == start.y {
+            None
+        }
+        else {
+            let x = (self.p2.y - start.y) * (end.x - start.x) / (end.y - start.y) + start.x;
+            Some(Vector2::new(x, self.p2.y))
+        };
+
+        [int_with_left_side, int_with_right_side, int_with_top_side, int_with_bottom_side]
     }
 }
 
