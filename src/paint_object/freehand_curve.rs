@@ -89,7 +89,7 @@ pub struct FreehandCurveTool {
 impl FreehandCurveTool {
     fn new_curve() -> FreehandCurve {
         FreehandCurve {
-            base: PaintObjectCommon { is_selected: false },
+            base: PaintObjectCommon::default(),
             stroke: None, 
             points: Vec::new(),
             min_x: f32::INFINITY,

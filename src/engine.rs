@@ -119,6 +119,7 @@ impl UserInput {
 }
 
 
+#[derive(Default)]
 pub struct PaintObjectCommon {
     pub is_selected: bool,
 }

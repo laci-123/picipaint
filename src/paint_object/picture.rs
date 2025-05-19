@@ -52,7 +52,7 @@ impl Picture {
                             .map_err(|err| err.to_string())?;
 
         Ok(Some(Picture {
-            base: PaintObjectCommon { is_selected: false },
+            base: PaintObjectCommon::default(),
             bounding_rect: Rectangle::from_point_and_size(top_left, Number::new(image.width() as f32), Number::new(image.height() as f32)),
             image,
             image_name: file_path.to_string_lossy().into_owned(),
@@ -126,7 +126,7 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
                 if let Some((image, image_name)) = image_from_open_file_dialog()? {
                     let pos = camera.point_to_world_coordinates(*position);
                     return Ok(Some(Box::new(Picture {
-                        base: PaintObjectCommon { is_selected: false },
+                        base: PaintObjectCommon::default(),
                         bounding_rect: Rectangle::from_point_and_size(pos, Number::new(image.width() as f32), Number::new(image.height() as f32)),
                         image,
                         image_name,
@@ -149,7 +149,7 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for PictureTool {
                     self.p2 = None;
                     if let Some((image, image_name)) = image_from_open_file_dialog()? {
                         return Ok(Some(Box::new(Picture {
-                            base: PaintObjectCommon { is_selected: false },
+                            base: PaintObjectCommon::default(),
                             bounding_rect: Rectangle { p1, p2 },
                             image,
                             image_name,

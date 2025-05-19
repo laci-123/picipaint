@@ -82,7 +82,7 @@ impl Tool<EguiPainter, egui::ImageSource<'static>> for StraghtLineTool {
                 let p = camera.point_to_world_coordinates(*position);
                 if let Some(start) = self.start {
                     let line = StraightLine {
-                        base: PaintObjectCommon { is_selected: false },
+                        base: PaintObjectCommon::default(),
                         start,
                         end: p,
                         stroke,
