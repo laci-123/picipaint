@@ -1,0 +1,21 @@
+{
+  "name": "typescript-react-template",
+  "version": "1.0.0",
+  "description": "",
+  "license": "MIT",
+  "author": "",
+  "type": "module",
+  "scripts": {
+    "build": "npx tsc --noEmit && npx esbuild ./src/index.tsx --bundle --minify --outfile=./dist/out.js && cp ./src/index.html ./dist/index.html",
+    "test": "npx vitest --watch=false"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.9",
+    "@types/react-dom": "^19.2.3",
+    "esbuild": "^0.27.2",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
+  }
+}
