@@ -6,12 +6,23 @@
 .menubar {
   display: flex;
   border: 1px solid red;
+
+  .menu-item {
+    position: relative;
+    padding: 1em;
+
+    .menu-item-body {
+      position: absolute;
+      top: 4em;
+      transform: translateX(-50%);
+      display: none;
+      border: 1px solid green;
+      padding: 1em;
+    }
+
+    &:hover .menu-item-body {
+      display: block;
+    }
+  }
 }
 
-.menu-item {
-  padding: 1em;
-}
-
-.menu-item-body {
-  border: 1px solid green;
-}

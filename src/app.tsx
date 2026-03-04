@@ -1,16 +1,12 @@
-import { MyButton } from "./button.tsx";
-import { useState } from "react";
+import Menubar from "./components/menubar.tsx"; 
 
 
-export function App() {
-  const [count, setCount] = useState(0);
-
-  function handleClick() {
-    setCount(count + 1);
-  }
+export default function App() {
   
   return <div>
-           <MyButton value={count} onClick={handleClick} />
-           <MyButton value={count} onClick={handleClick} />
+          <Menubar/>
+          <p>
+            Ide van írva valami.
+          </p>
          </div>;
 }

@@ -1,4 +1,4 @@
-import { App } from "./app.tsx"
+import App from "./app.tsx"
 import { createRoot } from "react-dom/client"
 
 
