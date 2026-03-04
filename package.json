@@ -6,7 +6,7 @@
   "author": "",
   "type": "module",
   "scripts": {
-    "build": "npx tsc --noEmit && npx esbuild ./src/index.tsx --bundle --minify --outfile=./dist/out.js && cp ./src/index.html ./dist/index.html",
+    "build": "npx tsc --noEmit && npx esbuild ./src/index.tsx --bundle --minify --outfile=./dist/out.js && cp ./src/*.html ./dist/ && cp ./src/*.css ./dist/",
     "test": "npx vitest --watch=false"
   },
   "devDependencies": {

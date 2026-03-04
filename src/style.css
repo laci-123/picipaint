@@ -1,0 +1,17 @@
+* {
+  box-sizing: border-box;
+  background-color: lightblue;
+}
+
+.menubar {
+  display: flex;
+  border: 1px solid red;
+}
+
+.menu-item {
+  padding: 1em;
+}
+
+.menu-item-body {
+  border: 1px solid green;
+}
