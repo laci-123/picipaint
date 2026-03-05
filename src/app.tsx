@@ -3,10 +3,8 @@ import Menubar from "./components/menubar.tsx";
 
 export default function App() {
   
-  return <div>
+  return <div id="app">
           <Menubar/>
-          <p>
-            Ide van írva valami.
-          </p>
+          <canvas className="main-canvas"></canvas>
          </div>;
 }
