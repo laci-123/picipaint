@@ -11,17 +11,17 @@
     position: relative;
     padding: 1em;
 
+    &:has(.menu-item-body) {
+      background-color: black;
+    }
+
     .menu-item-body {
       position: absolute;
       top: 4em;
+      left: 50%;
       transform: translateX(-50%);
-      display: none;
       border: 1px solid green;
       padding: 1em;
-    }
-
-    &:hover .menu-item-body {
-      display: block;
     }
   }
 }
